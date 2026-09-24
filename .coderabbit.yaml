@@ -1,0 +1,64 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+# CodeRabbit reviews every PR into main. Branch protection (docs/RELEASE.md) makes its
+# approval a required check, so nothing reaches production without it.
+language: en-US
+tone_instructions: "Be direct. Flag security and correctness issues first; skip style nits the linters already cover."
+early_access: false
+
+reviews:
+  profile: assertive
+  request_changes_workflow: true   # CodeRabbit approves only after its comments are resolved
+  high_level_summary: true
+  review_status: true
+  collapse_walkthrough: true
+  poem: false
+  auto_review:
+    enabled: true
+    drafts: false
+    base_branches:
+      - main
+  path_filters:
+    - "!docs/**/*.png"
+  path_instructions:
+    - path: "functions/**"
+      instructions: |
+        Cloudflare Pages Functions (server side). Check:
+        - Every /api/admin/* handler must reject requests unless the Cloudflare Access email header
+          matches ADMIN_EMAILS, and must fail closed when ADMIN_EMAILS is unset. DEV_ADMIN_BYPASS must
+          never work on a non-localhost host.
+        - All request bodies are validated (types, lengths, https-only URLs, valid dates) before KV writes.
+        - No secrets, stack traces or internal errors are returned to clients.
+        - KV write volume stays within free-tier limits (1,000 writes/day); flag per-request writes.
+    - path: "ads.js"
+      instructions: |
+        Renders advertiser-supplied content on the public site. Any use of innerHTML, insertAdjacentHTML,
+        or unescaped attributes with campaign data is a security bug. Links must be https, use
+        rel="sponsored noopener" and must not allow javascript: URLs. Must not cause layout shift.
+    - path: "admin/**"
+      instructions: |
+        Admin portal. Treat all data from the API as untrusted when rendering. Check CSRF exposure of
+        state-changing requests and that no credentials are stored in localStorage.
+    - path: "convert.js"
+      instructions: |
+        Pure functions, unit-tested in tests/. Any behavior change needs a matching test change.
+    - path: "app.js"
+      instructions: |
+        User JSON must never be sent over the network. Flag any fetch/XHR/beacon that includes editor content.
+    - path: "tests/**"
+      instructions: "Tests must be deterministic and must not hit the network."
+    - path: "_headers"
+      instructions: "Security headers for Cloudflare Pages. Flag any weakening of CSP or frame protections."
+  tools:
+    gitleaks:
+      enabled: true
+    actionlint:
+      enabled: true
+    markdownlint:
+      enabled: true
+    biome:
+      enabled: true
+    htmlhint:
+      enabled: true
+
+chat:
+  auto_reply: true

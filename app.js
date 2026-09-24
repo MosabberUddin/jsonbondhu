@@ -1,0 +1,379 @@
+(function () {
+  'use strict';
+  const JB = window.JB;
+  const $ = (s) => document.querySelector(s);
+  const input = $('#input');
+  const output = $('#output');
+  const statusEl = $('#status');
+  const treeEl = $('#tree');
+  const pathEl = $('#path');
+  const STORE_KEY = 'jb_last_input';
+  const MAX_TREE_NODES = 50000;
+
+  let parsed;          // last successfully parsed value
+  let parsedFrom = null; // the text it was parsed from
+  let lastFileName = 'data';
+
+  // ---------- helpers ----------
+  function store(get, val) {
+    try {
+      if (get) return localStorage.getItem(STORE_KEY);
+      localStorage.setItem(STORE_KEY, val);
+    } catch (e) { /* storage unavailable (private mode etc.) */ }
+    return null;
+  }
+  function toast(msg) {
+    const t = $('#toast');
+    t.textContent = msg;
+    t.hidden = false;
+    clearTimeout(toast.timer);
+    toast.timer = setTimeout(() => { t.hidden = true; }, 1800);
+  }
+  function setStatus(kind, msg, detail) {
+    statusEl.className = 'status ' + (kind || '');
+    statusEl.textContent = msg;
+    if (detail) {
+      const s = document.createElement('small');
+      s.textContent = detail;
+      statusEl.appendChild(s);
+    }
+  }
+  function sizeLabel(bytes) {
+    if (bytes < 1024) return JB.bnNum(bytes) + ' বাইট';
+    if (bytes < 1048576) return JB.bnNum((bytes / 1024).toFixed(1)) + ' KB';
+    return JB.bnNum((bytes / 1048576).toFixed(2)) + ' MB';
+  }
+  function indentValue() {
+    const v = $('#indent').value;
+    return v === 'tab' ? '\t' : +v;
+  }
+  function download(text, name, mime) {
+    const blob = new Blob([text], { type: mime + ';charset=utf-8' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = name;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  }
+  async function copyText(text) {
+    try {
+      await navigator.clipboard.writeText(text);
+      toast('কপি হয়েছে');
+    } catch (e) {
+      toast('কপি করা যায়নি — নিজে সিলেক্ট করে কপি করুন');
+    }
+  }
+
+  // Parse the editor content; report errors in Bangla and move the caret to them.
+  function parse(quiet) {
+    const text = input.value;
+    if (!text.trim()) {
+      parsed = undefined; parsedFrom = null;
+      if (!quiet) setStatus('warn', 'কোনো JSON নেই — আগে কিছু পেস্ট করুন।');
+      return false;
+    }
+    if (text === parsedFrom) return true;
+    try {
+      parsed = JSON.parse(text);
+      parsedFrom = text;
+      const st = JB.stats(parsed);
+      setStatus('ok', '✓ সঠিক JSON — ' + sizeLabel(new Blob([text]).size) + ', ' +
+        JB.bnNum(st.nodes) + 'টি মান, গভীরতা ' + JB.bnNum(st.depth));
+      return true;
+    } catch (err) {
+      parsed = undefined; parsedFrom = null;
+      const loc = JB.errorLocation(err, text);
+      const where = loc ? ' লাইন ' + JB.bnNum(loc.line) + ', কলাম ' + JB.bnNum(loc.col) + '-এ' : '';
+      setStatus('err', '✗ JSON-এ ভুল আছে' + where + '। “ভুল ঠিক করুন” চেষ্টা করে দেখুন।', err.message);
+      if (loc && !quiet) {
+        input.focus();
+        input.setSelectionRange(loc.pos, Math.min(loc.pos + 1, text.length));
+      }
+      return false;
+    }
+  }
+
+  function setInput(text) {
+    input.value = text;
+    store(false, text);
+    parse(true);
+    if (currentTab === 'tree') renderTree();
+  }
+
+  function sortKeys(v) {
+    if (Array.isArray(v)) return v.map(sortKeys);
+    if (!JB.isContainer(v)) return v;
+    const o = {};
+    for (const k of Object.keys(v).sort((a, b) => a.localeCompare(b))) o[k] = sortKeys(v[k]);
+    return o;
+  }
+
+  // ---------- tree view ----------
+  let nodeCount = 0;
+  function leafValue(v) {
+    const span = document.createElement('span');
+    if (v === null) { span.className = 'null'; span.textContent = 'null'; }
+    else if (typeof v === 'string') { span.className = 'str'; span.textContent = JSON.stringify(v); }
+    else if (typeof v === 'number') { span.className = 'num'; span.textContent = String(v); }
+    else { span.className = 'bool'; span.textContent = String(v); }
+    return span;
+  }
+  function keySpan(label, path) {
+    const k = document.createElement('span');
+    k.className = 'key';
+    k.textContent = label;
+    k.dataset.path = path;
+    return k;
+  }
+  function buildNode(label, v, path, depth) {
+    nodeCount++;
+    if (!JB.isContainer(v) || !Object.keys(v).length) {
+      const d = document.createElement('div');
+      d.className = 'leaf';
+      if (label !== null) d.append(keySpan(label, path), ': ');
+      d.append(JB.isContainer(v) ? Object.assign(document.createElement('span'), { className: 'meta', textContent: Array.isArray(v) ? '[ ]' : '{ }' }) : leafValue(v));
+      return d;
+    }
+    const det = document.createElement('details');
+    const sum = document.createElement('summary');
+    const isArr = Array.isArray(v);
+    const n = isArr ? v.length : Object.keys(v).length;
+    if (label !== null) sum.append(keySpan(label, path), ' ');
+    const meta = document.createElement('span');
+    meta.className = 'meta';
+    meta.textContent = isArr ? '[' + JB.bnNum(n) + 'টি আইটেম]' : '{' + JB.bnNum(n) + 'টি কী}';
+    sum.append(meta);
+    det.append(sum);
+    det._value = v;
+    det._path = path;
+    det._depth = depth;
+    det.addEventListener('toggle', () => { if (det.open) fill(det); });
+    if (depth < 2 && n <= 200) { fill(det); det.open = true; }
+    return det;
+  }
+  // Children are built lazily so huge documents stay responsive.
+  function fill(det) {
+    if (det._filled) return;
+    det._filled = true;
+    const v = det._value;
+    const isArr = Array.isArray(v);
+    const frag = document.createDocumentFragment();
+    for (const k of Object.keys(v)) {
+      const childPath = JB.pathJoin(det._path, k, isArr);
+      frag.append(buildNode(isArr ? k : k, v[k], childPath, det._depth + 1));
+    }
+    det.append(frag);
+  }
+  function renderTree() {
+    treeEl.textContent = '';
+    nodeCount = 0;
+    if (!parse(true)) {
+      const p = document.createElement('p');
+      p.className = 'empty';
+      p.textContent = input.value.trim() ? 'JSON-এ ভুল আছে — টেক্সট ট্যাবে গিয়ে ঠিক করুন।' : 'দেখানোর মতো কিছু নেই — টেক্সট ট্যাবে JSON পেস্ট করুন।';
+      treeEl.append(p);
+      return;
+    }
+    treeEl.append(buildNode(null, parsed, '$', 0));
+    pathEl.textContent = '$';
+  }
+  function expandAll() {
+    for (;;) {
+      const closed = treeEl.querySelectorAll('details:not([open])');
+      if (!closed.length) return true;
+      for (const d of closed) {
+        if (nodeCount > MAX_TREE_NODES) {
+          toast('ডেটা অনেক বড় — সব একসাথে খোলা হয়নি');
+          return false;
+        }
+        fill(d);
+        d.open = true;
+      }
+    }
+  }
+  function search(q) {
+    for (const m of treeEl.querySelectorAll('mark')) m.replaceWith(m.textContent);
+    treeEl.normalize();
+    if (!q) return;
+    expandAll();
+    const needle = q.toLowerCase();
+    let first = null, count = 0;
+    for (const el of treeEl.querySelectorAll('.key, .str, .num, .bool, .null')) {
+      const t = el.textContent;
+      const i = t.toLowerCase().indexOf(needle);
+      if (i < 0) continue;
+      const mark = document.createElement('mark');
+      mark.textContent = t.slice(i, i + q.length);
+      el.textContent = '';
+      el.append(t.slice(0, i), mark, t.slice(i + q.length));
+      first = first || mark;
+      count++;
+    }
+    if (first) first.scrollIntoView({ block: 'center' });
+    toast(count ? JB.bnNum(count) + 'টি মিল পাওয়া গেছে' : 'কোনো মিল নেই');
+  }
+
+  // ---------- tabs ----------
+  let currentTab = 'text';
+  function showTab(name) {
+    currentTab = name;
+    for (const t of document.querySelectorAll('.tab')) {
+      const on = t.dataset.tab === name;
+      t.classList.toggle('active', on);
+      t.setAttribute('aria-selected', on);
+    }
+    for (const p of document.querySelectorAll('.panel')) p.hidden = p.dataset.panel !== name;
+    if (name === 'tree') renderTree();
+  }
+
+  // ---------- actions ----------
+  const actions = {
+    format() {
+      if (!parse()) return;
+      setInput(JSON.stringify(parsed, null, indentValue()));
+    },
+    minify() {
+      if (!parse()) return;
+      setInput(JSON.stringify(parsed));
+    },
+    validate() { parse(); },
+    repair() {
+      const fixed = JB.repair(input.value);
+      try {
+        const v = JSON.parse(fixed);
+        setInput(JSON.stringify(v, null, indentValue()));
+        toast('ঠিক করা হয়েছে');
+      } catch (e) {
+        parse();
+        toast('স্বয়ংক্রিয়ভাবে ঠিক করা গেল না');
+      }
+    },
+    sort() {
+      if (!parse()) return;
+      setInput(JSON.stringify(sortKeys(parsed), null, indentValue()));
+      toast('কী বর্ণানুক্রমে সাজানো হয়েছে');
+    },
+    async paste() {
+      try {
+        setInput(await navigator.clipboard.readText());
+        actions.format();
+      } catch (e) {
+        input.focus();
+        toast('Ctrl + V চেপে পেস্ট করুন');
+      }
+    },
+    copy() { copyText(input.value); },
+    open() { $('#file').click(); },
+    download() {
+      if (!input.value) return toast('ডাউনলোড করার মতো কিছু নেই');
+      download(input.value, lastFileName.replace(/\.json$/i, '') + '.json', 'application/json');
+    },
+    sample() {
+      setInput(JSON.stringify({
+        নাম: 'রহিম উদ্দিন', বয়স: 28, শহর: 'ঢাকা', ডেভেলপার: true, ওয়েবসাইট: null,
+        দক্ষতা: ['JavaScript', 'Python', 'SQL'],
+        ঠিকানা: { এলাকা: 'মিরপুর', পোস্টকোড: '1216', দেশ: 'বাংলাদেশ' },
+        প্রজেক্ট: [
+          { শিরোনাম: 'ই-কমার্স API', তারকা: 120 },
+          { শিরোনাম: 'বাংলা ফন্ট কনভার্টার', তারকা: 85 },
+        ],
+      }, null, indentValue()));
+      setStatus('ok', 'নমুনা JSON লোড হয়েছে — ট্রি ভিউ বা রূপান্তর ট্যাব দেখুন।');
+    },
+    clear() {
+      setInput('');
+      output.value = '';
+      treeEl.textContent = '';
+      setStatus('', 'প্রস্তুত — JSON পেস্ট করুন।');
+      input.focus();
+    },
+    expand() { expandAll(); },
+    collapse() {
+      for (const d of treeEl.querySelectorAll('details[open]')) d.open = false;
+      const root = treeEl.querySelector('details');
+      if (root) root.open = true;
+    },
+    copypath() { copyText(pathEl.textContent); },
+    convert() {
+      if (!parse()) { output.value = ''; return; }
+      const t = $('#target').value;
+      output.value = t === 'csv' ? JB.toCsv(parsed) : t === 'yaml' ? JB.toYaml(parsed) : JB.toXml(parsed);
+    },
+    copyout() {
+      if (!output.value) actions.convert();
+      if (output.value) copyText(output.value);
+    },
+    downloadout() {
+      if (!output.value) actions.convert();
+      if (!output.value) return;
+      const t = $('#target').value;
+      const base = lastFileName.replace(/\.json$/i, '');
+      // BOM makes Excel open UTF-8 CSV with Bangla text correctly.
+      if (t === 'csv') download('﻿' + output.value, base + '.csv', 'text/csv');
+      else if (t === 'yaml') download(output.value, base + '.yaml', 'text/yaml');
+      else download(output.value, base + '.xml', 'application/xml');
+    },
+  };
+
+  function loadFile(file) {
+    if (!file) return;
+    lastFileName = file.name;
+    const r = new FileReader();
+    r.onload = () => {
+      setInput(String(r.result));
+      if (parse()) actions.format();
+      toast(file.name + ' খোলা হয়েছে');
+    };
+    r.onerror = () => toast('ফাইল পড়া যায়নি');
+    r.readAsText(file);
+  }
+
+  // ---------- wiring ----------
+  document.addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-act]');
+    if (btn && actions[btn.dataset.act]) { actions[btn.dataset.act](); return; }
+    const tab = e.target.closest('.tab');
+    if (tab) { showTab(tab.dataset.tab); return; }
+    const key = e.target.closest('.tree .key');
+    if (key) {
+      e.preventDefault(); // don't toggle the <details> when picking a path
+      pathEl.textContent = key.dataset.path;
+      pathEl.title = key.dataset.path;
+    }
+  });
+  $('#file').addEventListener('change', (e) => { loadFile(e.target.files[0]); e.target.value = ''; });
+  $('#target').addEventListener('change', actions.convert);
+  let searchTimer;
+  $('#search').addEventListener('input', (e) => {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(() => search(e.target.value.trim()), 300);
+  });
+
+  let saveTimer;
+  input.addEventListener('input', () => {
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(() => { store(false, input.value); parse(true); }, 400);
+  });
+  input.addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); actions.format(); }
+    if (e.key === 'Tab' && !e.shiftKey) {
+      e.preventDefault();
+      input.setRangeText('  ', input.selectionStart, input.selectionEnd, 'end');
+    }
+  });
+
+  const textPanel = document.querySelector('[data-panel="text"]');
+  textPanel.addEventListener('dragover', (e) => { e.preventDefault(); textPanel.classList.add('dragover'); });
+  textPanel.addEventListener('dragleave', () => textPanel.classList.remove('dragover'));
+  textPanel.addEventListener('drop', (e) => {
+    e.preventDefault();
+    textPanel.classList.remove('dragover');
+    loadFile(e.dataTransfer.files[0]);
+  });
+
+  $('#year').textContent = JB.bnNum(new Date().getFullYear());
+  const saved = store(true);
+  if (saved) { input.value = saved; parse(true); }
+})();

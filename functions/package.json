@@ -1,0 +1,5 @@
+{
+  "private": true,
+  "type": "module",
+  "description": "Scopes ES-module semantics to functions/ so node:test can import functions/_lib/*.js without affecting the rest of the repo."
+}

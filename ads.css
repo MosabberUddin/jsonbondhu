@@ -1,0 +1,143 @@
+/* Ad card styles, injected by ads.js (and linked by the admin preview).
+   Uses the site's design tokens from styles.css with fallbacks.
+   Every rendered ad is locked to --jb-ad-h (the placeholder's reserved height)
+   so filling a slot never shifts the page. */
+
+.ad-slot[data-ad-state="card"],
+.ad-slot[data-ad-state="adsense"] {
+  border-style: solid;
+  place-items: stretch;
+  padding: 0;
+}
+
+.jb-adsense {
+  display: block;
+  width: 100%;
+  height: var(--jb-ad-h, 90px);
+  overflow: hidden;
+}
+
+.jb-ad {
+  --jb-ad-bg: var(--surface, #fff);
+  --jb-ad-ink: var(--text, #17201d);
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  height: var(--jb-ad-h, 90px);
+  padding: 10px 14px 10px 16px;
+  overflow: hidden;
+  background: var(--jb-ad-bg);
+  color: var(--jb-ad-ink);
+  font: inherit;
+  text-align: start;
+}
+
+.jb-ad__label {
+  position: absolute;
+  top: 4px;
+  inset-inline-start: 8px;
+  padding: 0 6px;
+  border-radius: 4px;
+  font-size: 0.68rem;
+  line-height: 1.5;
+  color: var(--muted, #5c6863);
+  background: var(--surface-2, #eef1ee);
+  z-index: 2;
+  pointer-events: none;
+}
+.jb-ad--custom .jb-ad__label {
+  color: var(--jb-ad-ink);
+  background: color-mix(in srgb, var(--jb-ad-ink) 12%, transparent);
+}
+
+.jb-ad__text {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding-top: 10px;
+}
+.jb-ad__headline,
+.jb-ad__body {
+  margin: 0;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  overflow-wrap: anywhere;
+}
+.jb-ad__headline {
+  font-weight: 700;
+  font-size: 1rem;
+  line-height: 1.35;
+  -webkit-line-clamp: 1;
+  line-clamp: 1;
+}
+.jb-ad__body {
+  font-size: 0.86rem;
+  line-height: 1.4;
+  opacity: 0.85;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+.jb-ad__media {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.jb-ad__media img {
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+.jb-ad--image { padding: 4px 12px 4px 4px; }
+
+.jb-ad__cta {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 6px 16px;
+  border-radius: 8px;
+  background: var(--accent, #0f766e);
+  color: var(--accent-ink, #fff);
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.jb-ad--custom .jb-ad__cta {
+  background: var(--jb-ad-ink);
+  color: var(--jb-ad-bg);
+}
+/* Stretched link: the whole card is clickable but there is only one link in the a11y tree. */
+.jb-ad__cta::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+.jb-ad__cta:hover { filter: brightness(1.08); }
+.jb-ad__cta:focus-visible {
+  outline: 3px solid var(--accent, #0f766e);
+  outline-offset: 2px;
+}
+.jb-ad:has(.jb-ad__cta:focus-visible) {
+  box-shadow: inset 0 0 0 2px var(--accent, #0f766e);
+}
+
+@media (max-width: 560px) {
+  .jb-ad { gap: 10px; padding-inline: 12px 10px; }
+  .jb-ad__headline { font-size: 0.92rem; }
+  .jb-ad__body { -webkit-line-clamp: 1; line-clamp: 1; font-size: 0.8rem; }
+  .jb-ad__cta { padding: 6px 12px; font-size: 0.82rem; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .jb-ad { animation: jb-ad-in 0.2s ease-out; }
+  @keyframes jb-ad-in { from { opacity: 0; } to { opacity: 1; } }
+}

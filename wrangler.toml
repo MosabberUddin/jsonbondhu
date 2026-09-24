@@ -1,0 +1,32 @@
+# Cloudflare Pages configuration for JSON বন্ধু (see docs/ADS.md).
+# Once this file exists, it is the source of truth for bindings and plain vars:
+# the dashboard shows them read-only. Secrets (ADMIN_EMAILS, ACCESS_AUD) are set
+# separately with `npx wrangler pages secret put ...` or in the dashboard.
+
+name = "jsonbondhu"
+pages_build_output_dir = "."
+compatibility_date = "2025-09-01"
+
+# Production (and default) bindings.
+[[kv_namespaces]]
+binding = "ADS_KV"
+id = "REPLACE_WITH_PRODUCTION_KV_NAMESPACE_ID"
+
+[vars]
+# Your Zero Trust team domain, used to verify the Access JWT (recommended).
+ACCESS_TEAM_DOMAIN = "REPLACE_WITH_TEAM.cloudflareaccess.com"
+# Record 1 in N impressions (weighted back up) to stay inside KV's free write quota.
+# 1 = record every impression. See "KV limits" in docs/ADS.md before changing.
+IMPRESSION_SAMPLE_RATE = "0.1"
+
+# Preview deployments (PR branches) get their own namespace so testing the admin
+# portal on a preview URL can never change production ads or stats.
+# Non-inheritable keys (vars, kv_namespaces) must be repeated per environment.
+[env.preview]
+[[env.preview.kv_namespaces]]
+binding = "ADS_KV"
+id = "REPLACE_WITH_PREVIEW_KV_NAMESPACE_ID"
+
+[env.preview.vars]
+ACCESS_TEAM_DOMAIN = "REPLACE_WITH_TEAM.cloudflareaccess.com"
+IMPRESSION_SAMPLE_RATE = "1"

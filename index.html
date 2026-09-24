@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="bn">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>JSON বন্ধু — অনলাইন JSON ফরম্যাটার, ভিউয়ার ও কনভার্টার (বাংলায়)</title>
+  <meta name="description" content="বিনামূল্যে বাংলায় JSON ফরম্যাট, যাচাই, মিনিফাই ও ট্রি-ভিউতে দেখুন। JSON থেকে CSV, YAML, XML-এ রূপান্তর করুন। আপনার ডেটা ব্রাউজারের বাইরে যায় না।">
+  <link rel="canonical" href="https://jsonbondhu.com/">
+  <meta property="og:title" content="JSON বন্ধু — বাংলায় JSON ফরম্যাটার">
+  <meta property="og:description" content="JSON ফরম্যাট, যাচাই, ট্রি-ভিউ ও CSV/YAML/XML রূপান্তর — সম্পূর্ণ বাংলায়, সম্পূর্ণ আপনার ব্রাউজারে।">
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="bn_BD">
+  <meta name="theme-color" content="#0f766e">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230f766e'/%3E%3Ctext x='16' y='22' font-size='15' font-family='monospace' font-weight='700' fill='white' text-anchor='middle'%3E%7B%7D%3C/text%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"WebApplication","name":"JSON বন্ধু","url":"https://jsonbondhu.com/","applicationCategory":"DeveloperApplication","operatingSystem":"Any","inLanguage":"bn","offers":{"@type":"Offer","price":"0","priceCurrency":"BDT"}}
+  </script>
+  <!-- AdSense: after approval, uncomment and replace ca-pub-XXXXXXXXXXXXXXXX with your publisher ID.
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX" crossorigin="anonymous"></script>
+  -->
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="./" aria-label="JSON বন্ধু হোম">
+      <span class="logo" aria-hidden="true">{ }</span>
+      <span><strong>JSON বন্ধু</strong><small>বাংলায় JSON ফরম্যাটার ও ভিউয়ার</small></span>
+    </a>
+    <nav class="top-nav">
+      <a href="#about">JSON কী?</a>
+      <a href="#faq">প্রশ্নোত্তর</a>
+      <a href="#premium" class="pill">বিজ্ঞাপনমুক্ত করুন</a>
+    </nav>
+  </header>
+
+  <div class="ad-slot ad-top" data-ad="top" aria-label="বিজ্ঞাপন">
+    <!-- <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-XXXXXXXXXXXXXXXX" data-ad-slot="0000000000" data-ad-format="auto" data-full-width-responsive="true"></ins> -->
+    <span>বিজ্ঞাপনের স্থান</span>
+  </div>
+
+  <main class="app">
+    <div class="tabs" role="tablist">
+      <button role="tab" class="tab active" data-tab="text" aria-selected="true">টেক্সট</button>
+      <button role="tab" class="tab" data-tab="tree" aria-selected="false">ট্রি ভিউ</button>
+      <button role="tab" class="tab" data-tab="convert" aria-selected="false">রূপান্তর</button>
+    </div>
+
+    <div class="toolbar" role="toolbar" aria-label="সরঞ্জাম">
+      <button data-act="format" class="primary" title="Ctrl + Enter">ফরম্যাট</button>
+      <select id="indent" aria-label="ইন্ডেন্ট">
+        <option value="2">২ স্পেস</option>
+        <option value="4">৪ স্পেস</option>
+        <option value="tab">ট্যাব</option>
+      </select>
+      <button data-act="minify">মিনিফাই</button>
+      <button data-act="validate">যাচাই</button>
+      <button data-act="repair" title="কমেন্ট, শেষের কমা, সিঙ্গেল কোট ইত্যাদি ঠিক করে">ভুল ঠিক করুন</button>
+      <button data-act="sort">কী সাজান</button>
+      <span class="sep"></span>
+      <button data-act="paste">পেস্ট</button>
+      <button data-act="copy">কপি</button>
+      <button data-act="open">ফাইল খুলুন</button>
+      <button data-act="download">ডাউনলোড</button>
+      <button data-act="sample">নমুনা</button>
+      <button data-act="clear" class="danger">মুছুন</button>
+      <input type="file" id="file" accept=".json,application/json,text/plain" hidden>
+    </div>
+
+    <section class="panel" data-panel="text">
+      <textarea id="input" spellcheck="false" autocomplete="off" placeholder="এখানে JSON পেস্ট করুন অথবা ফাইল টেনে এনে ছাড়ুন…&#10;&#10;আপনার ডেটা কোনো সার্ভারে পাঠানো হয় না।"></textarea>
+    </section>
+
+    <section class="panel" data-panel="tree" hidden>
+      <div class="tree-bar">
+        <button data-act="expand">সব খুলুন</button>
+        <button data-act="collapse">সব বন্ধ</button>
+        <input id="search" type="search" placeholder="কী বা মান খুঁজুন…" aria-label="খুঁজুন">
+        <span class="path-wrap">পাথ: <code id="path">$</code> <button data-act="copypath" class="small">কপি</button></span>
+      </div>
+      <div id="tree" class="tree" aria-live="polite"></div>
+    </section>
+
+    <section class="panel" data-panel="convert" hidden>
+      <div class="tree-bar">
+        <label>ফরম্যাট:
+          <select id="target">
+            <option value="csv">CSV (এক্সেল)</option>
+            <option value="yaml">YAML</option>
+            <option value="xml">XML</option>
+          </select>
+        </label>
+        <button data-act="convert" class="primary">রূপান্তর করুন</button>
+        <button data-act="copyout">কপি</button>
+        <button data-act="downloadout">ডাউনলোড</button>
+      </div>
+      <textarea id="output" spellcheck="false" readonly placeholder="রূপান্তরিত ফলাফল এখানে দেখাবে"></textarea>
+    </section>
+
+    <div id="status" class="status" role="status">প্রস্তুত — JSON পেস্ট করুন।</div>
+  </main>
+
+  <div class="ad-slot ad-bottom" data-ad="bottom" aria-label="বিজ্ঞাপন">
+    <!-- <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-XXXXXXXXXXXXXXXX" data-ad-slot="0000000001" data-ad-format="auto" data-full-width-responsive="true"></ins> -->
+    <span>বিজ্ঞাপনের স্থান</span>
+  </div>
+
+  <article class="content">
+    <section id="about">
+      <h2>JSON কী?</h2>
+      <p>JSON (JavaScript Object Notation) হলো ডেটা আদান-প্রদানের একটি সহজ টেক্সট-ভিত্তিক ফরম্যাট। ওয়েবসাইট, মোবাইল অ্যাপ ও সার্ভারের মধ্যে তথ্য পাঠাতে প্রায় সব API এখন JSON ব্যবহার করে। এটি মানুষ পড়তে পারে, আবার কম্পিউটারও সহজে বুঝতে পারে।</p>
+      <p>JSON-এ ছয় ধরনের মান থাকে: <b>অবজেক্ট</b> <code>{ }</code>, <b>অ্যারে</b> <code>[ ]</code>, <b>স্ট্রিং</b> <code>"লেখা"</code>, <b>সংখ্যা</b> <code>42</code>, <b>বুলিয়ান</b> <code>true/false</code> এবং <code>null</code>।</p>
+      <h3>JSON বন্ধু দিয়ে যা করতে পারবেন</h3>
+      <ul>
+        <li><b>ফরম্যাট:</b> এক লাইনের জটিল JSON সুন্দর করে সাজানো, পড়ার উপযোগী রূপে।</li>
+        <li><b>যাচাই:</b> ভুল থাকলে কোন লাইন ও কলামে ভুল, তা বাংলায় দেখায় এবং কার্সর সেখানে নিয়ে যায়।</li>
+        <li><b>ভুল ঠিক করুন:</b> কমেন্ট, শেষের বাড়তি কমা, সিঙ্গেল কোট, কোটবিহীন কী ও Python-এর True/False/None স্বয়ংক্রিয়ভাবে ঠিক করে।</li>
+        <li><b>ট্রি ভিউ:</b> বড় JSON ভাঁজ করে দেখা, খোঁজা এবং যেকোনো মানের পাথ (যেমন <code>$.users[0].name</code>) কপি করা।</li>
+        <li><b>রূপান্তর:</b> JSON থেকে CSV (এক্সেলে বাংলা ঠিকমতো দেখায়), YAML ও XML।</li>
+      </ul>
+      <h3>গোপনীয়তা</h3>
+      <p>সব কাজ আপনার ব্রাউজারের ভেতরেই হয়। আপনার JSON কোনো সার্ভারে আপলোড বা সংরক্ষণ করা হয় না। বিস্তারিত দেখুন <a href="privacy.html">গোপনীয়তা নীতি</a>-তে।</p>
+    </section>
+
+    <section id="faq">
+      <h2>প্রশ্নোত্তর</h2>
+      <details><summary>আমার ডেটা কি নিরাপদ?</summary><p>হ্যাঁ। প্রসেসিং সম্পূর্ণ আপনার ডিভাইসে হয়। শেষ ইনপুটটি শুধু আপনার নিজের ব্রাউজারে সংরক্ষিত থাকে, যাতে পেজ রিফ্রেশ করলে হারিয়ে না যায়।</p></details>
+      <details><summary>“Unexpected token” ভুল কেন আসে?</summary><p>সাধারণত শেষে বাড়তি কমা, সিঙ্গেল কোট ( ' ) ব্যবহার, বা কী-এর চারপাশে কোট না থাকার কারণে। “ভুল ঠিক করুন” বোতাম চাপলে বেশিরভাগ ক্ষেত্রে এগুলো ঠিক হয়ে যায়।</p></details>
+      <details><summary>CSV এক্সেলে খুললে বাংলা ভেঙে যায় কেন?</summary><p>JSON বন্ধুর ডাউনলোড করা CSV-তে UTF-8 BOM যোগ করা থাকে, তাই এক্সেলে বাংলা ঠিকমতো দেখায়।</p></details>
+      <details><summary>কত বড় ফাইল খোলা যাবে?</summary><p>আপনার ডিভাইসের মেমোরির ওপর নির্ভর করে; সাধারণত কয়েক MB পর্যন্ত স্বাচ্ছন্দ্যে কাজ করে।</p></details>
+    </section>
+
+    <section id="premium" class="premium">
+      <h2>বিজ্ঞাপনমুক্ত JSON বন্ধু</h2>
+      <p>একবার পেমেন্টে আজীবন বিজ্ঞাপনমুক্ত ব্যবহার এবং নতুন ফিচার সবার আগে। বিকাশ/নগদ/কার্ড দিয়ে পেমেন্ট — <b>শীঘ্রই আসছে</b>।</p>
+    </section>
+  </article>
+
+  <footer class="site-footer">
+    <span>© <span id="year"></span> JSON বন্ধু</span>
+    <a href="privacy.html">গোপনীয়তা নীতি</a>
+    <a href="mailto:hello@jsonbondhu.com">যোগাযোগ</a>
+  </footer>
+
+  <div id="toast" class="toast" hidden></div>
+
+  <script src="convert.js"></script>
+  <script src="app.js"></script>
+  <script src="ads.js" defer></script>
+</body>
+</html>
