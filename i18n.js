@@ -11,6 +11,8 @@
   const STORE_KEY = 'jb_lang';
   const LANGS = ['en', 'bn'];
 
+  // Note: tree.items / tree.keys intentionally wrap the count in the container's own
+  // brackets, like JSON: an array shows "[3 items]" and an object shows "{3 keys}".
   const STRINGS = {
     en: {
       'meta.title': 'JSON Bondhu — Online JSON Formatter, Viewer & Converter',

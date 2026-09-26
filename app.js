@@ -174,7 +174,9 @@
     if (label !== null) sum.append(keySpan(label, path), ' ');
     const meta = document.createElement('span');
     meta.className = 'meta';
-    meta.textContent = t(isArr ? 'tree.items' : 'tree.keys', { n });
+    meta.dataset.i18nKey = isArr ? 'tree.items' : 'tree.keys';
+    meta.dataset.n = n;
+    meta.textContent = t(meta.dataset.i18nKey, { n });
     sum.append(meta);
     det.append(sum);
     det._value = v;
@@ -203,12 +205,19 @@
     if (!parse(true)) {
       const p = document.createElement('p');
       p.className = 'empty';
-      p.textContent = t(input.value.trim() ? 'tree.invalid' : 'tree.empty');
+      p.dataset.i18nKey = input.value.trim() ? 'tree.invalid' : 'tree.empty';
+      p.textContent = t(p.dataset.i18nKey);
       treeEl.append(p);
       return;
     }
     treeEl.append(buildNode(null, parsed, '$', 0));
     pathEl.textContent = '$';
+  }
+  // Relabel in place on a language switch so expansion, selected path and search stay intact.
+  function relabelTree() {
+    for (const el of treeEl.querySelectorAll('[data-i18n-key]')) {
+      el.textContent = t(el.dataset.i18nKey, el.dataset.n !== undefined ? { n: Number(el.dataset.n) } : null);
+    }
   }
   function expandAll() {
     for (;;) {
@@ -402,7 +411,7 @@
   window.addEventListener('jb:langchange', () => {
     renderYear();
     renderStatus();
-    if (currentTab === 'tree') renderTree();
+    relabelTree();
   });
   const saved = store(true);
   if (saved) { input.value = saved; parse(true); }

@@ -121,6 +121,20 @@ test.describe('language', () => {
     await expect(page.locator('#status')).toContainText('লাইন ৩');
   });
 
+  test('switching language keeps tree expansion, selected path and search results', async ({ page }) => {
+    await page.click('[data-act=sample]');
+    await page.click('[data-tab=tree]');
+    await page.fill('#search', 'python');
+    await expect(page.locator('#tree mark')).toHaveCount(1);
+    await page.locator('.tree .key', { hasText: /^city$/ }).click();
+    const openBefore = await page.locator('#tree details[open]').count();
+    await page.click('[data-set-lang=bn]');
+    await expect(page.locator('#tree mark')).toHaveCount(1);
+    await expect(page.locator('#path')).toHaveText('$.city');
+    expect(await page.locator('#tree details[open]').count()).toBe(openBefore);
+    await expect(page.locator('#tree summary .meta').first()).toHaveText('{৮টি কী}');
+  });
+
   test('?lang=bn opens in Bangla', async ({ page }) => {
     await page.goto('/?lang=bn');
     await expect(page.locator('html')).toHaveAttribute('lang', 'bn');
