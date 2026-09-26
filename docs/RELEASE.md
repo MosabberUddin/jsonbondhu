@@ -35,7 +35,7 @@ that has passed all four gates.
 ### 3. Branch protection (makes the gates mandatory)
 Settings → Branches → Add rule for `main`:
 - [x] Require a pull request before merging → Require **1 approval** → Dismiss stale approvals on new commits
-- [x] Require review from Code Owners (the `CODEOWNERS` file names the DevOps reviewer)
+- [x] Require review from Code Owners (the `CODEOWNERS` file names @biprajit007)
 - [x] Require status checks to pass: `unit-and-backend`, `e2e`, `CodeRabbit`
 - [x] Require branches to be up to date before merging
 - [x] Require conversation resolution before merging
