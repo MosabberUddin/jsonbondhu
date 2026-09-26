@@ -9,9 +9,14 @@
   },
   "devDependencies": {
     "@playwright/test": "1.55.0",
-    "wrangler": "4.40.0"
+    "wrangler": "4.141.0"
   },
   "engines": {
     "node": ">=22"
+  },
+  "allowScripts": {
+    "workerd@1.20260925.1": true,
+    "esbuild@0.28.1": true,
+    "sharp@0.35.4": true
   }
 }

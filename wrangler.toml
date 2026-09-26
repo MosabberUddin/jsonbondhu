@@ -10,11 +10,11 @@ compatibility_date = "2025-09-01"
 # Production (and default) bindings.
 [[kv_namespaces]]
 binding = "ADS_KV"
-id = "REPLACE_WITH_PRODUCTION_KV_NAMESPACE_ID"
+id = "0676242b12254097839d787c7d58f284"
 
 [vars]
 # Your Zero Trust team domain, used to verify the Access JWT (recommended).
-ACCESS_TEAM_DOMAIN = "REPLACE_WITH_TEAM.cloudflareaccess.com"
+ACCESS_TEAM_DOMAIN = "withered-base-a84c.cloudflareaccess.com"
 # Record 1 in N impressions (weighted back up) to stay inside KV's free write quota.
 # 1 = record every impression. See "KV limits" in docs/ADS.md before changing.
 IMPRESSION_SAMPLE_RATE = "0.1"
@@ -25,8 +25,8 @@ IMPRESSION_SAMPLE_RATE = "0.1"
 [env.preview]
 [[env.preview.kv_namespaces]]
 binding = "ADS_KV"
-id = "REPLACE_WITH_PREVIEW_KV_NAMESPACE_ID"
+id = "22f416b9e1b14ae99b2f169b76dc53ad"
 
 [env.preview.vars]
-ACCESS_TEAM_DOMAIN = "REPLACE_WITH_TEAM.cloudflareaccess.com"
+ACCESS_TEAM_DOMAIN = "withered-base-a84c.cloudflareaccess.com"
 IMPRESSION_SAMPLE_RATE = "1"
