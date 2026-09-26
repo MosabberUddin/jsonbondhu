@@ -39,10 +39,10 @@ Then open http://localhost:8765. For the ad API and admin portal, use `npx wrang
 4. Follow `docs/ADS.md` to set up KV, admin email, and Cloudflare Access.
 5. Submit `sitemap.xml` in Google Search Console.
 
-## Review workflow (for the DevOps reviewer)
-- Use `main` as a protected branch, with all changes made through PRs. CI must pass.
-- Claude can open PRs and address review comments, and `/code-review` can run an automated pass before human review.
-- Things to check first: ad-rendering escaping in `ads.js`, auth on `functions/api/admin/*`, and KV write limits.
+## Review workflow
+- `main` is protected: every change goes through a PR that needs CI (unit + e2e) and CodeRabbit's approval. Human review is optional.
+- Claude can open PRs and address review comments, and `/code-review` can run an extra automated pass.
+- Areas worth a human look when time allows: ad-rendering escaping in `ads.js`, auth on `functions/api/admin/*`, and KV write limits.
 
 ## Before launch checklist
 - [ ] Buy the domain and replace the placeholder domain/email
