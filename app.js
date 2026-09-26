@@ -1,6 +1,8 @@
 (function () {
   'use strict';
   const JB = window.JB;
+  const I18N = window.JBI18N;
+  const t = I18N.t;
   const $ = (s) => document.querySelector(s);
   const input = $('#input');
   const output = $('#output');
@@ -9,6 +11,27 @@
   const pathEl = $('#path');
   const STORE_KEY = 'jb_last_input';
   const MAX_TREE_NODES = 50000;
+
+  const SAMPLES = {
+    en: {
+      name: 'Rahim Uddin', age: 28, city: 'Dhaka', developer: true, website: null,
+      skills: ['JavaScript', 'Python', 'SQL'],
+      address: { area: 'Mirpur', postcode: '1216', country: 'Bangladesh' },
+      projects: [
+        { title: 'E-commerce API', stars: 120 },
+        { title: 'Bangla font converter', stars: 85 },
+      ],
+    },
+    bn: {
+      নাম: 'রহিম উদ্দিন', বয়স: 28, শহর: 'ঢাকা', ডেভেলপার: true, ওয়েবসাইট: null,
+      দক্ষতা: ['JavaScript', 'Python', 'SQL'],
+      ঠিকানা: { এলাকা: 'মিরপুর', পোস্টকোড: '1216', দেশ: 'বাংলাদেশ' },
+      প্রজেক্ট: [
+        { শিরোনাম: 'ই-কমার্স API', তারকা: 120 },
+        { শিরোনাম: 'বাংলা ফন্ট কনভার্টার', তারকা: 85 },
+      ],
+    },
+  };
 
   let parsed;          // last successfully parsed value
   let parsedFrom = null; // the text it was parsed from
@@ -29,19 +52,27 @@
     clearTimeout(toast.timer);
     toast.timer = setTimeout(() => { t.hidden = true; }, 1800);
   }
-  function setStatus(kind, msg, detail) {
+  // The status line stores its message key so it can be re-rendered on a language switch.
+  let lastStatus = { kind: '', key: 'status.ready', vars: null, detail: null };
+  function renderStatus() {
+    const { kind, key, vars, detail } = lastStatus;
     statusEl.className = 'status ' + (kind || '');
-    statusEl.textContent = msg;
+    statusEl.textContent = t(key, vars && vars());
     if (detail) {
       const s = document.createElement('small');
       s.textContent = detail;
       statusEl.appendChild(s);
     }
   }
+  // vars is a function so values like sizes are re-localized on a language switch.
+  function setStatus(kind, key, vars, detail) {
+    lastStatus = { kind, key, vars: vars || null, detail: detail || null };
+    renderStatus();
+  }
   function sizeLabel(bytes) {
-    if (bytes < 1024) return JB.bnNum(bytes) + ' বাইট';
-    if (bytes < 1048576) return JB.bnNum((bytes / 1024).toFixed(1)) + ' KB';
-    return JB.bnNum((bytes / 1048576).toFixed(2)) + ' MB';
+    if (bytes < 1024) return t('size.bytes', { n: bytes });
+    if (bytes < 1048576) return I18N.num((bytes / 1024).toFixed(1)) + ' KB';
+    return I18N.num((bytes / 1048576).toFixed(2)) + ' MB';
   }
   function indentValue() {
     const v = $('#indent').value;
@@ -60,9 +91,9 @@
   async function copyText(text) {
     try {
       await navigator.clipboard.writeText(text);
-      toast('কপি হয়েছে');
+      toast(t('toast.copied'));
     } catch (e) {
-      toast('কপি করা যায়নি — নিজে সিলেক্ট করে কপি করুন');
+      toast(t('toast.copyFailed'));
     }
   }
 
@@ -71,7 +102,7 @@
     const text = input.value;
     if (!text.trim()) {
       parsed = undefined; parsedFrom = null;
-      if (!quiet) setStatus('warn', 'কোনো JSON নেই — আগে কিছু পেস্ট করুন।');
+      if (!quiet) setStatus('warn', 'status.empty');
       return false;
     }
     if (text === parsedFrom) return true;
@@ -79,14 +110,14 @@
       parsed = JSON.parse(text);
       parsedFrom = text;
       const st = JB.stats(parsed);
-      setStatus('ok', '✓ সঠিক JSON — ' + sizeLabel(new Blob([text]).size) + ', ' +
-        JB.bnNum(st.nodes) + 'টি মান, গভীরতা ' + JB.bnNum(st.depth));
+      const bytes = new Blob([text]).size;
+      setStatus('ok', 'status.valid', () => ({ size: sizeLabel(bytes), nodes: st.nodes, depth: st.depth }));
       return true;
     } catch (err) {
       parsed = undefined; parsedFrom = null;
       const loc = JB.errorLocation(err, text);
-      const where = loc ? ' লাইন ' + JB.bnNum(loc.line) + ', কলাম ' + JB.bnNum(loc.col) + '-এ' : '';
-      setStatus('err', '✗ JSON-এ ভুল আছে' + where + '। “ভুল ঠিক করুন” চেষ্টা করে দেখুন।', err.message);
+      setStatus('err', 'status.invalid',
+        () => ({ where: loc ? t('status.where', { line: loc.line, col: loc.col }) : '' }), err.message);
       if (loc && !quiet) {
         input.focus();
         input.setSelectionRange(loc.pos, Math.min(loc.pos + 1, text.length));
@@ -143,7 +174,9 @@
     if (label !== null) sum.append(keySpan(label, path), ' ');
     const meta = document.createElement('span');
     meta.className = 'meta';
-    meta.textContent = isArr ? '[' + JB.bnNum(n) + 'টি আইটেম]' : '{' + JB.bnNum(n) + 'টি কী}';
+    meta.dataset.i18nKey = isArr ? 'tree.items' : 'tree.keys';
+    meta.dataset.n = n;
+    meta.textContent = t(meta.dataset.i18nKey, { n });
     sum.append(meta);
     det.append(sum);
     det._value = v;
@@ -172,12 +205,19 @@
     if (!parse(true)) {
       const p = document.createElement('p');
       p.className = 'empty';
-      p.textContent = input.value.trim() ? 'JSON-এ ভুল আছে — টেক্সট ট্যাবে গিয়ে ঠিক করুন।' : 'দেখানোর মতো কিছু নেই — টেক্সট ট্যাবে JSON পেস্ট করুন।';
+      p.dataset.i18nKey = input.value.trim() ? 'tree.invalid' : 'tree.empty';
+      p.textContent = t(p.dataset.i18nKey);
       treeEl.append(p);
       return;
     }
     treeEl.append(buildNode(null, parsed, '$', 0));
     pathEl.textContent = '$';
+  }
+  // Relabel in place on a language switch so expansion, selected path and search stay intact.
+  function relabelTree() {
+    for (const el of treeEl.querySelectorAll('[data-i18n-key]')) {
+      el.textContent = t(el.dataset.i18nKey, el.dataset.n !== undefined ? { n: Number(el.dataset.n) } : null);
+    }
   }
   function expandAll() {
     for (;;) {
@@ -185,7 +225,7 @@
       if (!closed.length) return true;
       for (const d of closed) {
         if (nodeCount > MAX_TREE_NODES) {
-          toast('ডেটা অনেক বড় — সব একসাথে খোলা হয়নি');
+          toast(t('toast.tooBig'));
           return false;
         }
         fill(d);
@@ -212,7 +252,7 @@
       count++;
     }
     if (first) first.scrollIntoView({ block: 'center' });
-    toast(count ? JB.bnNum(count) + 'টি মিল পাওয়া গেছে' : 'কোনো মিল নেই');
+    toast(count ? t('toast.matches', { n: count }) : t('toast.noMatches'));
   }
 
   // ---------- tabs ----------
@@ -244,16 +284,16 @@
       try {
         const v = JSON.parse(fixed);
         setInput(JSON.stringify(v, null, indentValue()));
-        toast('ঠিক করা হয়েছে');
+        toast(t('toast.repaired'));
       } catch (e) {
         parse();
-        toast('স্বয়ংক্রিয়ভাবে ঠিক করা গেল না');
+        toast(t('toast.repairFailed'));
       }
     },
     sort() {
       if (!parse()) return;
       setInput(JSON.stringify(sortKeys(parsed), null, indentValue()));
-      toast('কী বর্ণানুক্রমে সাজানো হয়েছে');
+      toast(t('toast.sorted'));
     },
     async paste() {
       try {
@@ -261,32 +301,24 @@
         actions.format();
       } catch (e) {
         input.focus();
-        toast('Ctrl + V চেপে পেস্ট করুন');
+        toast(t('toast.pasteManually'));
       }
     },
     copy() { copyText(input.value); },
     open() { $('#file').click(); },
     download() {
-      if (!input.value) return toast('ডাউনলোড করার মতো কিছু নেই');
+      if (!input.value) return toast(t('toast.nothingToDownload'));
       download(input.value, lastFileName.replace(/\.json$/i, '') + '.json', 'application/json');
     },
     sample() {
-      setInput(JSON.stringify({
-        নাম: 'রহিম উদ্দিন', বয়স: 28, শহর: 'ঢাকা', ডেভেলপার: true, ওয়েবসাইট: null,
-        দক্ষতা: ['JavaScript', 'Python', 'SQL'],
-        ঠিকানা: { এলাকা: 'মিরপুর', পোস্টকোড: '1216', দেশ: 'বাংলাদেশ' },
-        প্রজেক্ট: [
-          { শিরোনাম: 'ই-কমার্স API', তারকা: 120 },
-          { শিরোনাম: 'বাংলা ফন্ট কনভার্টার', তারকা: 85 },
-        ],
-      }, null, indentValue()));
-      setStatus('ok', 'নমুনা JSON লোড হয়েছে — ট্রি ভিউ বা রূপান্তর ট্যাব দেখুন।');
+      setInput(JSON.stringify(SAMPLES[I18N.lang] || SAMPLES.en, null, indentValue()));
+      setStatus('ok', 'status.sample');
     },
     clear() {
       setInput('');
       output.value = '';
       treeEl.textContent = '';
-      setStatus('', 'প্রস্তুত — JSON পেস্ট করুন।');
+      setStatus('', 'status.ready');
       input.focus();
     },
     expand() { expandAll(); },
@@ -324,9 +356,9 @@
     r.onload = () => {
       setInput(String(r.result));
       if (parse()) actions.format();
-      toast(file.name + ' খোলা হয়েছে');
+      toast(t('toast.opened', { name: file.name }));
     };
-    r.onerror = () => toast('ফাইল পড়া যায়নি');
+    r.onerror = () => toast(t('toast.readFailed'));
     r.readAsText(file);
   }
 
@@ -373,7 +405,14 @@
     loadFile(e.dataTransfer.files[0]);
   });
 
-  $('#year').textContent = JB.bnNum(new Date().getFullYear());
+  function renderYear() { $('#year').textContent = I18N.num(new Date().getFullYear()); }
+  renderYear();
+  renderStatus();
+  window.addEventListener('jb:langchange', () => {
+    renderYear();
+    renderStatus();
+    relabelTree();
+  });
   const saved = store(true);
   if (saved) { input.value = saved; parse(true); }
 })();

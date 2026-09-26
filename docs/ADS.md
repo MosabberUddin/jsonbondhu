@@ -25,7 +25,7 @@ Admin (/admin/)        Cloudflare Access    │ functions/api/admin/          �
 
 | Path | Role |
 |---|---|
-| `functions/_lib/ads-core.js` | Pure logic: validation, slot resolution, weighted pick, stats aggregation. Shared by functions and tests. |
+| `functions/_lib/ads-core.js` | Pure logic: validation, slot resolution, language targeting, weighted pick, stats aggregation. Shared by functions and tests. |
 | `functions/_lib/auth.js` | Admin auth: Access JWT or header check, `ADMIN_EMAILS` allow-list, localhost-only dev bypass. |
 | `functions/_lib/store.js` | KV reads and writes for the config and its history. |
 | `functions/_lib/http.js` | JSON responses, a body-size-capped reader, and the same-origin check. |
@@ -37,7 +37,7 @@ Admin (/admin/)        Cloudflare Access    │ functions/api/admin/          �
 | `functions/admin/_middleware.js` | Guards the static `/admin/*` portal and adds a strict CSP. |
 | `functions/package.json` | Makes `functions/` ES modules for Node tests. It does not affect the rest of the repo. |
 | `ads.js`, `ads.css` | Site-side renderer. `ads.js` injects `ads.css` itself. |
-| `admin/` | Admin portal (Bangla UI). Its preview uses `ads.js`, so it matches the site. |
+| `admin/` | Admin portal (English / Bangla UI, strings in `admin/i18n.js`). Its preview uses `ads.js`, so it matches the site. |
 
 ## Data model
 
@@ -60,6 +60,7 @@ Admin (/admin/)        Cloudflare Access    │ functions/api/admin/          �
       "name": "Dhaka Dev Shop — Sept", // admin-only label, ≤80
       "advertiser": "Dhaka Dev Shop",  // "house" = own promotion, ≤80
       "slot": "top",                   // "top" | "bottom"
+      "lang": "bn",                    // "any" | "en" | "bn"; optional, missing = "any"
       "type": "text",                  // "text" | "image"
       "imageUrl": "",                  // https, required for image
       "headline": "ল্যাপটপে ১০% ছাড়",     // ≤60, required; alt text for image ads
@@ -80,7 +81,12 @@ Validation lives in `validateConfig()` in `ads-core.js`, and the server runs it 
 Unknown fields are dropped. Server metadata never comes from the client. Text is trimmed and
 length-checked in characters. Control characters are rejected. URLs must be absolute
 `https:` with no user or password. Dates must be real calendar dates with `end >= start`.
-The limit is 200 campaigns.
+The limit is 200 campaigns. `lang` must be `any`, `en`, or `bn`. A missing `lang` (configs
+saved before language targeting) is read as `any` and saved as `any` on the next `PUT`.
+
+Each validation error is `{path, code, message, params?}`. `code` is stable (for example
+`url.https`, `text.tooLong` with `params.max`, or `lang.invalid`), and the portal translates it
+through the `e.<code>` keys in `admin/i18n.js`. `message` is a Bangla fallback for other clients.
 
 ### Slot resolution (`resolveSlot()`)
 
@@ -97,10 +103,38 @@ The API returns the eligible **pool** per slot. The browser picks one with weigh
 selection, so a 60-second cached response still rotates ads across page views. The pick mirrors
 `pickWeighted()`.
 
+### Language targeting
+
+The site language is `document.documentElement.lang`: `en` (the default) or `bn`. A campaign
+shows only to visitors whose language matches its `lang`, or to everyone when `lang` is `any`.
+The table above applies **per language**: `resolveSlot(config, slot, today, lang)`. In
+`direct` mode, a paid Bangla campaign replaces house ads for Bangla visitors only, and English
+visitors still get the English house ad. A slot with nothing for a language is hidden for that
+language.
+
+`/api/ads` stays a single cacheable response with no language parameter. For each campaign slot,
+it returns the union of the English and Bangla pools, with `lang` on every campaign. `mode` is
+`direct` if either language resolved to paid campaigns. `ads.js` narrows the pool with
+`poolForLang()`: it keeps the visitor's language and `any`, and if any of those are paid, it
+drops the house ads. A unit test checks that this equals `resolveSlot(..., lang)` for every
+combination. Campaigns without `lang`, including responses from an older deploy, count as `any`.
+
+When the site dispatches `jb:langchange` on `window` (after it updates `documentElement.lang`),
+`ads.js` re-renders the campaign slots from the response it already has, without a new request.
+A campaign that also fits the new language stays. Otherwise it picks again. AdSense slots are not
+touched. The small label reads **Ad** in English and **বিজ্ঞাপন** in Bangla. Impressions are sent
+at most once per campaign per page view, so switching back and forth never double-counts.
+
 `GET /api/ads` exposes only `id, type, imageUrl, headline, body, ctaText, ctaUrl, bgColor,
-weight, house`. It never exposes advertiser names, schedules, or history. If KV is empty or
-unreachable, it serves `defaultConfig()`: Bangla house ads for the "remove ads" upgrade in both
-slots.
+weight, lang, house`. It never exposes advertiser names, schedules, or history. If KV is empty or
+unreachable, it serves `defaultConfig()`: four house ads for the "remove ads" upgrade, one
+English (`lang: "en"`) and one Bangla (`lang: "bn"`) in each slot. The Bangla ones keep their
+original ids (`house-premium-top`, `house-premium-bottom`) so their stats continue. The English
+ones are `house-premium-top-en` and `house-premium-bottom-en`.
+
+> **Stored configs are not migrated.** A config already saved in KV has Bangla-only house ads with
+> no `lang`, which means `any`. English visitors keep seeing them until an admin adds English
+> house campaigns (or sets languages) in the portal and saves.
 
 ### History (`config:history`)
 
@@ -121,7 +155,8 @@ calendar month in range (max range 92 days), so it never does one `get` per key.
 ## Tracking
 
 * **Impression:** sent after at least 50% of the card is visible for 1 second while the tab
-  is visible (`IntersectionObserver`), once per page view.
+  is visible (`IntersectionObserver`), at most once per campaign per page view, including
+  across language switches.
 * **Click:** `navigator.sendBeacon` fires on CTA `click`/middle-click. The link opens normally
   (`target=_blank`, `rel="sponsored noopener"`; house ads use `rel="noopener"`). The whole card
   is clickable through a stretched link, so the accessibility tree has one link.
@@ -171,7 +206,8 @@ impression writes plus clicks. That exhausts the free quota, and **config saves 
 * **CSRF:** non-GET admin requests need a same-origin `Origin` and `Content-Type: application/json`.
 * **Input:** bodies are size-capped (256 KB config, 512 B track) and validated server-side.
   The portal's own checks are only for UX.
-* **Rendering:** `ads.js` and `admin.js` build DOM with `textContent`/`setAttribute` only.
+* **Rendering:** `ads.js` and `admin.js` build DOM with `textContent`/`setAttribute` only,
+  translated strings included.
   There is no `innerHTML` with data. URLs are re-checked for `https:` in the browser.
   `bgColor` must match `#RRGGBB`.
 * **Admin portal headers:** strict CSP (`script-src 'self'`, `frame-ancestors 'none'`),
@@ -251,6 +287,8 @@ npx wrangler pages dev .                # http://localhost:8788
   `ads.js` leaves the placeholders as they are, which is what the e2e tests expect.
 * Unit and handler tests: `node --test` (see the note on `node --test tests/` in Open issues).
 * To see ads again after testing premium: `localStorage.removeItem('jb_premium')`.
+* Language: the portal and the site share the `localStorage` key `jb_lang` (`en` | `bn`). The
+  portal has its own **EN | বাংলা** switch in the header. English is the default.
 
 ## How a local advertiser's campaign goes live
 
@@ -259,20 +297,23 @@ npx wrangler pages dev .                # http://localhost:8788
    optionally a banner (728×90 or 320×90, WebP/PNG, < 50 KB).
 2. **Host the creative on our domain.** For example, commit it under `/ads-img/` through a PR,
    or use R2. Then the advertiser cannot swap the image after approval or collect visitor IPs.
-3. **Create the campaign.** In `/admin/`, go to **ক্যাম্পেইন → + নতুন ক্যাম্পেইন**. Fill in
-   the fields, check the **লাইভ প্রিভিউ** in desktop and mobile widths, set the start and end
-   dates and the weight, and switch on **সক্রিয়**. Then click **প্রয়োগ করুন**.
-4. **Check the slot mode.** In **স্লট সেটিংস**, the slot must be in **সরাসরি** mode. In AdSense
-   mode, direct campaigns do not show.
-5. **Publish.** Click **সংরক্ষণ ও প্রকাশ**. The server validates the config and stores it as a
+3. **Create the campaign.** In `/admin/`, go to **Campaigns → + New campaign** (Bangla UI:
+   **ক্যাম্পেইন → + নতুন ক্যাম্পেইন**). Fill in the fields and set **Language** to the language the
+   copy is written in. **Any** shows it to everyone. Check the **Live preview** in desktop and
+   mobile widths, set the start and end dates and the weight, and switch on **Active**. Then click
+   **Apply**.
+4. **Check the slot mode.** In **Slot settings**, the slot must be in **Direct** mode. In AdSense
+   mode, direct campaigns do not show. Each slot card lists what is live today for English and
+   for Bangla visitors.
+5. **Publish.** Click **Save & publish**. The server validates the config and stores it as a
    new version. Visitors see it within about 2 minutes (KV propagation plus the 60 s cache).
    If the start date is in the future, it goes live automatically at 00:00 Bangladesh time.
 6. **Verify.** Open the site in a private window. With several campaigns in one slot, reload a
    few times to see the rotation.
-7. **Report.** Use **পরিসংখ্যান** to pick the date range and send impressions, clicks, and CTR
+7. **Report.** Use **Statistics** to pick the date range and send impressions, clicks, and CTR
    to the advertiser. Numbers are approximate (see KV limits).
 8. **End.** After `endDate` the campaign stops automatically, and the slot falls back to the
-   house ad. If something goes wrong, go to **সংস্করণ ইতিহাস → লোড করুন → সংরক্ষণ**. This rolls
+   house ad. If something goes wrong, go to **Version history → Load this version → Save & publish**. This rolls
    back instantly and needs no deploy.
 
 ## Open issues / owner decisions

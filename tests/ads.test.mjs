@@ -4,9 +4,9 @@ import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 
 import {
-  addDays, aggregateStats, ctr, daySpan, defaultConfig, eligibleCampaigns, isLikelyBot, isValidDate,
-  monthPrefixes, normalizeHttpsUrl, parseStatsKey, parseTrackEvent, pickWeighted, resolveSlot, sampleRate,
-  statsKey, todayLocal, toPublicConfig, validateCampaign, validateConfig,
+  addDays, aggregateStats, campaignLang, ctr, daySpan, defaultConfig, eligibleCampaigns, isLikelyBot, isValidDate,
+  matchesLang, monthPrefixes, normalizeHttpsUrl, parseStatsKey, parseTrackEvent, pickWeighted, poolForLang,
+  resolveSlot, sampleRate, statsKey, todayLocal, toPublicConfig, validateCampaign, validateConfig,
 } from '../functions/_lib/ads-core.js';
 import { parseAdminEmails } from '../functions/_lib/auth.js';
 
@@ -110,6 +110,10 @@ describe('validateCampaign', () => {
     ['bad color', { bgColor: 'red' }, 'bgColor'],
     ['active not boolean', { active: 'yes' }, 'active'],
     ['non-string text', { headline: { html: '<b>' } }, 'headline'],
+    ['unknown lang', { lang: 'fr' }, 'lang'],
+    ['upper-case lang', { lang: 'EN' }, 'lang'],
+    ['empty lang', { lang: '' }, 'lang'],
+    ['non-string lang', { lang: 1 }, 'lang'],
   ];
   for (const [name, patch, field] of cases) {
     test(`rejects ${name}`, () => {
@@ -117,6 +121,31 @@ describe('validateCampaign', () => {
       assert.ok(r.errors.some((e) => e.path === `campaign.${field}`), JSON.stringify(r.errors));
     });
   }
+
+  test('every error carries a stable code for the admin UI', () => {
+    for (const [, patch] of cases) {
+      for (const e of validateCampaign(campaign(patch)).errors) {
+        assert.match(e.code, /^[a-z]+\.[a-zA-Z]+$/, JSON.stringify(e));
+        assert.equal(typeof e.message, 'string');
+      }
+    }
+    const tooLong = validateCampaign(campaign({ headline: 'x'.repeat(61) })).errors[0];
+    assert.deepEqual([tooLong.code, tooLong.params], ['text.tooLong', { max: 60 }]);
+    const lang = validateCampaign(campaign({ lang: 'fr' })).errors[0];
+    assert.deepEqual([lang.code, lang.params], ['lang.invalid', { allowed: 'any | en | bn' }]);
+  });
+
+  test('lang accepts any / en / bn and defaults to "any" when missing (older configs)', () => {
+    for (const lang of ['any', 'en', 'bn']) {
+      const r = validateCampaign(campaign({ lang }));
+      assert.deepEqual(r.errors, []);
+      assert.equal(r.value.lang, lang);
+    }
+    const legacy = campaign();
+    delete legacy.lang;
+    assert.equal(validateCampaign(legacy).value.lang, 'any');
+    assert.equal(validateCampaign(campaign({ lang: null })).value.lang, 'any');
+  });
 
   test('headline length counts characters, not UTF-16 units', () => {
     assert.deepEqual(validateCampaign(campaign({ headline: '😀'.repeat(60) })).errors, []);
@@ -175,6 +204,23 @@ describe('validateConfig', () => {
   test('error paths point at the offending campaign', () => {
     const r = validateConfig(config({ campaigns: [campaign(), campaign({ id: 'b', ctaUrl: 'ftp://x' })] }));
     assert.deepEqual(r.errors.map((e) => e.path), ['campaigns[1].ctaUrl']);
+    assert.equal(r.errors[0].code, 'url.https');
+  });
+
+  test('config-level errors carry codes too', () => {
+    assert.equal(validateConfig(null).errors[0].code, 'config.type');
+    const dup = validateConfig(config({ campaigns: [campaign(), campaign()] }));
+    assert.deepEqual(dup.errors.map((e) => [e.code, e.params]), [['id.duplicate', { id: 'acme-top' }]]);
+    const many = validateConfig(config({ campaigns: Array.from({ length: 201 }, (_, i) => campaign({ id: `c${i}` })) }));
+    assert.deepEqual(many.errors.map((e) => [e.code, e.params]), [['campaigns.tooMany', { max: 200 }]]);
+  });
+
+  test('a stored config from before language targeting stays valid; lang becomes "any"', () => {
+    const legacy = config({ campaigns: [campaign(), house()] });
+    for (const c of legacy.campaigns) delete c.lang;
+    const r = validateConfig(legacy);
+    assert.equal(r.ok, true, JSON.stringify(r.errors));
+    assert.deepEqual(r.value.campaigns.map((c) => c.lang), ['any', 'any']);
   });
 });
 
@@ -235,6 +281,90 @@ describe('selection', () => {
   });
 });
 
+describe('language targeting', () => {
+  const ids = (r) => (r.campaigns || []).map((c) => c.id);
+
+  test('campaignLang / matchesLang: missing lang means "any"', () => {
+    assert.equal(campaignLang(campaign()), 'any');
+    assert.equal(campaignLang(campaign({ lang: 'bn' })), 'bn');
+    assert.ok(matchesLang(campaign(), 'en') && matchesLang(campaign(), 'bn'));
+    assert.ok(matchesLang(campaign({ lang: 'any' }), 'bn'));
+    assert.ok(matchesLang(campaign({ lang: 'en' }), 'en'));
+    assert.ok(!matchesLang(campaign({ lang: 'en' }), 'bn'));
+    assert.ok(!matchesLang(campaign({ lang: 'fr' }), 'en'), 'unknown values never match');
+  });
+
+  test('eligibleCampaigns filters by lang only when a language is given', () => {
+    const cfg = config({
+      campaigns: [
+        campaign({ id: 'en', lang: 'en' }), campaign({ id: 'bn', lang: 'bn' }),
+        campaign({ id: 'any', lang: 'any' }), campaign({ id: 'legacy' }),
+      ],
+    });
+    assert.deepEqual(eligibleCampaigns(cfg, 'top', TODAY, 'en').map((c) => c.id), ['en', 'any', 'legacy']);
+    assert.deepEqual(eligibleCampaigns(cfg, 'top', TODAY, 'bn').map((c) => c.id), ['bn', 'any', 'legacy']);
+    assert.deepEqual(eligibleCampaigns(cfg, 'top', TODAY).map((c) => c.id), ['en', 'bn', 'any', 'legacy']);
+  });
+
+  test('direct: a paid campaign in one language does not hide house ads in the other', () => {
+    const cfg = config({
+      campaigns: [campaign({ id: 'paid-bn', lang: 'bn' }), house({ id: 'house-en', lang: 'en' }), house({ id: 'house-bn', lang: 'bn' })],
+    });
+    assert.deepEqual(resolveSlot(cfg, 'top', TODAY, 'bn'), { mode: 'direct', campaigns: [cfg.campaigns[0]] });
+    const en = resolveSlot(cfg, 'top', TODAY, 'en');
+    assert.equal(en.mode, 'house');
+    assert.deepEqual(ids(en), ['house-en']);
+  });
+
+  test('a slot with no campaign for a language is off for that language', () => {
+    const cfg = config({ campaigns: [house({ lang: 'bn' })] });
+    assert.deepEqual(resolveSlot(cfg, 'top', TODAY, 'en'), { mode: 'off' });
+    assert.equal(resolveSlot(cfg, 'top', TODAY, 'bn').mode, 'house');
+  });
+
+  test('poolForLang keeps the language (or any) and prefers paid over house', () => {
+    const pool = [
+      { id: 'p-en', lang: 'en', house: false }, { id: 'p-bn', lang: 'bn', house: false },
+      { id: 'h-any', lang: 'any', house: true }, { id: 'h-bn', lang: 'bn', house: true },
+    ];
+    assert.deepEqual(poolForLang(pool, 'en').map((c) => c.id), ['p-en']);
+    assert.deepEqual(poolForLang(pool.slice(1), 'en').map((c) => c.id), ['h-any']);
+    assert.deepEqual(poolForLang([{ id: 'old', house: true }], 'bn').map((c) => c.id), ['old'], 'no lang = any');
+    assert.deepEqual(poolForLang(null, 'en'), []);
+  });
+
+  // The public API serves one union pool per slot; the browser narrows it with poolForLang().
+  // For every config, that must equal resolving the slot for the visitor's language directly.
+  test('public pool + poolForLang == resolveSlot(..., lang) for every language', () => {
+    const langs = [undefined, 'any', 'en', 'bn'];
+    const variants = [];
+    for (const paidLang of langs) {
+      for (const houseLang of langs) {
+        for (const mode of ['direct', 'house', 'adsense', 'off']) {
+          const paid = campaign({ id: 'paid' });
+          const own = house({ id: 'own' });
+          if (paidLang) paid.lang = paidLang;
+          if (houseLang) own.lang = houseLang;
+          variants.push(config({ top: { mode }, campaigns: [paid, own, campaign({ id: 'paid-bn', lang: 'bn', active: paidLang === 'en' })] }));
+        }
+      }
+    }
+    for (const cfg of variants) {
+      const pub = toPublicConfig(cfg, TODAY).slots.top;
+      for (const lang of ['en', 'bn']) {
+        const expected = resolveSlot(cfg, 'top', TODAY, lang);
+        const label = JSON.stringify({ lang, slot: cfg.slots.top.mode, campaigns: cfg.campaigns.map((c) => [c.id, c.lang, c.active]) });
+        if (!pub.campaigns) {
+          assert.deepEqual(pub, expected, label);
+          continue;
+        }
+        const got = poolForLang(pub.campaigns, lang).map((c) => c.id);
+        assert.deepEqual(got, ids(expected), label);
+      }
+    }
+  });
+});
+
 describe('pickWeighted', () => {
   const list = [{ id: 'a', weight: 1 }, { id: 'b', weight: 3 }];
 
@@ -268,21 +398,45 @@ describe('toPublicConfig', () => {
     assert.equal(pub.version, 7);
     assert.deepEqual(pub.slots.bottom, { mode: 'off' });
     const [c] = pub.slots.top.campaigns;
-    assert.deepEqual(Object.keys(c).sort(), ['bgColor', 'body', 'ctaText', 'ctaUrl', 'headline', 'house', 'id', 'imageUrl', 'type', 'weight']);
+    assert.deepEqual(Object.keys(c).sort(), ['bgColor', 'body', 'ctaText', 'ctaUrl', 'headline', 'house', 'id', 'imageUrl', 'lang', 'type', 'weight']);
     assert.equal(c.house, false);
+    assert.equal(c.lang, 'any', 'campaigns without lang are served as "any"');
     const json = JSON.stringify(pub);
     for (const secret of ['Acme Ltd', 'startDate', 'endDate', 'advertiser', 'updatedBy']) {
       assert.ok(!json.includes(secret), `leaked ${secret}`);
     }
   });
 
-  test('default config serves Bangla house ads in both slots', () => {
-    const pub = toPublicConfig(defaultConfig(), TODAY);
+  test('one response serves both languages: union of per-language pools, mode direct if any is paid', () => {
+    const cfg = config({
+      campaigns: [campaign({ id: 'paid-bn', lang: 'bn' }), house({ id: 'house-en', lang: 'en' }), house({ id: 'house-bn', lang: 'bn' })],
+    });
+    const top = toPublicConfig(cfg, TODAY).slots.top;
+    assert.equal(top.mode, 'direct');
+    // house-bn is not in any pool: Bangla visitors get the paid campaign.
+    assert.deepEqual(top.campaigns.map((c) => [c.id, c.lang, c.house]), [['paid-bn', 'bn', false], ['house-en', 'en', true]]);
+  });
+
+  test('default config: an English and a Bangla house ad in each slot', () => {
+    const cfg = defaultConfig();
+    assert.equal(cfg.campaigns.length, 4);
+    assert.ok(cfg.campaigns.every((c) => c.advertiser === 'house' && c.ctaUrl === 'https://jsonbondhu.pages.dev/#premium'));
+    const pub = toPublicConfig(cfg, TODAY);
     for (const s of ['top', 'bottom']) {
       assert.equal(pub.slots[s].mode, 'house');
-      assert.equal(pub.slots[s].campaigns[0].house, true);
-      assert.match(pub.slots[s].campaigns[0].headline, /[ঀ-৿]/);
+      const en = poolForLang(pub.slots[s].campaigns, 'en');
+      const bn = poolForLang(pub.slots[s].campaigns, 'bn');
+      assert.equal(en.length, 1);
+      assert.equal(bn.length, 1);
+      assert.ok(en[0].house && bn[0].house);
+      assert.doesNotMatch(en[0].headline + en[0].body + en[0].ctaText, /[ঀ-৿]/, 'English ad has no Bangla text');
+      assert.match(bn[0].headline, /[ঀ-৿]/);
     }
+    // The Bangla ids predate language targeting; keeping them keeps their stats.
+    assert.equal(poolForLang(pub.slots.top.campaigns, 'bn')[0].id, 'house-premium-top');
+    assert.equal(poolForLang(pub.slots.bottom.campaigns, 'bn')[0].id, 'house-premium-bottom');
+    assert.equal(poolForLang(pub.slots.top.campaigns, 'en')[0].headline, 'Use JSON Bondhu without ads');
+    assert.equal(poolForLang(pub.slots.bottom.campaigns, 'en')[0].ctaText, 'Go ad-free');
   });
 });
 

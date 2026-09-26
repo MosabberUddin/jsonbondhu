@@ -1,10 +1,12 @@
 <!doctype html>
-<html lang="bn">
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex, nofollow">
-  <title>বিজ্ঞাপন প্রশাসন — JSON বন্ধু</title>
+  <!-- Text is English by default; admin/i18n.js + admin.js swap every [data-i18n] string
+       (and [data-i18n-<attr>] attributes) to the language saved in localStorage "jb_lang". -->
+  <title data-i18n="doc.title">Ad admin — JSON Bondhu</title>
   <link rel="icon" href="data:,">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -17,97 +19,110 @@
     <div class="brand">
       <span class="logo" aria-hidden="true">{ }</span>
       <div>
-        <strong>JSON বন্ধু</strong>
-        <small>বিজ্ঞাপন প্রশাসন</small>
+        <strong data-i18n="brand.name">JSON Bondhu</strong>
+        <small data-i18n="brand.sub">Ad admin</small>
       </div>
     </div>
     <div class="topbar-actions">
-      <span id="me" class="me" title="লগইন করা ইমেইল"></span>
-      <span id="dirty" class="dirty" hidden>অসংরক্ষিত পরিবর্তন</span>
-      <button id="discard" type="button" class="btn ghost" hidden>বাতিল</button>
-      <button id="save" type="button" class="btn primary" disabled>সংরক্ষণ ও প্রকাশ</button>
+      <div class="segmented small lang-toggle" role="group" aria-label="Language" data-i18n-aria-label="lang.group">
+        <button type="button" class="seg" data-set-lang="en" lang="en" aria-pressed="true">EN</button>
+        <button type="button" class="seg" data-set-lang="bn" lang="bn" aria-pressed="false">বাংলা</button>
+      </div>
+      <span id="me" class="me" title="Signed-in email" data-i18n-title="me.title"></span>
+      <span id="dirty" class="dirty" data-i18n="dirty" hidden>Unsaved changes</span>
+      <button id="discard" type="button" class="btn ghost" data-i18n="discard" hidden>Discard</button>
+      <button id="save" type="button" class="btn primary" data-i18n="save" disabled>Save &amp; publish</button>
     </div>
   </header>
 
   <div id="notice" class="notice" role="status" aria-live="polite" hidden></div>
 
-  <nav class="tabs" role="tablist" aria-label="বিভাগ">
-    <button type="button" role="tab" class="tab" id="tab-campaigns" aria-controls="panel-campaigns" aria-selected="true">ক্যাম্পেইন</button>
-    <button type="button" role="tab" class="tab" id="tab-slots" aria-controls="panel-slots" aria-selected="false" tabindex="-1">স্লট সেটিংস</button>
-    <button type="button" role="tab" class="tab" id="tab-stats" aria-controls="panel-stats" aria-selected="false" tabindex="-1">পরিসংখ্যান</button>
-    <button type="button" role="tab" class="tab" id="tab-history" aria-controls="panel-history" aria-selected="false" tabindex="-1">সংস্করণ ইতিহাস</button>
+  <nav class="tabs" role="tablist" aria-label="Sections" data-i18n-aria-label="tabs.label">
+    <button type="button" role="tab" class="tab" id="tab-campaigns" aria-controls="panel-campaigns" aria-selected="true" data-i18n="tab.campaigns">Campaigns</button>
+    <button type="button" role="tab" class="tab" id="tab-slots" aria-controls="panel-slots" aria-selected="false" tabindex="-1" data-i18n="tab.slots">Slot settings</button>
+    <button type="button" role="tab" class="tab" id="tab-stats" aria-controls="panel-stats" aria-selected="false" tabindex="-1" data-i18n="tab.stats">Statistics</button>
+    <button type="button" role="tab" class="tab" id="tab-history" aria-controls="panel-history" aria-selected="false" tabindex="-1" data-i18n="tab.history">Version history</button>
   </nav>
 
   <main>
-    <p id="loading" class="loading">লোড হচ্ছে…</p>
+    <p id="loading" class="loading" data-i18n="loading">Loading…</p>
 
     <!-- Campaigns -->
     <section id="panel-campaigns" role="tabpanel" aria-labelledby="tab-campaigns" class="panel" hidden>
       <div class="panel-bar">
-        <button id="new-campaign" type="button" class="btn primary">+ নতুন ক্যাম্পেইন</button>
-        <label class="inline">স্লট
+        <button id="new-campaign" type="button" class="btn primary" data-i18n="campaigns.new">+ New campaign</button>
+        <label class="inline"><span data-i18n="filter.slot">Slot</span>
           <select id="filter-slot">
-            <option value="">সব</option>
-            <option value="top">উপরে</option>
-            <option value="bottom">নিচে</option>
+            <option value="" data-i18n="filter.all">All</option>
+            <option value="top" data-i18n="slot.top">Top</option>
+            <option value="bottom" data-i18n="slot.bottom">Bottom</option>
           </select>
         </label>
-        <label class="inline">অবস্থা
+        <label class="inline"><span data-i18n="filter.status">Status</span>
           <select id="filter-status">
-            <option value="">সব</option>
-            <option value="live">চলমান</option>
-            <option value="scheduled">নির্ধারিত</option>
-            <option value="ended">শেষ</option>
-            <option value="inactive">নিষ্ক্রিয়</option>
+            <option value="" data-i18n="filter.all">All</option>
+            <option value="live" data-i18n="status.live">Live</option>
+            <option value="scheduled" data-i18n="status.scheduled">Scheduled</option>
+            <option value="ended" data-i18n="status.ended">Ended</option>
+            <option value="inactive" data-i18n="status.inactive">Inactive</option>
           </select>
         </label>
-        <input id="filter-q" type="search" placeholder="নাম বা বিজ্ঞাপনদাতা খুঁজুন…" aria-label="খুঁজুন">
+        <input id="filter-q" type="search" placeholder="Search name or advertiser…" aria-label="Search"
+               data-i18n-placeholder="filter.searchPlaceholder" data-i18n-aria-label="filter.search">
       </div>
       <div class="table-wrap">
         <table class="table campaigns">
           <thead>
             <tr>
-              <th scope="col">ক্যাম্পেইন</th>
-              <th scope="col">স্লট</th>
-              <th scope="col">ধরন</th>
-              <th scope="col">সময়কাল</th>
-              <th scope="col" class="num">ওজন</th>
-              <th scope="col">অবস্থা</th>
-              <th scope="col"><span class="sr-only">কাজ</span></th>
+              <th scope="col" data-i18n="col.campaign">Campaign</th>
+              <th scope="col" data-i18n="col.slot">Slot</th>
+              <th scope="col" data-i18n="col.lang">Language</th>
+              <th scope="col" data-i18n="col.type">Type</th>
+              <th scope="col" data-i18n="col.period">Period</th>
+              <th scope="col" class="num" data-i18n="col.weight">Weight</th>
+              <th scope="col" data-i18n="col.status">Status</th>
+              <th scope="col"><span class="sr-only" data-i18n="col.actions">Actions</span></th>
             </tr>
           </thead>
           <tbody id="campaign-rows"></tbody>
         </table>
       </div>
-      <p id="campaign-empty" class="empty" hidden>কোনো ক্যাম্পেইন নেই।</p>
+      <p id="campaign-empty" class="empty" data-i18n="campaigns.empty" hidden>No campaigns.</p>
     </section>
 
     <!-- Slots -->
     <section id="panel-slots" role="tabpanel" aria-labelledby="tab-slots" class="panel" hidden>
-      <p class="hint">মোড: <b>AdSense</b> — Google বিজ্ঞাপন; <b>সরাসরি</b> — চলমান পেইড ক্যাম্পেইন, না থাকলে হাউস বিজ্ঞাপন, তাও না থাকলে স্লট লুকানো; <b>হাউস</b> — শুধু নিজস্ব প্রচারণা; <b>বন্ধ</b> — স্লট লুকানো।</p>
+      <p class="hint">
+        <span data-i18n="slots.hint.lead">Modes:</span>
+        <b>AdSense</b> — <span data-i18n="slots.hint.adsense">Google ads;</span>
+        <b data-i18n="slots.hint.directTerm">Direct</b> — <span data-i18n="slots.hint.direct">live paid campaigns, else house ads, else the slot is hidden;</span>
+        <b data-i18n="slots.hint.houseTerm">House</b> — <span data-i18n="slots.hint.house">own promotions only;</span>
+        <b data-i18n="slots.hint.offTerm">Off</b> — <span data-i18n="slots.hint.off">slot hidden.</span>
+      </p>
+      <p class="hint" data-i18n="slots.hint.lang">This is decided separately for English and Bangla visitors: a campaign only shows when its Language is “Any” or matches the visitor’s site language.</p>
       <div id="slot-cards" class="slot-grid"></div>
     </section>
 
     <!-- Stats -->
     <section id="panel-stats" role="tabpanel" aria-labelledby="tab-stats" class="panel" hidden>
       <form id="stats-form" class="panel-bar">
-        <label class="inline">শুরু <input id="stats-from" type="date" required></label>
-        <label class="inline">শেষ <input id="stats-to" type="date" required></label>
-        <button type="submit" class="btn primary">দেখুন</button>
-        <button type="button" class="btn ghost" data-range="7">৭ দিন</button>
-        <button type="button" class="btn ghost" data-range="30">৩০ দিন</button>
-        <button type="button" class="btn ghost" data-range="90">৯০ দিন</button>
+        <label class="inline"><span data-i18n="stats.from">From</span> <input id="stats-from" type="date" required></label>
+        <label class="inline"><span data-i18n="stats.to">To</span> <input id="stats-to" type="date" required></label>
+        <button type="submit" class="btn primary" data-i18n="stats.show">Show</button>
+        <button type="button" class="btn ghost" data-range="7" data-i18n="stats.7d">7 days</button>
+        <button type="button" class="btn ghost" data-range="30" data-i18n="stats.30d">30 days</button>
+        <button type="button" class="btn ghost" data-range="90" data-i18n="stats.90d">90 days</button>
       </form>
       <div class="table-wrap">
         <table class="table">
           <thead>
             <tr>
-              <th scope="col">ক্যাম্পেইন</th>
-              <th scope="col">বিজ্ঞাপনদাতা</th>
-              <th scope="col">স্লট</th>
-              <th scope="col" class="num">ইমপ্রেশন</th>
-              <th scope="col" class="num">ক্লিক</th>
-              <th scope="col" class="num">CTR</th>
+              <th scope="col" data-i18n="col.campaign">Campaign</th>
+              <th scope="col" data-i18n="col.advertiser">Advertiser</th>
+              <th scope="col" data-i18n="col.slot">Slot</th>
+              <th scope="col" class="num" data-i18n="col.impressions">Impressions</th>
+              <th scope="col" class="num" data-i18n="col.clicks">Clicks</th>
+              <th scope="col" class="num" data-i18n="col.ctr">CTR</th>
             </tr>
           </thead>
           <tbody id="stats-rows"></tbody>
@@ -119,22 +134,22 @@
 
     <!-- History -->
     <section id="panel-history" role="tabpanel" aria-labelledby="tab-history" class="panel" hidden>
-      <p class="hint">শেষ ১০টি সংরক্ষিত সংস্করণ। কোনো সংস্করণ লোড করলে সেটি খসড়া হিসেবে আসবে; পর্যালোচনা করে “সংরক্ষণ ও প্রকাশ” চাপলে সেটি নতুন সংস্করণ হিসেবে চালু হবে।</p>
+      <p class="hint" data-i18n="history.hint">The last 10 saved versions. Loading a version brings it in as a draft; review it and press “Save &amp; publish” to make it live as a new version.</p>
       <div class="table-wrap">
         <table class="table">
           <thead>
             <tr>
-              <th scope="col" class="num">সংস্করণ</th>
-              <th scope="col">সময়</th>
-              <th scope="col">যিনি সংরক্ষণ করেছেন</th>
-              <th scope="col" class="num">ক্যাম্পেইন</th>
-              <th scope="col"><span class="sr-only">কাজ</span></th>
+              <th scope="col" class="num" data-i18n="col.version">Version</th>
+              <th scope="col" data-i18n="col.time">Time</th>
+              <th scope="col" data-i18n="col.savedBy">Saved by</th>
+              <th scope="col" class="num" data-i18n="col.campaigns">Campaigns</th>
+              <th scope="col"><span class="sr-only" data-i18n="col.actions">Actions</span></th>
             </tr>
           </thead>
           <tbody id="history-rows"></tbody>
         </table>
       </div>
-      <p id="history-empty" class="empty" hidden>এখনো কোনো সংস্করণ সংরক্ষিত হয়নি (ডিফল্ট কনফিগ চলছে)।</p>
+      <p id="history-empty" class="empty" data-i18n="history.empty" hidden>No versions saved yet (the default config is live).</p>
     </section>
   </main>
 
@@ -142,99 +157,106 @@
   <dialog id="editor" class="editor" aria-labelledby="editor-title">
     <form id="editor-form" method="dialog" novalidate>
       <header class="editor-head">
-        <h2 id="editor-title">ক্যাম্পেইন</h2>
-        <button type="button" class="btn ghost icon" data-close aria-label="বন্ধ করুন">✕</button>
+        <h2 id="editor-title" data-i18n="editor.title">Campaign</h2>
+        <button type="button" class="btn ghost icon" data-close aria-label="Close" data-i18n-aria-label="editor.close">✕</button>
       </header>
 
       <div class="editor-body">
         <div class="fields">
-          <p class="id-line">আইডি: <code id="f-id"></code></p>
+          <p class="id-line"><span data-i18n="editor.id">ID:</span> <code id="f-id"></code></p>
 
-          <label class="field">নাম (শুধু প্রশাসনের জন্য)
+          <label class="field"><span data-i18n="f.name">Name (admin only)</span>
             <input name="name" required maxlength="80" autocomplete="off">
           </label>
 
           <div class="row">
-            <label class="field grow">বিজ্ঞাপনদাতা
+            <label class="field grow"><span data-i18n="f.advertiser">Advertiser</span>
               <input name="advertiser" required maxlength="80" autocomplete="off">
             </label>
             <label class="check">
-              <input type="checkbox" name="isHouse"> হাউস বিজ্ঞাপন
+              <input type="checkbox" name="isHouse"> <span data-i18n="f.isHouse">House ad</span>
             </label>
           </div>
 
           <div class="row">
-            <label class="field grow">স্লট
+            <label class="field grow"><span data-i18n="f.slot">Slot</span>
               <select name="slot">
-                <option value="top">উপরে (top)</option>
-                <option value="bottom">নিচে (bottom)</option>
+                <option value="top" data-i18n="slot.top.full">Top (top)</option>
+                <option value="bottom" data-i18n="slot.bottom.full">Bottom (bottom)</option>
+              </select>
+            </label>
+            <label class="field grow"><span data-i18n="f.lang">Language</span>
+              <select name="lang">
+                <option value="any" data-i18n="lang.any">Any</option>
+                <option value="en" lang="en">English</option>
+                <option value="bn" lang="bn">বাংলা</option>
               </select>
             </label>
             <fieldset class="field grow segmented">
-              <legend>ধরন</legend>
-              <label><input type="radio" name="type" value="text"> টেক্সট</label>
-              <label><input type="radio" name="type" value="image"> ছবি</label>
+              <legend data-i18n="f.type">Type</legend>
+              <label><input type="radio" name="type" value="text"> <span data-i18n="type.text">Text</span></label>
+              <label><input type="radio" name="type" value="image"> <span data-i18n="type.image">Image</span></label>
             </fieldset>
           </div>
 
-          <label class="field" data-show="image">ছবির লিংক (https)
+          <label class="field" data-show="image"><span data-i18n="f.imageUrl">Image link (https)</span>
             <input name="imageUrl" type="url" inputmode="url" maxlength="2048" placeholder="https://…" pattern="https://.+">
-            <small class="hint">প্রস্তাবিত: ৭২৮×৯০ বা ৩২০×৯০ px, হালকা ফাইল (WebP/PNG)।</small>
+            <small class="hint" data-i18n="f.imageHint">Recommended: 728×90 or 320×90 px, small file (WebP/PNG).</small>
           </label>
 
-          <label class="field">শিরোনাম <small class="hint">(ছবির ক্ষেত্রে alt টেক্সট)</small>
+          <label class="field"><span><span data-i18n="f.headline">Headline</span> <small class="hint" data-i18n="f.headlineHint">(alt text for image ads)</small></span>
             <input name="headline" required maxlength="60" autocomplete="off">
             <span class="counter" data-for="headline"></span>
           </label>
 
-          <label class="field" data-show="text">বিবরণ
+          <label class="field" data-show="text"><span data-i18n="f.body">Description</span>
             <textarea name="body" rows="2" maxlength="140"></textarea>
             <span class="counter" data-for="body"></span>
           </label>
 
           <div class="row">
-            <label class="field">বোতামের লেখা
+            <label class="field"><span data-i18n="f.ctaText">Button text</span>
               <input name="ctaText" required maxlength="24" autocomplete="off">
             </label>
-            <label class="field grow">বোতামের লিংক (https)
+            <label class="field grow"><span data-i18n="f.ctaUrl">Button link (https)</span>
               <input name="ctaUrl" type="url" inputmode="url" required maxlength="2048" placeholder="https://…" pattern="https://.+">
             </label>
           </div>
 
           <div class="row">
-            <label class="field">শুরুর তারিখ
+            <label class="field"><span data-i18n="f.startDate">Start date</span>
               <input name="startDate" type="date" required>
             </label>
-            <label class="field">শেষের তারিখ
+            <label class="field"><span data-i18n="f.endDate">End date</span>
               <input name="endDate" type="date" required>
             </label>
-            <label class="field">ওজন
+            <label class="field"><span data-i18n="f.weight">Weight</span>
               <input name="weight" type="number" min="1" max="100" step="1" required>
             </label>
           </div>
 
           <div class="row">
-            <label class="field">পটভূমির রং
+            <label class="field"><span data-i18n="f.bgColor">Background colour</span>
               <input name="bgColor" type="color">
             </label>
             <label class="check">
-              <input type="checkbox" name="useBg"> কাস্টম রং ব্যবহার করুন
+              <input type="checkbox" name="useBg"> <span data-i18n="f.useBg">Use a custom colour</span>
             </label>
             <label class="check switch">
-              <input type="checkbox" name="active"> সক্রিয়
+              <input type="checkbox" name="active"> <span data-i18n="f.active">Active</span>
             </label>
           </div>
 
-          <p class="hint">তারিখ বাংলাদেশ সময় অনুযায়ী, শুরু ও শেষ দুই দিনই অন্তর্ভুক্ত। ওজন বেশি হলে একই স্লটের অন্য ক্যাম্পেইনের চেয়ে বেশিবার দেখাবে।</p>
+          <p class="hint" data-i18n="editor.hint">Dates are in Bangladesh time; the start and end days are both included. A higher weight shows more often than other campaigns in the same slot. Language decides which visitors see the campaign (by the site language they chose).</p>
           <ul id="editor-errors" class="errors" hidden></ul>
         </div>
 
-        <aside class="preview" aria-label="প্রিভিউ">
+        <aside class="preview" aria-label="Preview" data-i18n-aria-label="preview.label">
           <div class="preview-head">
-            <h3>লাইভ প্রিভিউ</h3>
-            <div class="segmented small" role="group" aria-label="প্রিভিউয়ের প্রস্থ">
-              <button type="button" class="seg" data-width="desktop" aria-pressed="true">ডেস্কটপ</button>
-              <button type="button" class="seg" data-width="mobile" aria-pressed="false">মোবাইল</button>
+            <h3 data-i18n="preview.title">Live preview</h3>
+            <div class="segmented small" role="group" aria-label="Preview width" data-i18n-aria-label="preview.width">
+              <button type="button" class="seg" data-width="desktop" aria-pressed="true" data-i18n="preview.desktop">Desktop</button>
+              <button type="button" class="seg" data-width="mobile" aria-pressed="false" data-i18n="preview.mobile">Mobile</button>
             </div>
           </div>
           <div id="preview-frame" class="preview-frame">
@@ -245,13 +267,14 @@
       </div>
 
       <footer class="editor-foot">
-        <button type="button" class="btn ghost" data-close>বাতিল</button>
-        <button type="submit" class="btn primary" value="apply">প্রয়োগ করুন</button>
+        <button type="button" class="btn ghost" data-close data-i18n="editor.cancel">Cancel</button>
+        <button type="submit" class="btn primary" value="apply" data-i18n="editor.apply">Apply</button>
       </footer>
     </form>
   </dialog>
 
   <script src="/ads.js" defer></script>
+  <script src="/admin/i18n.js" defer></script>
   <script src="/admin/admin.js" defer></script>
 </body>
 </html>
