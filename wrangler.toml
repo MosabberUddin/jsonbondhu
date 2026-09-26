@@ -14,7 +14,7 @@ id = "0676242b12254097839d787c7d58f284"
 
 [vars]
 # Your Zero Trust team domain, used to verify the Access JWT (recommended).
-ACCESS_TEAM_DOMAIN = ""  # set once Cloudflare Access is enabled; admin stays locked (503) until then
+ACCESS_TEAM_DOMAIN = "withered-base-a84c.cloudflareaccess.com"
 # Record 1 in N impressions (weighted back up) to stay inside KV's free write quota.
 # 1 = record every impression. See "KV limits" in docs/ADS.md before changing.
 IMPRESSION_SAMPLE_RATE = "0.1"
@@ -28,5 +28,5 @@ binding = "ADS_KV"
 id = "22f416b9e1b14ae99b2f169b76dc53ad"
 
 [env.preview.vars]
-ACCESS_TEAM_DOMAIN = ""  # set once Cloudflare Access is enabled; admin stays locked (503) until then
+ACCESS_TEAM_DOMAIN = "withered-base-a84c.cloudflareaccess.com"
 IMPRESSION_SAMPLE_RATE = "1"
