@@ -4,7 +4,10 @@
  * - AdSense mode: inserts <ins class="adsbygoogle"> and loads adsbygoogle.js once.
  * - Direct/house mode: renders a card built with DOM APIs only (textContent /
  *   setAttribute), never innerHTML, so advertiser text cannot inject markup.
- * - Impression beacon once the card is >= 50% visible for 1s; click beacon on CTA.
+ * - Impression beacon once the card is >= 50% visible for 1s (at most once per
+ *   campaign per page view); click beacon on CTA.
+ * - Language: campaigns are filtered by document.documentElement.lang ("en" | "bn");
+ *   on the site's "jb:langchange" event the campaign slots are re-rendered.
  * - localStorage jb_premium = "1" hides all ads.
  * - Any failure (file://, offline, API down, bad data) leaves the placeholders as they are.
  *
@@ -23,6 +26,7 @@
   var ADSENSE_SLOT_RE = /^\d{6,20}$/;
   var COLOR_RE = /^#[0-9a-fA-F]{6}$/;
   var ID_RE = /^[a-z0-9][a-z0-9-]{0,63}$/;
+  var AD_LABEL = { en: 'Ad', bn: 'বিজ্ঞাপন' };
 
   var script = document.currentScript;
 
@@ -36,6 +40,11 @@
       var u = new URL(value);
       return u.protocol === 'https:' && !u.username && !u.password ? u.href : null;
     } catch (e) { return null; }
+  }
+
+  /** Current site language: "bn" or "en" (the default). */
+  function currentLang() {
+    return /^bn\b/i.test(document.documentElement.lang || '') ? 'bn' : 'en';
   }
 
   function str(v, max) {
@@ -59,6 +68,18 @@
     return list[list.length - 1];
   }
 
+  // Mirrors poolForLang() in functions/_lib/ads-core.js (unit-tested there): keep campaigns
+  // for this language or "any" (no lang = "any", e.g. an older API response); paid beat house.
+  function poolForLang(list, lang) {
+    var matching = (Array.isArray(list) ? list : []).filter(function (c) {
+      if (!c || typeof c !== 'object') return false;
+      var l = c.lang == null ? 'any' : c.lang;
+      return l === 'any' || l === lang;
+    });
+    var paid = matching.filter(function (c) { return !c.house; });
+    return paid.length ? paid : matching;
+  }
+
   // Pick black or white text for a custom background (WCAG relative luminance).
   function inkFor(hex) {
     var rgb = [1, 3, 5].map(function (i) {
@@ -78,10 +99,12 @@
 
   /**
    * Build a sponsored card from untrusted campaign data. Returns null if the
-   * campaign is unusable (bad URL, missing text). opts.onClick is called on CTA click.
+   * campaign is unusable (bad URL, missing text). opts.onClick is called on CTA click;
+   * opts.lang ("en" | "bn") picks the "Ad" label language (default: the page's language).
    */
   function buildCard(c, opts) {
     opts = opts || {};
+    var label = AD_LABEL[opts.lang] || AD_LABEL[currentLang()];
     if (!c || typeof c !== 'object') return null;
     var ctaUrl = safeHttpsUrl(c.ctaUrl);
     var headline = str(c.headline, 60).trim();
@@ -97,7 +120,7 @@
       card.classList.add('jb-ad--custom');
     }
 
-    card.appendChild(el('span', 'jb-ad__label', 'বিজ্ঞাপন'));
+    card.appendChild(el('span', 'jb-ad__label', label));
 
     if (isImage) {
       var media = el('div', 'jb-ad__media');
@@ -124,7 +147,7 @@
     if (!sameOrigin) a.target = '_blank';
     a.rel = c.house ? 'noopener' : 'sponsored noopener';
     // Screen readers hear the headline with the CTA (image ads have no visible headline text).
-    a.setAttribute('aria-label', ctaText + ' — ' + headline + ' (বিজ্ঞাপন)');
+    a.setAttribute('aria-label', ctaText + ' — ' + headline + ' (' + label + ')');
     if (typeof opts.onClick === 'function') {
       a.addEventListener('click', opts.onClick);
       // Middle-click / open-in-new-tab.
@@ -151,20 +174,32 @@
     } catch (e) { /* ignore */ }
   }
 
+  // Campaign ids already counted in this page view, so re-rendering a slot (language
+  // switch) never counts the same campaign twice.
+  var counted = Object.create(null);
+
+  /** Watch a card for a qualifying impression. Returns a function that stops watching. */
   function observeImpression(node, campaignId) {
-    if (!('IntersectionObserver' in window)) return; // under-count rather than over-count
+    // Without IntersectionObserver: under-count rather than over-count.
+    if (counted[campaignId] || !('IntersectionObserver' in window)) return function () {};
     var timer = null;
     var visible = false;
     var done = false;
     var io;
 
+    function stop() {
+      done = true;
+      disarm();
+      io.disconnect();
+      document.removeEventListener('visibilitychange', onVis);
+    }
     function fire() {
       timer = null;
       if (done || !visible) return;
       if (document.visibilityState !== 'visible') return; // resumes on visibilitychange
-      done = true;
-      io.disconnect();
-      document.removeEventListener('visibilitychange', onVis);
+      stop();
+      if (counted[campaignId]) return;
+      counted[campaignId] = true;
       beacon(campaignId, 'impression');
     }
     function arm() { if (!timer && !done) timer = setTimeout(fire, DWELL_MS); }
@@ -181,6 +216,7 @@
     }, { threshold: [0, 0.5] });
     io.observe(node);
     document.addEventListener('visibilitychange', onVis);
+    return stop;
   }
 
   // --- slot rendering -------------------------------------------------------
@@ -192,6 +228,8 @@
 
   function reserveHeight(slot) {
     // Lock the rendered ad to the height the placeholder already reserved (no CLS).
+    // Measured once: a re-render (language switch) keeps the same height.
+    if (slot.style.getPropertyValue('--jb-ad-h')) return;
     var h = Math.max(slot.clientHeight, 90);
     slot.style.setProperty('--jb-ad-h', h + 'px');
   }
@@ -224,31 +262,74 @@
     return true;
   }
 
-  function renderCampaign(slot, pool) {
+  /**
+   * Render one campaign from the pool. `keepId` (the campaign already shown) is reused
+   * when still in the pool, so a language switch only swaps ads that do not fit.
+   * Returns {campaignId, stop} or null.
+   */
+  function renderCampaign(slot, pool, lang, keepId) {
     // Try weighted picks until one renders; drop unusable entries from the pool.
-    var candidates = (pool || []).slice();
+    var candidates = pool.slice();
+    var kept = keepId ? candidates.filter(function (c) { return c.id === keepId; })[0] : null;
     while (candidates.length) {
-      var c = pickWeighted(candidates);
+      var c = kept || pickWeighted(candidates);
+      kept = null;
       var id = c.id;
-      var card = ID_RE.test(id || '') && buildCard(c, { onClick: function () { beacon(id, 'click'); } });
+      var card = ID_RE.test(id || '') && buildCard(c, { lang: lang, onClick: function () { beacon(id, 'click'); } });
       if (card) {
         reserveHeight(slot);
         slot.replaceChildren(card);
         slot.setAttribute('data-ad-state', 'card');
-        observeImpression(card, id);
-        return true;
+        return { campaignId: id, stop: observeImpression(card, id) };
       }
       candidates.splice(candidates.indexOf(c), 1);
     }
-    return false;
+    return null;
   }
 
-  function renderSlot(slot, decision) {
+  // Per [data-ad] element (same index): what it shows now ({campaignId, stop} for a card).
+  var slotEls = [];
+  var views = [];
+  var adsData = null; // last good /api/ads response, reused on language switches
+
+  function isCampaignMode(decision) {
+    return !!decision && (decision.mode === 'direct' || decision.mode === 'house');
+  }
+
+  function decisionFor(i) {
+    var name = slotEls[i].getAttribute('data-ad');
+    return Object.prototype.hasOwnProperty.call(adsData.slots, name) ? adsData.slots[name] : null;
+  }
+
+  function renderSlot(i, decision) {
+    var slot = slotEls[i];
     if (!decision || typeof decision !== 'object') return; // unknown slot: leave placeholder
-    var ok = false;
-    if (decision.mode === 'adsense') ok = renderAdSense(slot, decision.adsense);
-    else if (decision.mode === 'direct' || decision.mode === 'house') ok = renderCampaign(slot, decision.campaigns);
-    if (!ok) hideSlot(slot);
+    var prev = views[i];
+    if (prev && prev.stop) prev.stop();
+    views[i] = null;
+    if (decision.mode === 'adsense') {
+      if (renderAdSense(slot, decision.adsense)) return;
+    } else if (isCampaignMode(decision)) {
+      var lang = currentLang();
+      views[i] = renderCampaign(slot, poolForLang(decision.campaigns, lang), lang, prev && prev.campaignId);
+      if (views[i]) return;
+    }
+    hideSlot(slot);
+  }
+
+  // Language switch: re-render campaign slots from the cached response (no new request).
+  // AdSense slots are language-independent and must not be re-requested. A slot hidden
+  // for lack of ads in the old language may show again.
+  function onLangChange() {
+    slotEls.forEach(function (slot, i) {
+      var decision = decisionFor(i);
+      if (!isCampaignMode(decision)) return;
+      if (slot.getAttribute('data-ad-state') === 'off') {
+        slot.style.display = '';
+        slot.removeAttribute('data-ad-state');
+      }
+      renderSlot(i, decision);
+    });
   }
 
   function injectStyles() {
@@ -261,9 +342,9 @@
   }
 
   function run() {
-    var slots = Array.prototype.slice.call(document.querySelectorAll('[data-ad]'));
-    if (!slots.length) return;
-    if (isPremium()) { slots.forEach(hideSlot); return; }
+    slotEls = Array.prototype.slice.call(document.querySelectorAll('[data-ad]'));
+    if (!slotEls.length) return;
+    if (isPremium()) { slotEls.forEach(hideSlot); return; }
     if (!/^https?:$/.test(window.location.protocol) || !window.fetch) return;
 
     injectStyles();
@@ -277,10 +358,9 @@
       })
       .then(function (data) {
         if (!data || typeof data.slots !== 'object' || !data.slots) return;
-        slots.forEach(function (slot) {
-          var name = slot.getAttribute('data-ad');
-          if (Object.prototype.hasOwnProperty.call(data.slots, name)) renderSlot(slot, data.slots[name]);
-        });
+        adsData = data;
+        slotEls.forEach(function (slot, i) { renderSlot(i, decisionFor(i)); });
+        window.addEventListener('jb:langchange', onLangChange);
       })
       .catch(function () { /* leave placeholders untouched */ })
       .then(function () { if (t) clearTimeout(t); });

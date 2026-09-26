@@ -60,6 +60,8 @@ h2, h3 { margin: 0; line-height: 1.3; }
   background: var(--accent); color: var(--accent-ink); font: 700 14px ui-monospace, monospace;
 }
 .topbar-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+/* EN | বাংলা switch (reuses .segmented.small / .seg from the editor preview). */
+.lang-toggle .seg { min-height: 32px; padding-inline: 10px; font-weight: 600; }
 .me { color: var(--muted); font-size: .85rem; max-width: 26ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .dirty {
   font-size: .8rem; font-weight: 600; color: var(--warn); background: var(--warn-bg);

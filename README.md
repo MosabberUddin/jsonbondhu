@@ -1,12 +1,13 @@
 # JSON বন্ধু (jsonbondhu)
 
-A free, Bangla-language online JSON formatter, validator, tree viewer, and converter
+A free, bilingual (English / Bangla) online JSON formatter, validator, tree viewer, and converter
 (JSON → CSV / YAML / XML). It is supported by ads and a one-time "remove ads" upgrade.
 Everything runs in the browser. User JSON never leaves the device.
 
 ## Features
 - Format (2/4 spaces or tab), minify, validate, and sort keys
-- Error line and column shown in Bangla, with the caret moved to the error
+- English and Bangla UI with an EN | বাংলা switch (auto-detects Bangla browsers; `?lang=bn` works too)
+- Error line and column shown in the chosen language, with the caret moved to the error
 - **Auto-repair**: fixes comments, trailing commas, single quotes, unquoted keys, and Python `True/False/None`
 - Tree view: lazy rendering for large files, search, and click-to-copy JSONPath (`$.users[0].name`)
 - Convert to CSV (UTF-8 BOM, so Bangla opens correctly in Excel), YAML, and XML

@@ -77,13 +77,26 @@ function editable(cfg) { return { slots: cfg.slots, campaigns: cfg.campaigns }; 
 // ---------------------------------------------------------------------------
 
 describe('GET /api/ads', () => {
-  test('serves Bangla house ads when KV is empty, cacheable ~60s', async () => {
+  test('serves English and Bangla house ads when KV is empty, cacheable ~60s', async () => {
     const res = await adsHandler(ctx(req('/api/ads')));
     assert.equal(res.status, 200);
     assert.match(res.headers.get('Cache-Control'), /max-age=60/);
     const body = await res.json();
-    assert.equal(body.slots.top.mode, 'house');
-    assert.equal(body.slots.bottom.mode, 'house');
+    for (const slot of ['top', 'bottom']) {
+      assert.equal(body.slots[slot].mode, 'house');
+      assert.deepEqual(body.slots[slot].campaigns.map((c) => c.lang).sort(), ['bn', 'en']);
+    }
+  });
+
+  test('serves a legacy stored config (campaigns without lang) as "any"', async () => {
+    const legacy = defaultConfig();
+    legacy.version = 3;
+    legacy.campaigns = legacy.campaigns.filter((c) => c.lang === 'bn');
+    for (const c of legacy.campaigns) delete c.lang;
+    await env.ADS_KV.put('config:current', JSON.stringify(legacy));
+    const body = await (await adsHandler(ctx(req('/api/ads')))).json();
+    assert.equal(body.version, 3);
+    assert.deepEqual(body.slots.top.campaigns.map((c) => [c.id, c.lang]), [['house-premium-top', 'any']]);
   });
 
   test('still works if the KV binding is missing', async () => {
@@ -181,7 +194,24 @@ describe('/api/admin/config', () => {
     assert.equal(res.status, 422);
     const body = await res.json();
     assert.equal(body.errors[0].path, 'campaigns[0].ctaUrl');
+    assert.equal(body.errors[0].code, 'url.https');
     assert.equal(env.ADS_KV.writes, 0);
+  });
+
+  test('PUT validates campaign lang and fills "any" for campaigns without it', async () => {
+    const bad = editable(defaultConfig());
+    bad.campaigns[0].lang = 'fr';
+    const res = await putConfig(bad, 0);
+    assert.equal(res.status, 422);
+    const { errors } = await res.json();
+    assert.deepEqual(errors.map((e) => [e.path, e.code]), [['campaigns[0].lang', 'lang.invalid']]);
+
+    const legacy = editable(defaultConfig());
+    delete legacy.campaigns[0].lang;
+    const ok = await putConfig(legacy, 0);
+    assert.equal(ok.status, 200);
+    const saved = (await ok.json()).config;
+    assert.deepEqual(saved.campaigns.map((c) => c.lang), ['any', 'bn', 'en', 'bn']);
   });
 
   test('PUT with a stale baseVersion -> 409', async () => {

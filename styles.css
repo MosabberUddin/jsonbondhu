@@ -52,7 +52,13 @@ code { font-family: var(--mono); font-size: .9em; background: var(--surface-2); 
 .top-nav a:hover { color: var(--text); }
 .top-nav .pill { color: var(--accent); border: 1px solid var(--accent); padding: 3px 12px; border-radius: 999px; }
 
-.ad-slot { min-height: 90px; margin: 8px 0 14px; border: 1px dashed var(--border); border-radius: var(--radius); display: grid; place-items: center; color: var(--muted); font-size: .8rem; overflow: hidden; }
+/* Language: only the active [data-lang] block is shown (html[lang] is set by i18n.js before paint). */
+html[lang="en"] [data-lang="bn"], html[lang="bn"] [data-lang="en"] { display: none; }
+.lang-switch { display: inline-flex; border: 1px solid var(--border); border-radius: 999px; overflow: hidden; }
+.lang-switch button { border: 0; border-radius: 0; min-height: 30px; padding: 2px 12px; background: transparent; color: var(--muted); font-weight: 600; }
+.lang-switch button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
+
+.ad-slot {min-height: 90px; margin: 8px 0 14px; border: 1px dashed var(--border); border-radius: var(--radius); display: grid; place-items: center; color: var(--muted); font-size: .8rem; overflow: hidden; }
 .ad-slot.ad-bottom { margin-top: 14px; }
 
 .app { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
