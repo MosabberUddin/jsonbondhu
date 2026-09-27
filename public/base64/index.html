@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en" data-tool="base64" data-title-key="base64.title" data-desc-key="tool.base64.desc">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Base64 Encode / Decode — UTF-8, URL-safe, files &amp; images | JSON Bondhu</title>
+  <meta name="description" content="Encode text or files to Base64 and decode it back — UTF-8 and URL-safe.">
+  <link rel="canonical" href="https://jsonbondhu.pages.dev/base64/">
+  <link rel="alternate" hreflang="en" href="https://jsonbondhu.pages.dev/base64/?lang=en">
+  <link rel="alternate" hreflang="bn" href="https://jsonbondhu.pages.dev/base64/?lang=bn">
+  <link rel="alternate" hreflang="x-default" href="https://jsonbondhu.pages.dev/base64/">
+  <meta name="theme-color" content="#0f766e">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230f766e'/%3E%3Ctext x='16' y='22' font-size='15' font-family='monospace' font-weight='700' fill='white' text-anchor='middle'%3E%7B%7D%3C/text%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/base64/base64.css">
+  <script src="/i18n.js"></script>
+  <script src="/tools.js"></script>
+  <script src="/lib/base64-core.js" defer></script>
+  <script src="/base64/base64.js" defer></script>
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"WebApplication","name":"Base64 Encode / Decode — JSON Bondhu","url":"https://jsonbondhu.pages.dev/base64/","applicationCategory":"DeveloperApplication","operatingSystem":"Any","inLanguage":["en","bn"],"offers":{"@type":"Offer","price":"0","priceCurrency":"BDT"}}
+  </script>
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="/">
+      <span class="logo" aria-hidden="true">{ }</span>
+      <span><strong data-i18n="brand">JSON Bondhu</strong></span>
+    </a>
+    <nav class="top-nav">
+      <a href="/" data-i18n="nav.tools">All tools</a>
+      <a href="/#premium" class="pill" data-i18n="nav.premium">Go ad-free</a>
+      <div class="lang-switch" role="group" data-i18n-attr="aria-label:lang.label" aria-label="Language">
+        <button type="button" data-set-lang="en" lang="en" aria-pressed="true">EN</button>
+        <button type="button" data-set-lang="bn" lang="bn" aria-pressed="false">বাংলা</button>
+      </div>
+    </nav>
+  </header>
+
+  <div class="tool-head">
+    <h1 data-i18n="tool.base64.name">Base64 Encode / Decode</h1>
+    <p data-i18n="tool.base64.desc">Encode text or files to Base64 and decode it back — UTF-8 and URL-safe.</p>
+  </div>
+
+  <div class="ad-slot ad-top" data-ad="top" data-i18n-attr="aria-label:ad.label" aria-label="Advertisement">
+    <span data-i18n="ad.placeholder">Ad space</span>
+  </div>
+
+  <main class="app">
+    <div class="toolbar">
+      <div class="b64-mode" role="group" data-i18n-attr="aria-label:base64.mode" aria-label="Direction">
+        <button type="button" class="primary" data-act="encode" aria-pressed="true" data-i18n="base64.encode">Encode</button>
+        <button type="button" data-act="decode" aria-pressed="false" data-i18n="base64.decode">Decode</button>
+      </div>
+      <button type="button" data-act="swap" data-i18n-attr="title:base64.swap.title" title="Use the output as the new input and switch direction"><span aria-hidden="true">⇄ </span><span data-i18n="base64.swap">Swap</span></button>
+      <span class="sep"></span>
+      <button type="button" data-act="open" data-i18n="base64.openFile">Encode a file</button>
+      <button type="button" data-act="copy" data-i18n="btn.copy">Copy</button>
+      <button type="button" data-act="download" data-i18n="btn.download">Download</button>
+      <button type="button" data-act="clear" data-i18n="btn.clear">Clear</button>
+      <input type="file" id="b64-file" hidden>
+    </div>
+    <div class="options">
+      <label><input id="b64-urlsafe" type="checkbox"> <span data-i18n="base64.urlSafe">URL-safe (- and _)</span></label>
+      <label><input id="b64-pad" type="checkbox" checked> <span data-i18n="base64.padding">Padding (=)</span></label>
+      <label><input id="b64-datauri" type="checkbox"> <span data-i18n="base64.dataUri">Files as data URI</span></label>
+    </div>
+    <div class="io-grid" id="b64-grid">
+      <div class="pane">
+        <label class="pane-label" for="b64-in" id="b64-in-label">Text</label>
+        <textarea id="b64-in" spellcheck="false" autocomplete="off" aria-describedby="b64-in-size"
+          data-i18n-attr="placeholder:base64.in.placeholder" placeholder="Type or paste text here, or drop a file…"></textarea>
+        <div class="b64-size" id="b64-in-size" aria-live="polite"></div>
+      </div>
+      <div class="pane">
+        <label class="pane-label" for="b64-out" id="b64-out-label">Base64</label>
+        <textarea id="b64-out" readonly spellcheck="false" aria-describedby="b64-out-size"></textarea>
+        <div class="b64-size" id="b64-out-size" aria-live="polite"></div>
+      </div>
+    </div>
+    <figure id="b64-preview" class="b64-preview" hidden>
+      <figcaption id="b64-preview-cap"></figcaption>
+    </figure>
+    <div id="status" class="status" role="status"></div>
+  </main>
+
+  <div class="ad-slot ad-bottom" data-ad="bottom" data-i18n-attr="aria-label:ad.label" aria-label="Advertisement">
+    <span data-i18n="ad.placeholder">Ad space</span>
+  </div>
+
+  <article class="content">
+    <section data-lang="en" lang="en">
+      <h2>What is Base64?</h2>
+      <p>Base64 turns any sequence of bytes — text, an image, a PDF — into a string made of just 64 “safe” characters: <code>A–Z</code>, <code>a–z</code>, <code>0–9</code>, <code>+</code> and <code>/</code>. Many systems were designed to carry plain text only: email bodies, JSON fields, HTML attributes, HTTP headers. Wrapping binary data in Base64 lets it pass through them without being corrupted. Every 3 bytes become 4 characters, so the encoded version is roughly a third larger than the original.</p>
+      <h3>When is it useful?</h3>
+      <ul>
+        <li>Embedding a small icon straight into HTML or CSS as a data URI, like <code>data:image/png;base64,…</code></li>
+        <li>Sending a file inside a JSON API request or storing it in a text column.</li>
+        <li>Building or checking an HTTP Basic <code>Authorization</code> header.</li>
+        <li>Reading the parts of a JWT, which use the URL-safe variant without padding.</li>
+        <li>Looking inside an email attachment or a PEM certificate block.</li>
+      </ul>
+      <h3>Things to watch out for</h3>
+      <ul>
+        <li><b>It is not encryption.</b> Anyone can decode Base64 in a second. Never use it to “hide” a password or an API key.</li>
+        <li><b>Text becomes bytes first.</b> This tool uses UTF-8, so Bangla, emoji and every other script round-trip exactly. The browser’s built-in <code>btoa()</code> only accepts Latin-1 and throws “InvalidCharacterError” on Bangla text — a very common bug.</li>
+        <li><b>Two alphabets.</b> URL-safe Base64 (RFC 4648) swaps <code>+</code> for <code>-</code> and <code>/</code> for <code>_</code>, and often leaves out the <code>=</code> padding. The decoder here accepts both alphabets, with or without padding, and ignores line breaks.</li>
+      </ul>
+      <h3>FAQ</h3>
+      <details><summary>Is my data uploaded anywhere?</summary><p>No. Encoding and decoding run entirely in your browser, and files are read locally with the FileReader API. Nothing leaves your device.</p></details>
+      <details><summary>Can I turn Base64 back into an image or file?</summary><p>Yes. Switch to Decode and paste the Base64 or a full data URI. PNG, JPEG, GIF and WebP images get a preview, and Download saves the original file with a matching extension.</p></details>
+      <details><summary>What does “invalid character at position …” mean?</summary><p>The input contains something that is not part of either Base64 alphabet — often a stray quote, a <code>%</code> from URL encoding, or text copied along with the data. The position tells you exactly where to look.</p></details>
+    </section>
+    <section data-lang="bn" lang="bn">
+      <h2>Base64 কী?</h2>
+      <p>Base64 যেকোনো বাইটের ধারাকে — হোক তা টেক্সট, ছবি বা PDF — মাত্র ৬৪টি “নিরাপদ” অক্ষরে লেখা একটি স্ট্রিংয়ে রূপান্তর করে: <code>A–Z</code>, <code>a–z</code>, <code>0–9</code>, <code>+</code> আর <code>/</code>। ইমেইল, JSON ফিল্ড, HTML অ্যাট্রিবিউট বা HTTP হেডারের মতো অনেক ব্যবস্থা শুধু সাধারণ টেক্সট বহনের জন্য তৈরি। বাইনারি ডেটাকে Base64-এ মুড়ে দিলে সেটি এসবের মধ্য দিয়ে নষ্ট না হয়ে পৌঁছায়। প্রতি ৩ বাইট হয়ে যায় ৪টি অক্ষর, তাই এনকোড করা ডেটা মূলের চেয়ে প্রায় এক-তৃতীয়াংশ বড় হয়।</p>
+      <h3>কখন কাজে লাগে?</h3>
+      <ul>
+        <li>ছোট আইকন সরাসরি HTML বা CSS-এ data URI হিসেবে বসাতে, যেমন <code>data:image/png;base64,…</code></li>
+        <li>JSON API রিকোয়েস্টের ভেতরে ফাইল পাঠাতে বা টেক্সট কলামে সংরক্ষণ করতে।</li>
+        <li>HTTP Basic <code>Authorization</code> হেডার তৈরি বা যাচাই করতে।</li>
+        <li>JWT-এর অংশগুলো পড়তে — এগুলো প্যাডিং ছাড়া URL-safe Base64 ব্যবহার করে।</li>
+        <li>ইমেইলের অ্যাটাচমেন্ট বা PEM সার্টিফিকেটের ভেতরে কী আছে দেখতে।</li>
+      </ul>
+      <h3>যেসব বিষয়ে সতর্ক থাকবেন</h3>
+      <ul>
+        <li><b>এটি এনক্রিপশন নয়।</b> যে কেউ এক সেকেন্ডে Base64 ডিকোড করতে পারে। পাসওয়ার্ড বা API কী “লুকাতে” কখনো এটি ব্যবহার করবেন না।</li>
+        <li><b>টেক্সট আগে বাইটে রূপান্তরিত হয়।</b> এই টুল UTF-8 ব্যবহার করে, তাই বাংলা, ইমোজি বা যেকোনো ভাষার লেখা হুবহু ফিরে আসে। ব্রাউজারের নিজস্ব <code>btoa()</code> শুধু Latin-1 গ্রহণ করে এবং বাংলা দিলে “InvalidCharacterError” দেয় — এটি খুব প্রচলিত একটি বাগ।</li>
+        <li><b>দুই ধরনের বর্ণমালা।</b> URL-safe Base64 (RFC 4648) <code>+</code>-এর বদলে <code>-</code> আর <code>/</code>-এর বদলে <code>_</code> ব্যবহার করে, এবং প্রায়ই শেষের <code>=</code> প্যাডিং বাদ দেয়। এখানকার ডিকোডার দুই বর্ণমালাই গ্রহণ করে, প্যাডিং থাকুক বা না থাকুক, আর লাইন ব্রেক উপেক্ষা করে।</li>
+      </ul>
+      <h3>প্রশ্নোত্তর</h3>
+      <details><summary>আমার ডেটা কি কোথাও আপলোড হয়?</summary><p>না। এনকোড ও ডিকোড সম্পূর্ণ আপনার ব্রাউজারেই হয়, আর ফাইল পড়া হয় FileReader API দিয়ে আপনার ডিভাইসেই। কিছুই বাইরে যায় না।</p></details>
+      <details><summary>Base64 থেকে কি ছবি বা ফাইল ফিরিয়ে আনা যায়?</summary><p>হ্যাঁ। “ডিকোড” বেছে নিয়ে Base64 বা পুরো data URI পেস্ট করুন। PNG, JPEG, GIF ও WebP ছবির প্রিভিউ দেখাবে, আর “ডাউনলোড” চাপলে সঠিক এক্সটেনশনসহ মূল ফাইলটি সেভ হবে।</p></details>
+      <details><summary>“… নম্বর অবস্থানে অবৈধ অক্ষর” মানে কী?</summary><p>ইনপুটে এমন কিছু আছে যা কোনো Base64 বর্ণমালার অংশ নয় — প্রায়ই একটি বাড়তি কোট, URL এনকোডিংয়ের <code>%</code>, বা ডেটার সাথে কপি হয়ে আসা অন্য লেখা। অবস্থান নম্বর দেখে ঠিক কোথায় সমস্যা তা খুঁজে পাবেন।</p></details>
+    </section>
+
+    <section class="more-tools">
+      <h2 data-i18n="tools.more">More free tools</h2>
+      <ul class="tool-grid" data-more-tools></ul>
+    </section>
+  </article>
+
+  <footer class="site-footer">
+    <span>© <span data-year></span> <span data-i18n="brand">JSON Bondhu</span></span>
+    <a href="/privacy.html" data-i18n="footer.privacy">Privacy policy</a>
+    <a href="https://github.com/MosabberUddin/jsonbondhu/issues" rel="noopener" data-i18n="footer.contact">Contact</a>
+  </footer>
+
+  <script src="/ads.js" defer></script>
+</body>
+</html>

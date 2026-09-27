@@ -6,7 +6,7 @@ export default defineConfig({
   reporter: process.env.CI ? 'github' : 'list',
   use: { baseURL: 'http://localhost:8765' },
   webServer: {
-    command: 'python3 -m http.server 8765',
+    command: 'python3 -m http.server 8765 --directory public',
     port: 8765,
     reuseExistingServer: !process.env.CI,
   },

@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en" data-tool="timestamp" data-title-key="timestamp.title" data-desc-key="tool.timestamp.desc">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Unix Timestamp Converter — epoch to date &amp; back, Dhaka time | JSON Bondhu</title>
+  <meta name="description" content="Convert Unix time to a readable date and back, in UTC, your time and Dhaka time.">
+  <link rel="canonical" href="https://jsonbondhu.pages.dev/timestamp-converter/">
+  <link rel="alternate" hreflang="en" href="https://jsonbondhu.pages.dev/timestamp-converter/?lang=en">
+  <link rel="alternate" hreflang="bn" href="https://jsonbondhu.pages.dev/timestamp-converter/?lang=bn">
+  <link rel="alternate" hreflang="x-default" href="https://jsonbondhu.pages.dev/timestamp-converter/">
+  <meta name="theme-color" content="#0f766e">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230f766e'/%3E%3Ctext x='16' y='22' font-size='15' font-family='monospace' font-weight='700' fill='white' text-anchor='middle'%3E%7B%7D%3C/text%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/timestamp-converter/timestamp.css">
+  <script src="/i18n.js"></script>
+  <script src="/tools.js"></script>
+  <script src="/lib/timestamp-core.js" defer></script>
+  <script src="/timestamp-converter/timestamp.js" defer></script>
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"WebApplication","name":"Unix Timestamp Converter — JSON Bondhu","url":"https://jsonbondhu.pages.dev/timestamp-converter/","applicationCategory":"DeveloperApplication","operatingSystem":"Any","inLanguage":["en","bn"],"offers":{"@type":"Offer","price":"0","priceCurrency":"BDT"}}
+  </script>
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="/">
+      <span class="logo" aria-hidden="true">{ }</span>
+      <span><strong data-i18n="brand">JSON Bondhu</strong></span>
+    </a>
+    <nav class="top-nav">
+      <a href="/" data-i18n="nav.tools">All tools</a>
+      <a href="/#premium" class="pill" data-i18n="nav.premium">Go ad-free</a>
+      <div class="lang-switch" role="group" data-i18n-attr="aria-label:lang.label" aria-label="Language">
+        <button type="button" data-set-lang="en" lang="en" aria-pressed="true">EN</button>
+        <button type="button" data-set-lang="bn" lang="bn" aria-pressed="false">বাংলা</button>
+      </div>
+    </nav>
+  </header>
+
+  <div class="tool-head">
+    <h1 data-i18n="tool.timestamp.name">Unix Timestamp Converter</h1>
+    <p data-i18n="tool.timestamp.desc">Convert Unix time to a readable date and back, in UTC, your time and Dhaka time.</p>
+  </div>
+
+  <div class="ad-slot ad-top" data-ad="top" data-i18n-attr="aria-label:ad.label" aria-label="Advertisement">
+    <span data-i18n="ad.placeholder">Ad space</span>
+  </div>
+
+  <main class="app">
+    <section class="ts-now" aria-labelledby="ts-now-h">
+      <h2 id="ts-now-h" class="ts-h2" data-i18n="timestamp.now">Current Unix time</h2>
+      <div class="ts-now-grid">
+        <div class="ts-now-cell">
+          <span class="ts-now-label" data-i18n="timestamp.unit.s">Seconds</span>
+          <span id="ts-now-s" class="ts-now-value mono"></span>
+          <button type="button" class="small" data-act="copy-now-s" data-i18n="btn.copy">Copy</button>
+        </div>
+        <div class="ts-now-cell">
+          <span class="ts-now-label" data-i18n="timestamp.unit.ms">Milliseconds</span>
+          <span id="ts-now-ms" class="ts-now-value mono"></span>
+          <button type="button" class="small" data-act="copy-now-ms" data-i18n="btn.copy">Copy</button>
+        </div>
+      </div>
+      <button type="button" data-act="use-now" data-i18n="timestamp.useNow">Convert the current time</button>
+    </section>
+
+    <section class="ts-section" aria-labelledby="ts-conv-h">
+      <h2 id="ts-conv-h" class="ts-h2" data-i18n="timestamp.toDate">Timestamp → date</h2>
+      <div class="options">
+        <label for="ts-input" data-i18n="timestamp.input">Unix timestamp</label>
+        <input id="ts-input" type="text" class="mono ts-input" inputmode="text" autocomplete="off" spellcheck="false"
+          data-i18n-attr="placeholder:timestamp.input.placeholder" placeholder="e.g. 1700000000 or 1700000000000">
+        <label><span data-i18n="timestamp.unit">Unit</span>
+          <select id="ts-unit">
+            <option value="auto" data-i18n="timestamp.unit.auto">Auto-detect</option>
+            <option value="s" data-i18n="timestamp.unit.s">Seconds</option>
+            <option value="ms" data-i18n="timestamp.unit.ms">Milliseconds</option>
+            <option value="us" data-i18n="timestamp.unit.us">Microseconds</option>
+            <option value="ns" data-i18n="timestamp.unit.ns">Nanoseconds</option>
+          </select>
+        </label>
+      </div>
+      <div id="ts-status" class="status" role="status"></div>
+      <div class="ts-table-wrap">
+        <table id="ts-result" class="kv-table ts-table"></table>
+      </div>
+    </section>
+
+    <section class="ts-section" aria-labelledby="ts-back-h">
+      <h2 id="ts-back-h" class="ts-h2" data-i18n="timestamp.toUnix">Date → timestamp</h2>
+      <div class="options">
+        <label for="dt-input" data-i18n="timestamp.dt">Date and time</label>
+        <input id="dt-input" type="datetime-local" step="1">
+        <label><span data-i18n="timestamp.zone">Time zone</span>
+          <select id="dt-zone">
+            <option value="local" id="dt-zone-local">Local</option>
+            <option value="UTC">UTC</option>
+            <option value="Asia/Dhaka" data-i18n="timestamp.zone.dhaka">Asia/Dhaka (Bangladesh)</option>
+          </select>
+        </label>
+        <button type="button" data-act="dt-now" data-i18n="timestamp.dt.now">Now</button>
+      </div>
+      <div id="dt-status" class="status" role="status"></div>
+      <div class="ts-table-wrap">
+        <table id="dt-result" class="kv-table ts-table"></table>
+      </div>
+    </section>
+  </main>
+
+  <div class="ad-slot ad-bottom" data-ad="bottom" data-i18n-attr="aria-label:ad.label" aria-label="Advertisement">
+    <span data-i18n="ad.placeholder">Ad space</span>
+  </div>
+
+  <article class="content">
+    <section data-lang="en" lang="en">
+      <h2>What is a Unix timestamp?</h2>
+      <p>Unix time counts the seconds that have passed since midnight UTC on 1 January 1970, a moment called the <em>epoch</em>. Because it is a single number with no time zone attached, it is how databases, log files, APIs and JWTs usually store “when”. The same instant is the same number in Dhaka, London and New York — only the way it is displayed changes.</p>
+      <h3>Seconds, milliseconds or more?</h3>
+      <p>Different systems use different precision. Unix tools, PHP and most APIs use seconds (10 digits today), JavaScript’s <code>Date.now()</code> and Java use milliseconds (13 digits), and some databases and Go use microseconds (16) or nanoseconds (19). This converter guesses the unit from the number of digits and tells you what it assumed; if the guess is wrong, choose the unit yourself. Negative values are dates before 1970.</p>
+      <h3>Reading the results</h3>
+      <ul>
+        <li><b>ISO 8601</b> (<code>2023-11-14T22:13:20.000Z</code>) is the best format for storing and exchanging dates; the <code>Z</code> means UTC.</li>
+        <li><b>RFC 2822</b> is the style used in email headers, and the <b>HTTP date</b> appears in headers such as <code>Last-Modified</code>.</li>
+        <li><b>Asia/Dhaka</b> is UTC+6 with no daylight saving time (Bangladesh briefly used UTC+7 in 2009, which the converter handles).</li>
+      </ul>
+      <h3>The Year 2038 problem</h3>
+      <p>Old software stores Unix time in a signed 32-bit integer, whose largest value is 2,147,483,647 — 03:14:07 UTC on 19 January 2038. One second later such counters overflow to a date in 1901. Modern systems use 64-bit time, but embedded devices and old database columns may not. The converter warns when a value does not fit in 32 bits.</p>
+      <h3>FAQ</h3>
+      <details><summary>Does Unix time include leap seconds?</summary><p>No. Every Unix day is exactly 86,400 seconds, so leap seconds are simply not counted.</p></details>
+      <details><summary>Why does my local time look wrong?</summary><p>Local time comes from your device’s time zone setting. Check that it is correct, or compare with the UTC and Dhaka rows.</p></details>
+    </section>
+    <section data-lang="bn" lang="bn">
+      <h2>ইউনিক্স টাইমস্ট্যাম্প কী?</h2>
+      <p>ইউনিক্স সময় হলো ১৯৭০ সালের ১ জানুয়ারি UTC মধ্যরাত থেকে এখন পর্যন্ত কত সেকেন্ড পেরিয়েছে তার হিসাব; ওই মুহূর্তকে বলা হয় <em>epoch</em>। এটি কোনো টাইম জোন ছাড়া একটি মাত্র সংখ্যা, তাই ডেটাবেস, লগ ফাইল, API আর JWT সাধারণত “কখন” এভাবেই রাখে। একই মুহূর্ত ঢাকা, লন্ডন বা নিউ ইয়র্কে একই সংখ্যা — শুধু দেখানোর ধরন বদলায়।</p>
+      <h3>সেকেন্ড, মিলিসেকেন্ড নাকি আরও সূক্ষ্ম?</h3>
+      <p>বিভিন্ন সিস্টেম বিভিন্ন সূক্ষ্মতা ব্যবহার করে। ইউনিক্স টুল, PHP ও বেশিরভাগ API সেকেন্ড ব্যবহার করে (এখন ১০ অঙ্ক), JavaScript-এর <code>Date.now()</code> ও Java মিলিসেকেন্ড (১৩ অঙ্ক), আর কিছু ডেটাবেস ও Go মাইক্রোসেকেন্ড (১৬) বা ন্যানোসেকেন্ড (১৯)। এই কনভার্টার অঙ্কের সংখ্যা দেখে একক অনুমান করে এবং কী ধরে নিয়েছে তা জানায়; অনুমান ভুল হলে নিজেই একক বেছে নিন। ঋণাত্মক মান মানে ১৯৭০-এর আগের তারিখ।</p>
+      <h3>ফলাফল কীভাবে পড়বেন</h3>
+      <ul>
+        <li><b>ISO 8601</b> (<code>2023-11-14T22:13:20.000Z</code>) তারিখ সংরক্ষণ ও আদান-প্রদানের সবচেয়ে ভালো ফরম্যাট; শেষের <code>Z</code> মানে UTC।</li>
+        <li><b>RFC 2822</b> ইমেইল হেডারে ব্যবহৃত ধরন, আর <b>HTTP date</b> দেখা যায় <code>Last-Modified</code>-এর মতো হেডারে।</li>
+        <li><b>Asia/Dhaka</b> হলো UTC+6, কোনো ডেলাইট সেভিং নেই (২০০৯ সালে বাংলাদেশ অল্প সময়ের জন্য UTC+7 ব্যবহার করেছিল, কনভার্টার সেটাও হিসাব করে)।</li>
+      </ul>
+      <h3>২০৩৮ সালের সমস্যা</h3>
+      <p>পুরোনো সফটওয়্যার ইউনিক্স সময় সাইনড ৩২-বিট পূর্ণসংখ্যায় রাখে, যার সর্বোচ্চ মান ২,১৪৭,৪৮৩,৬৪৭ — ২০৩৮ সালের ১৯ জানুয়ারি UTC ০৩:১৪:০৭। এর এক সেকেন্ড পর এমন কাউন্টার উল্টে ১৯০১ সালের তারিখে চলে যায়। আধুনিক সিস্টেম ৬৪-বিট সময় ব্যবহার করে, কিন্তু এমবেডেড ডিভাইস বা পুরোনো ডেটাবেস কলাম হয়তো করে না। কোনো মান ৩২ বিটে না আঁটলে কনভার্টার সতর্ক করে।</p>
+      <h3>প্রশ্নোত্তর</h3>
+      <details><summary>ইউনিক্স সময়ে কি লিপ সেকেন্ড গোনা হয়?</summary><p>না। ইউনিক্স হিসাবে প্রতিটি দিন ঠিক ৮৬,৪০০ সেকেন্ড, তাই লিপ সেকেন্ড গোনাই হয় না।</p></details>
+      <details><summary>আমার স্থানীয় সময় ভুল দেখাচ্ছে কেন?</summary><p>স্থানীয় সময় আসে আপনার ডিভাইসের টাইম জোন সেটিং থেকে। সেটি ঠিক আছে কি না দেখুন, অথবা UTC ও ঢাকার সারির সাথে মিলিয়ে নিন।</p></details>
+    </section>
+
+    <section class="more-tools">
+      <h2 data-i18n="tools.more">More free tools</h2>
+      <ul class="tool-grid" data-more-tools></ul>
+    </section>
+  </article>
+
+  <footer class="site-footer">
+    <span>© <span data-year></span> <span data-i18n="brand">JSON Bondhu</span></span>
+    <a href="/privacy.html" data-i18n="footer.privacy">Privacy policy</a>
+    <a href="https://github.com/MosabberUddin/jsonbondhu/issues" rel="noopener" data-i18n="footer.contact">Contact</a>
+  </footer>
+
+  <script src="/ads.js" defer></script>
+</body>
+</html>

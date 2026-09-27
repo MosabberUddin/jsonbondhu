@@ -18,6 +18,39 @@
       'meta.title': 'JSON Bondhu — Online JSON Formatter, Viewer & Converter',
       'meta.description': 'Free online JSON formatter, validator and tree viewer. Convert JSON to CSV, YAML and XML. Your data never leaves your browser. Available in English and Bangla.',
       'privacy.title': 'Privacy Policy — JSON Bondhu',
+      'privacy.desc': 'JSON Bondhu privacy policy: how your data is handled, cookies and advertising.',
+      'hub.title': 'JSON Bondhu — Free Online Developer Tools (JSON, Base64, JWT, CSV, UUID)',
+      'hub.desc': 'Free, fast developer tools that run entirely in your browser: JSON formatter, Base64, JWT decoder, CSV ↔ JSON, URL encoder, UUID generator and Unix timestamp converter. In English and Bangla.',
+      'hub.heading': 'Developer tools that respect your data',
+      'hub.lead': 'Everyday tools for developers — fast, free, no sign-up. Everything runs in your browser; nothing you paste is uploaded.',
+      'hub.search': 'Search tools…',
+      'hub.noMatch': 'No tool matches your search.',
+      'hub.why': 'Why JSON Bondhu?',
+      'hub.why.private': 'Private by design',
+      'hub.why.private.body': 'Your data never leaves your device — safe for tokens, logs and customer data.',
+      'hub.why.fast': 'Fast and clean',
+      'hub.why.fast.body': 'No pop-ups, no sign-up, works on your phone too.',
+      'hub.why.bilingual': 'English & Bangla',
+      'hub.why.bilingual.body': 'Every tool works in both languages — switch any time at the top.',
+      'nav.tools': 'All tools',
+      'tools.more': 'More free tools',
+      'tool.json.name': 'JSON Formatter',
+      'tool.json.desc': 'Format, validate, repair and explore JSON as a tree; convert to CSV, YAML, XML.',
+      'tool.base64.name': 'Base64 Encode / Decode',
+      'tool.base64.desc': 'Encode text or files to Base64 and decode it back — UTF-8 and URL-safe.',
+      'tool.jwt.name': 'JWT Decoder',
+      'tool.jwt.desc': 'Read a JSON Web Token’s header and claims and check when it expires.',
+      'tool.csv.name': 'CSV ↔ JSON Converter',
+      'tool.csv.desc': 'Turn CSV into JSON and JSON into CSV, with delimiter and header options.',
+      'tool.url.name': 'URL Encode / Decode',
+      'tool.url.desc': 'Percent-encode or decode text and break a URL into its query parameters.',
+      'tool.uuid.name': 'UUID Generator',
+      'tool.uuid.desc': 'Generate random UUIDs (v4) or time-ordered v7 in bulk, and validate them.',
+      'tool.timestamp.name': 'Unix Timestamp Converter',
+      'tool.timestamp.desc': 'Convert Unix time to a readable date and back, in UTC, your time and Dhaka time.',
+      'notfound.title': 'Page not found — JSON Bondhu',
+      'notfound.heading': 'Page not found',
+      'notfound.body': 'This page doesn’t exist. Try one of our tools instead:',
       brand: 'JSON Bondhu',
       tagline: 'JSON formatter & viewer',
       'nav.about': 'What is JSON?',
@@ -59,7 +92,7 @@
       'output.placeholder': 'Converted output appears here',
       'footer.privacy': 'Privacy policy',
       'footer.contact': 'Contact',
-      'footer.back': '← Back to the tool',
+      'footer.back': '← Back to the tools',
       'status.ready': 'Ready — paste some JSON.',
       'status.empty': 'Nothing to process — paste some JSON first.',
       'status.valid': '✓ Valid JSON — {size}, {nodes} values, depth {depth}',
@@ -88,6 +121,39 @@
       'meta.title': 'JSON বন্ধু — অনলাইন JSON ফরম্যাটার, ভিউয়ার ও কনভার্টার (বাংলায়)',
       'meta.description': 'বিনামূল্যে বাংলায় JSON ফরম্যাট, যাচাই, মিনিফাই ও ট্রি-ভিউতে দেখুন। JSON থেকে CSV, YAML, XML-এ রূপান্তর করুন। আপনার ডেটা ব্রাউজারের বাইরে যায় না।',
       'privacy.title': 'গোপনীয়তা নীতি — JSON বন্ধু',
+      'privacy.desc': 'JSON বন্ধুর গোপনীয়তা নীতি: আপনার ডেটা কীভাবে ব্যবহৃত হয়, কুকি ও বিজ্ঞাপন।',
+      'hub.title': 'JSON বন্ধু — বিনামূল্যে অনলাইন ডেভেলপার টুল (JSON, Base64, JWT, CSV, UUID)',
+      'hub.desc': 'ব্রাউজারেই চলে এমন দ্রুত ও বিনামূল্যের ডেভেলপার টুল: JSON ফরম্যাটার, Base64, JWT ডিকোডার, CSV ↔ JSON, URL এনকোডার, UUID জেনারেটর ও ইউনিক্স টাইমস্ট্যাম্প কনভার্টার। বাংলা ও ইংরেজিতে।',
+      'hub.heading': 'আপনার ডেটার প্রতি শ্রদ্ধাশীল ডেভেলপার টুল',
+      'hub.lead': 'ডেভেলপারদের প্রতিদিনের কাজের টুল — দ্রুত, বিনামূল্যে, সাইন-আপ ছাড়াই। সব কাজ আপনার ব্রাউজারে হয়; যা পেস্ট করেন তা কোথাও আপলোড হয় না।',
+      'hub.search': 'টুল খুঁজুন…',
+      'hub.noMatch': 'আপনার খোঁজের সাথে মেলে এমন কোনো টুল নেই।',
+      'hub.why': 'কেন JSON বন্ধু?',
+      'hub.why.private': 'গোপনীয়তা প্রথমে',
+      'hub.why.private.body': 'আপনার ডেটা আপনার ডিভাইসের বাইরে যায় না — টোকেন, লগ বা গ্রাহকের তথ্যের জন্যও নিরাপদ।',
+      'hub.why.fast': 'দ্রুত ও পরিচ্ছন্ন',
+      'hub.why.fast.body': 'কোনো পপ-আপ নেই, সাইন-আপ নেই, মোবাইলেও চলে।',
+      'hub.why.bilingual': 'বাংলা ও ইংরেজি',
+      'hub.why.bilingual.body': 'প্রতিটি টুল দুই ভাষাতেই চলে — ওপরে যেকোনো সময় বদলান।',
+      'nav.tools': 'সব টুল',
+      'tools.more': 'আরও বিনামূল্যের টুল',
+      'tool.json.name': 'JSON ফরম্যাটার',
+      'tool.json.desc': 'JSON ফরম্যাট, যাচাই, মেরামত ও ট্রি-ভিউতে দেখুন; CSV, YAML, XML-এ রূপান্তর করুন।',
+      'tool.base64.name': 'Base64 এনকোড / ডিকোড',
+      'tool.base64.desc': 'টেক্সট বা ফাইল Base64-এ এনকোড করুন ও ফিরিয়ে আনুন — UTF-8 ও URL-safe।',
+      'tool.jwt.name': 'JWT ডিকোডার',
+      'tool.jwt.desc': 'JSON Web Token-এর হেডার ও ক্লেইম পড়ুন এবং কবে মেয়াদ শেষ হবে দেখুন।',
+      'tool.csv.name': 'CSV ↔ JSON কনভার্টার',
+      'tool.csv.desc': 'CSV থেকে JSON এবং JSON থেকে CSV — ডিলিমিটার ও হেডার অপশনসহ।',
+      'tool.url.name': 'URL এনকোড / ডিকোড',
+      'tool.url.desc': 'টেক্সট পার্সেন্ট-এনকোড বা ডিকোড করুন এবং URL-এর কুয়েরি প্যারামিটার আলাদা করে দেখুন।',
+      'tool.uuid.name': 'UUID জেনারেটর',
+      'tool.uuid.desc': 'একসাথে অনেকগুলো র‍্যান্ডম UUID (v4) বা সময়ভিত্তিক v7 তৈরি ও যাচাই করুন।',
+      'tool.timestamp.name': 'ইউনিক্স টাইমস্ট্যাম্প কনভার্টার',
+      'tool.timestamp.desc': 'ইউনিক্স সময়কে পড়ার মতো তারিখে ও উল্টোটা রূপান্তর করুন — UTC, আপনার সময় ও ঢাকার সময়ে।',
+      'notfound.title': 'পেজ পাওয়া যায়নি — JSON বন্ধু',
+      'notfound.heading': 'পেজ পাওয়া যায়নি',
+      'notfound.body': 'এই পেজটি নেই। বরং আমাদের কোনো টুল ব্যবহার করে দেখুন:',
       brand: 'JSON বন্ধু',
       tagline: 'বাংলায় JSON ফরম্যাটার ও ভিউয়ার',
       'nav.about': 'JSON কী?',
@@ -129,7 +195,7 @@
       'output.placeholder': 'রূপান্তরিত ফলাফল এখানে দেখাবে',
       'footer.privacy': 'গোপনীয়তা নীতি',
       'footer.contact': 'যোগাযোগ',
-      'footer.back': '← টুলে ফিরে যান',
+      'footer.back': '← সব টুলে ফিরে যান',
       'status.ready': 'প্রস্তুত — JSON পেস্ট করুন।',
       'status.empty': 'কোনো JSON নেই — আগে কিছু পেস্ট করুন।',
       'status.valid': '✓ সঠিক JSON — {size}, {nodes}টি মান, গভীরতা {depth}',
@@ -209,10 +275,17 @@
     for (const btn of doc.querySelectorAll('[data-set-lang]')) {
       btn.setAttribute('aria-pressed', String(btn.dataset.setLang === lang));
     }
-    const titleKey = document.documentElement.dataset.titleKey || 'meta.title';
-    document.title = t(titleKey);
+    // Each page names its own title/description keys on <html data-title-key data-desc-key>.
+    const { titleKey, descKey } = document.documentElement.dataset;
+    if (titleKey) document.title = t(titleKey);
     const desc = document.querySelector('meta[name="description"]');
-    if (desc && !document.documentElement.dataset.titleKey) desc.setAttribute('content', t('meta.description'));
+    if (desc && descKey) desc.setAttribute('content', t(descKey));
+  }
+
+  // Tool pages add their own strings: JBI18N.extend({ en: {...}, bn: {...} }).
+  // Call it from a <head> script (before DOMContentLoaded) so the first apply() sees them.
+  function extend(dict) {
+    for (const l of LANGS) Object.assign(STRINGS[l], (dict && dict[l]) || {});
   }
 
   function set(next) {
@@ -235,5 +308,5 @@
     });
   });
 
-  root.JBI18N = { t, num, set, apply, get lang() { return lang; }, STRINGS };
+  root.JBI18N = { t, num, set, apply, extend, get lang() { return lang; }, STRINGS };
 })(typeof self !== 'undefined' ? self : this);

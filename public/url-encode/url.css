@@ -1,0 +1,14 @@
+/* URL encode/decode page: small additions on top of the shared tool layout. */
+.url-mode { display: inline-flex; gap: 6px; }
+.url-mode button[aria-pressed="false"] { background: var(--surface); color: var(--text); border-color: var(--border); font-weight: 400; }
+.url-options { margin: 0; border-left: 0; border-right: 0; border-top: 0; min-width: 0; }
+.url-legend { float: left; padding: 0; font-weight: 600; color: var(--muted); font-size: .85rem; }
+.url-parse { margin-top: 16px; }
+.url-parse-h { margin: 0; padding: 10px 14px 0; font-size: 1.05rem; }
+.url-params-h { margin: 0; padding: 12px 14px 4px; font-size: .95rem; }
+.url-parse-in { flex: 1; min-width: 0; width: 100%; }
+.url-parse .options { flex-wrap: nowrap; }
+.url-params td.empty { color: var(--muted); font-style: italic; }
+.url-params td .badge { margin-left: 6px; }
+.kv-table caption { text-align: left; padding: 8px 12px 4px; }
+.kv-table caption .badge + .badge { margin-left: 6px; }

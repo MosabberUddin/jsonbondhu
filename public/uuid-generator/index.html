@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en" data-tool="uuid" data-title-key="uuid.title" data-desc-key="tool.uuid.desc">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>UUID Generator — v4 &amp; v7, bulk, online | JSON Bondhu</title>
+  <meta name="description" content="Generate random UUIDs (v4) or time-ordered v7 in bulk, and validate them.">
+  <link rel="canonical" href="https://jsonbondhu.pages.dev/uuid-generator/">
+  <link rel="alternate" hreflang="en" href="https://jsonbondhu.pages.dev/uuid-generator/?lang=en">
+  <link rel="alternate" hreflang="bn" href="https://jsonbondhu.pages.dev/uuid-generator/?lang=bn">
+  <link rel="alternate" hreflang="x-default" href="https://jsonbondhu.pages.dev/uuid-generator/">
+  <meta name="theme-color" content="#0f766e">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230f766e'/%3E%3Ctext x='16' y='22' font-size='15' font-family='monospace' font-weight='700' fill='white' text-anchor='middle'%3E%7B%7D%3C/text%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/i18n.js"></script>
+  <script src="/tools.js"></script>
+  <script src="/lib/uuid-core.js" defer></script>
+  <script src="/uuid-generator/uuid.js" defer></script>
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"WebApplication","name":"UUID Generator — JSON Bondhu","url":"https://jsonbondhu.pages.dev/uuid-generator/","applicationCategory":"DeveloperApplication","operatingSystem":"Any","inLanguage":["en","bn"],"offers":{"@type":"Offer","price":"0","priceCurrency":"BDT"}}
+  </script>
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="/">
+      <span class="logo" aria-hidden="true">{ }</span>
+      <span><strong data-i18n="brand">JSON Bondhu</strong></span>
+    </a>
+    <nav class="top-nav">
+      <a href="/" data-i18n="nav.tools">All tools</a>
+      <a href="/#premium" class="pill" data-i18n="nav.premium">Go ad-free</a>
+      <div class="lang-switch" role="group" data-i18n-attr="aria-label:lang.label" aria-label="Language">
+        <button type="button" data-set-lang="en" lang="en" aria-pressed="true">EN</button>
+        <button type="button" data-set-lang="bn" lang="bn" aria-pressed="false">বাংলা</button>
+      </div>
+    </nav>
+  </header>
+
+  <div class="tool-head">
+    <h1 data-i18n="tool.uuid.name">UUID Generator</h1>
+    <p data-i18n="tool.uuid.desc">Generate random UUIDs (v4) or time-ordered v7 in bulk, and validate them.</p>
+  </div>
+
+  <div class="ad-slot ad-top" data-ad="top" data-i18n-attr="aria-label:ad.label" aria-label="Advertisement">
+    <span data-i18n="ad.placeholder">Ad space</span>
+  </div>
+
+  <main class="app">
+    <form id="uuid-form" class="options">
+      <span data-i18n="uuid.version">Version</span>
+      <label><input type="radio" name="uuid-version" value="4" checked> <span data-i18n="uuid.v4">v4 (random)</span></label>
+      <label><input type="radio" name="uuid-version" value="7"> <span data-i18n="uuid.v7">v7 (time-ordered)</span></label>
+      <label><span data-i18n="uuid.count">How many</span> <input id="uuid-count" type="number" min="1" max="1000" value="5" style="width:6em"></label>
+      <label><input id="uuid-upper" type="checkbox"> <span data-i18n="uuid.uppercase">Uppercase</span></label>
+      <label><input id="uuid-hyphens" type="checkbox" checked> <span data-i18n="uuid.hyphens">Hyphens</span></label>
+      <label><input id="uuid-braces" type="checkbox"> <span data-i18n="uuid.braces">Braces { }</span></label>
+    </form>
+    <div class="toolbar">
+      <button type="button" class="primary" data-act="generate" data-i18n="uuid.generate">Generate</button>
+      <button type="button" data-act="copy" data-i18n="uuid.copyAll">Copy all</button>
+      <button type="button" data-act="download" data-i18n="btn.download">Download</button>
+    </div>
+    <label class="pane-label" for="uuid-out" data-i18n="uuid.output">Generated UUIDs</label>
+    <textarea id="uuid-out" class="tool-textarea" readonly spellcheck="false"></textarea>
+    <div class="options" style="border-top:1px solid var(--border)">
+      <label for="uuid-check" data-i18n="uuid.check">Check a UUID</label>
+      <input id="uuid-check" type="text" class="mono" style="flex:1;min-width:0" autocomplete="off" spellcheck="false"
+        data-i18n-attr="placeholder:uuid.check.placeholder" placeholder="Paste a UUID to validate it…">
+    </div>
+    <table id="uuid-result" class="kv-table" aria-live="polite"></table>
+    <div id="status" class="status" role="status"></div>
+  </main>
+
+  <div class="ad-slot ad-bottom" data-ad="bottom" data-i18n-attr="aria-label:ad.label" aria-label="Advertisement">
+    <span data-i18n="ad.placeholder">Ad space</span>
+  </div>
+
+  <article class="content">
+    <section data-lang="en" lang="en">
+      <h2>What is a UUID?</h2>
+      <p>A UUID (Universally Unique Identifier, also called a GUID) is a 128-bit ID written as 32 hexadecimal digits, like <code>550e8400-e29b-41d4-a716-446655440000</code>. You can create one anywhere, without a central server, and it will practically never collide with another — which makes UUIDs popular as database keys, request IDs and file names.</p>
+      <h3>v4 or v7?</h3>
+      <ul>
+        <li><b>v4</b> is fully random. Use it when the ID should reveal nothing.</li>
+        <li><b>v7</b> starts with the creation time in milliseconds, so new IDs sort after older ones. Databases index v7 keys much more efficiently than random v4 keys, and you can read the creation time back (paste one into “Check a UUID”).</li>
+      </ul>
+      <h3>Is it safe?</h3>
+      <p>UUIDs are generated in your browser with the Web Crypto API (<code>crypto.getRandomValues</code>). Nothing is sent to a server.</p>
+    </section>
+    <section data-lang="bn" lang="bn">
+      <h2>UUID কী?</h2>
+      <p>UUID (Universally Unique Identifier, যাকে GUID-ও বলে) হলো ১২৮-বিটের একটি আইডি, যা ৩২টি হেক্সাডেসিমাল অঙ্কে লেখা হয়, যেমন <code>550e8400-e29b-41d4-a716-446655440000</code>। কোনো কেন্দ্রীয় সার্ভার ছাড়াই যেকোনো জায়গায় এটি তৈরি করা যায়, আর অন্য কোনো UUID-এর সাথে মিলে যাওয়ার সম্ভাবনা কার্যত শূন্য — তাই ডেটাবেস কী, রিকোয়েস্ট আইডি বা ফাইলের নাম হিসেবে UUID খুব জনপ্রিয়।</p>
+      <h3>v4 না v7?</h3>
+      <ul>
+        <li><b>v4</b> সম্পূর্ণ র‍্যান্ডম। আইডি থেকে কোনো তথ্য প্রকাশ না করতে চাইলে এটি ব্যবহার করুন।</li>
+        <li><b>v7</b>-এর শুরুতে মিলিসেকেন্ডে তৈরির সময় থাকে, তাই নতুন আইডি পুরোনোগুলোর পরে সাজানো থাকে। ডেটাবেসে র‍্যান্ডম v4-এর চেয়ে v7 কী অনেক দক্ষভাবে ইনডেক্স হয়, আর তৈরির সময়ও পড়া যায় (“UUID যাচাই করুন”-এ পেস্ট করে দেখুন)।</li>
+      </ul>
+      <h3>এটি কি নিরাপদ?</h3>
+      <p>UUID আপনার ব্রাউজারেই Web Crypto API (<code>crypto.getRandomValues</code>) দিয়ে তৈরি হয়। কোনো সার্ভারে কিছু পাঠানো হয় না।</p>
+    </section>
+
+    <section class="more-tools">
+      <h2 data-i18n="tools.more">More free tools</h2>
+      <ul class="tool-grid" data-more-tools></ul>
+    </section>
+  </article>
+
+  <footer class="site-footer">
+    <span>© <span data-year></span> <span data-i18n="brand">JSON Bondhu</span></span>
+    <a href="/privacy.html" data-i18n="footer.privacy">Privacy policy</a>
+    <a href="https://github.com/MosabberUddin/jsonbondhu/issues" rel="noopener" data-i18n="footer.contact">Contact</a>
+  </footer>
+
+  <script src="/ads.js" defer></script>
+</body>
+</html>

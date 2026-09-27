@@ -1,0 +1,23 @@
+/* Unix timestamp converter page. Shared layout lives in /styles.css. */
+.ts-h2 { font-size: 1.05rem; margin: 0 0 8px; }
+.ts-now { padding: 12px 14px 14px; background: var(--surface-2); border-bottom: 1px solid var(--border); }
+.ts-now-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 10px; margin-bottom: 10px; }
+.ts-now-cell { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; min-width: 0; }
+.ts-now-label { width: 100%; color: var(--muted); font-size: .82rem; font-weight: 600; }
+.ts-now-value { font-size: clamp(1.15rem, 4.5vw, 1.6rem); font-weight: 600; color: var(--accent); margin-right: auto; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+.ts-section { border-top: 1px solid var(--border); }
+.ts-section:first-of-type { border-top: 0; }
+.ts-section .ts-h2 { margin: 12px 14px 0; }
+.ts-input { flex: 1 1 14em; min-width: 0; }
+.ts-section .options input[type="datetime-local"] { min-width: 0; max-width: 100%; }
+.ts-section .status:empty { display: none; }
+.ts-table-wrap { overflow-x: auto; }
+.ts-table th { width: 1%; }
+.ts-table td { font-family: var(--mono); font-size: .88rem; }
+.ts-table td .ts-val { overflow-wrap: anywhere; }
+.ts-table td.ts-copy { width: 1%; text-align: right; white-space: nowrap; font-family: inherit; }
+.ts-table tr:last-child th, .ts-table tr:last-child td { border-bottom: 0; }
+@media (max-width: 480px) {
+  .ts-table th { white-space: normal; width: 30%; }
+  .ts-table td { font-size: .82rem; }
+}
