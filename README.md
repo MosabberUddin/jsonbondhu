@@ -37,7 +37,6 @@ Copy `public/uuid-generator/` (page + script) and `public/lib/uuid-core.js` + `t
 
 ```bash
 python -m http.server 8765 --directory public
-
 ```
 
 Then open http://localhost:8765. For the ad API and admin portal, use `npm run dev` (runs `wrangler pages dev`, which serves `public/` + `functions/`) (see `docs/ADS.md`).
