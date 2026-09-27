@@ -3,15 +3,15 @@
 ```
 feature branch ──► Pull Request ──► ① CI: unit + backend + e2e tests (desktop & mobile)
                                     ② CodeRabbit AI review (must approve)
-                                    ③ Cloudflare Pages preview URL (manual QA)
-                                         │ all green
+                                    (optional) Cloudflare Pages preview URL for manual QA
+                                         │ ① and ② green
                                          ▼
                                    merge to main ──► Cloudflare Pages deploys production
 ```
 
 Production is built **only** from `main`, and `main` accepts changes **only** through a PR
-that has passed all three gates (the owner chose CodeRabbit + tests only, 2026-09-27;
-human review by the DevOps reviewer is optional).
+that has passed both required gates: CI and CodeRabbit's approval. The owner chose this on
+2026-09-27; manual preview QA and human review by the DevOps reviewer are optional.
 
 ## One-time setup (the owner does these; each takes about 5 minutes)
 
@@ -32,8 +32,10 @@ human review by the DevOps reviewer is optional).
    current pricing on their site before choosing private.
 4. Ask CodeRabbit questions or request a re-review by commenting `@coderabbitai review` on a PR.
 
-### 3. Branch protection (makes the gates mandatory)
-Settings → Branches → Add rule for `main`:
+### 3. Branch ruleset (makes the gates mandatory)
+The rules live in the **`protect-main`** ruleset (Settings → Rules → Rulesets → protect-main),
+targeting the default branch. Don't use Settings → Branches (classic protection); it is separate
+and would not change the enforced rules. `protect-main` contains:
 - [x] Require a pull request before merging → Require **1 approval** (CodeRabbit's approval counts) → Dismiss stale approvals on new commits
 - [ ] Require review from Code Owners: **off** (no `CODEOWNERS` file; human review is optional)
 - [x] Require status checks to pass: `unit-and-backend`, `e2e`, `CodeRabbit`
