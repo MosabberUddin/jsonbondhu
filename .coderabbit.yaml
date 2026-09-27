@@ -29,24 +29,27 @@ reviews:
         - All request bodies are validated (types, lengths, https-only URLs, valid dates) before KV writes.
         - No secrets, stack traces or internal errors are returned to clients.
         - KV write volume stays within free-tier limits (1,000 writes/day); flag per-request writes.
-    - path: "ads.js"
+    - path: "public/ads.js"
       instructions: |
         Renders advertiser-supplied content on the public site. Any use of innerHTML, insertAdjacentHTML,
         or unescaped attributes with campaign data is a security bug. Links must be https, use
         rel="sponsored noopener" and must not allow javascript: URLs. Must not cause layout shift.
-    - path: "admin/**"
+    - path: "public/admin/**"
       instructions: |
         Admin portal. Treat all data from the API as untrusted when rendering. Check CSRF exposure of
         state-changing requests and that no credentials are stored in localStorage.
-    - path: "convert.js"
+    - path: "public/lib/**"
+      instructions: |
+        Pure tool logic (UMD), unit-tested in tests/. Any behavior change needs a matching test change.
+    - path: "public/convert.js"
       instructions: |
         Pure functions, unit-tested in tests/. Any behavior change needs a matching test change.
-    - path: "app.js"
+    - path: "public/**/*.js"
       instructions: |
-        User JSON must never be sent over the network. Flag any fetch/XHR/beacon that includes editor content.
+        Tool pages: user input (JSON, tokens, secrets, files) must never be sent over the network, and dynamic data must be rendered with textContent/DOM APIs, never innerHTML. Flag any fetch/XHR/beacon that includes user input.
     - path: "tests/**"
       instructions: "Tests must be deterministic and must not hit the network."
-    - path: "_headers"
+    - path: "public/_headers"
       instructions: "Security headers for Cloudflare Pages. Flag any weakening of CSP or frame protections."
   tools:
     gitleaks:

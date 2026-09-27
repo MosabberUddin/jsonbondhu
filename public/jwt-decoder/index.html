@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en" data-tool="jwt" data-title-key="jwt.title" data-desc-key="tool.jwt.desc">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>JWT Decoder — read claims, check expiry, verify signature | JSON Bondhu</title>
+  <meta name="description" content="Read a JSON Web Token’s header and claims and check when it expires.">
+  <link rel="canonical" href="https://jsonbondhu.pages.dev/jwt-decoder/">
+  <link rel="alternate" hreflang="en" href="https://jsonbondhu.pages.dev/jwt-decoder/?lang=en">
+  <link rel="alternate" hreflang="bn" href="https://jsonbondhu.pages.dev/jwt-decoder/?lang=bn">
+  <link rel="alternate" hreflang="x-default" href="https://jsonbondhu.pages.dev/jwt-decoder/">
+  <meta name="theme-color" content="#0f766e">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230f766e'/%3E%3Ctext x='16' y='22' font-size='15' font-family='monospace' font-weight='700' fill='white' text-anchor='middle'%3E%7B%7D%3C/text%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/jwt-decoder/jwt.css">
+  <script src="/i18n.js"></script>
+  <script src="/tools.js"></script>
+  <script src="/lib/jwt-core.js" defer></script>
+  <script src="/jwt-decoder/jwt.js" defer></script>
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"WebApplication","name":"JWT Decoder — JSON Bondhu","url":"https://jsonbondhu.pages.dev/jwt-decoder/","applicationCategory":"DeveloperApplication","operatingSystem":"Any","inLanguage":["en","bn"],"offers":{"@type":"Offer","price":"0","priceCurrency":"BDT"}}
+  </script>
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="/">
+      <span class="logo" aria-hidden="true">{ }</span>
+      <span><strong data-i18n="brand">JSON Bondhu</strong></span>
+    </a>
+    <nav class="top-nav">
+      <a href="/" data-i18n="nav.tools">All tools</a>
+      <a href="/#premium" class="pill" data-i18n="nav.premium">Go ad-free</a>
+      <div class="lang-switch" role="group" data-i18n-attr="aria-label:lang.label" aria-label="Language">
+        <button type="button" data-set-lang="en" lang="en" aria-pressed="true">EN</button>
+        <button type="button" data-set-lang="bn" lang="bn" aria-pressed="false">বাংলা</button>
+      </div>
+    </nav>
+  </header>
+
+  <div class="tool-head">
+    <h1 data-i18n="tool.jwt.name">JWT Decoder</h1>
+    <p data-i18n="tool.jwt.desc">Read a JSON Web Token’s header and claims and check when it expires.</p>
+  </div>
+
+  <div class="ad-slot ad-top" data-ad="top" data-i18n-attr="aria-label:ad.label" aria-label="Advertisement">
+    <span data-i18n="ad.placeholder">Ad space</span>
+  </div>
+
+  <main class="app">
+    <p class="jwt-privacy"><span aria-hidden="true">🔒</span> <span data-i18n="jwt.privacy">Your token never leaves this browser. Decoding and signature checks run locally — nothing is uploaded or logged.</span></p>
+    <div class="toolbar">
+      <button type="button" class="primary" data-act="sample" data-i18n="jwt.sample">Sample token</button>
+      <button type="button" data-act="paste" data-i18n="btn.paste">Paste</button>
+      <button type="button" data-act="clear" data-i18n="btn.clear">Clear</button>
+    </div>
+    <div class="io-grid">
+      <div class="pane">
+        <label class="pane-label" for="jwt-input" data-i18n="jwt.input">Encoded token (JWT)</label>
+        <textarea id="jwt-input" autocomplete="off" autocapitalize="off" spellcheck="false"
+          data-i18n-attr="placeholder:jwt.input.placeholder" placeholder="Paste a token like eyJhbGciOi… (a leading “Bearer ” is fine)"></textarea>
+        <div id="jwt-colored" class="jwt-colored mono" aria-hidden="true"></div>
+      </div>
+      <div class="pane jwt-out">
+        <div class="jwt-part-head">
+          <span class="pane-label jwt-h" id="jwt-header-label" data-i18n="jwt.header">Header</span>
+          <button type="button" class="small" data-copy="header" data-i18n="btn.copy">Copy</button>
+        </div>
+        <pre id="jwt-header" class="jwt-json" aria-labelledby="jwt-header-label" tabindex="0"></pre>
+        <div class="jwt-part-head">
+          <span class="pane-label jwt-p" id="jwt-payload-label" data-i18n="jwt.payload">Payload (claims)</span>
+          <button type="button" class="small" data-copy="payload" data-i18n="btn.copy">Copy</button>
+        </div>
+        <pre id="jwt-payload" class="jwt-json" aria-labelledby="jwt-payload-label" tabindex="0"></pre>
+        <div class="jwt-part-head">
+          <span class="pane-label jwt-s" id="jwt-sig-label" data-i18n="jwt.signature">Signature (base64url)</span>
+          <span id="jwt-sig-bytes" class="jwt-muted"></span>
+          <button type="button" class="small" data-copy="signature" data-i18n="btn.copy">Copy</button>
+        </div>
+        <pre id="jwt-sig" class="jwt-json jwt-sig" aria-labelledby="jwt-sig-label" tabindex="0"></pre>
+      </div>
+    </div>
+    <div id="status" class="status" role="status"></div>
+
+    <section class="jwt-section" aria-labelledby="jwt-claims-h">
+      <h2 id="jwt-claims-h" class="jwt-h2"><span data-i18n="jwt.claims">Registered claims</span> <span id="jwt-time-badge"></span></h2>
+      <div class="jwt-table-wrap">
+        <table id="jwt-claims" class="kv-table jwt-claims" aria-live="polite"></table>
+      </div>
+    </section>
+
+    <section class="jwt-section" aria-labelledby="jwt-verify-h">
+      <h2 id="jwt-verify-h" class="jwt-h2" data-i18n="jwt.verify.title">Verify the signature (optional)</h2>
+      <p id="jwt-verify-hint" class="jwt-hint"></p>
+      <div class="jwt-verify">
+        <label class="pane-label" for="jwt-key" id="jwt-key-label">Secret</label>
+        <textarea id="jwt-key" class="jwt-key mono" rows="4" autocomplete="off" autocapitalize="off" spellcheck="false"></textarea>
+        <div class="jwt-verify-row">
+          <label id="jwt-b64-wrap"><input id="jwt-b64" type="checkbox"> <span data-i18n="jwt.verify.b64">Secret is base64-encoded</span></label>
+          <button type="button" class="primary" data-act="verify" data-i18n="jwt.verify.btn">Verify signature</button>
+        </div>
+        <p id="jwt-verify-result" class="jwt-verify-result" role="status"></p>
+      </div>
+    </section>
+  </main>
+
+  <div class="ad-slot ad-bottom" data-ad="bottom" data-i18n-attr="aria-label:ad.label" aria-label="Advertisement">
+    <span data-i18n="ad.placeholder">Ad space</span>
+  </div>
+
+  <article class="content">
+    <section data-lang="en" lang="en">
+      <h2>What is a JWT?</h2>
+      <p>A JSON Web Token is a compact, URL-safe string that carries a small JSON document between two systems — most often a login session passed from an auth server to an API. It has three parts separated by dots: <code>header.payload.signature</code>. The first two are just base64url-encoded JSON, which is why anyone holding the token can read them with a tool like this one.</p>
+      <h3>How to read it</h3>
+      <ul>
+        <li><b>Header</b> — metadata, mainly <code>alg</code> (how it was signed, e.g. HS256 or RS256) and sometimes <code>kid</code>, the ID of the signing key.</li>
+        <li><b>Payload</b> — the claims. Registered names are short on purpose: <code>iss</code> issuer, <code>sub</code> subject, <code>aud</code> audience, <code>exp</code> expiry, <code>nbf</code> not-before, <code>iat</code> issued-at and <code>jti</code> token ID. Times are in seconds since 1 January 1970 (UTC); the table above turns them into real dates.</li>
+        <li><b>Signature</b> — proof that the first two parts were created by someone holding the key and have not been changed since.</li>
+      </ul>
+      <h3>Decoding is not verifying</h3>
+      <p>Reading a payload tells you what a token <em>claims</em>, not whether the claims are true. An attacker can edit the payload and re-encode it in seconds; only the signature check exposes that. Your server must always verify the signature with a fixed, expected algorithm — never trust the <code>alg</code> field blindly, and reject <code>alg: none</code>. Also remember that the payload is not encrypted: do not put passwords or personal data in it.</p>
+      <h3>FAQ</h3>
+      <details><summary>Is it safe to paste a real token here?</summary><p>The page works offline once loaded and sends nothing anywhere. Still, treat live tokens like passwords: prefer expired or test tokens, and never paste a private key — verification only needs the public key.</p></details>
+      <details><summary>Why does my app accept a token this page calls expired?</summary><p>Many libraries allow a little clock skew (often 30–120 seconds), and your device clock may differ from the server’s.</p></details>
+      <details><summary>My token has five parts.</summary><p>That is an encrypted JWE. Only the header is readable; the content needs the recipient’s private key.</p></details>
+      <details><summary>Verification says my key format is wrong.</summary><p>Use an SPKI key that starts with <code>BEGIN PUBLIC KEY</code>, or a public JWK. A certificate or a <code>BEGIN RSA PUBLIC KEY</code> key must be converted first (for example with <code>openssl</code>).</p></details>
+    </section>
+    <section data-lang="bn" lang="bn">
+      <h2>JWT কী?</h2>
+      <p>JSON Web Token হলো ছোট, URL-এ নিরাপদে পাঠানো যায় এমন একটি স্ট্রিং, যা দুটি সিস্টেমের মধ্যে ছোট্ট একটি JSON ডকুমেন্ট বহন করে — সাধারণত লগইন সেশনের তথ্য, যা অথ সার্ভার থেকে API-তে যায়। এর তিনটি অংশ থাকে, ডট দিয়ে আলাদা: <code>header.payload.signature</code>। প্রথম দুটি অংশ কেবল base64url-এ এনকোড করা JSON, তাই টোকেন যার হাতে আছে সে-ই এই ধরনের টুল দিয়ে এগুলো পড়তে পারে।</p>
+      <h3>কীভাবে পড়বেন</h3>
+      <ul>
+        <li><b>হেডার</b> — মেটাডেটা, মূলত <code>alg</code> (কোন পদ্ধতিতে সাইন করা, যেমন HS256 বা RS256) আর কখনো <code>kid</code>, অর্থাৎ সাইনিং কী-এর আইডি।</li>
+        <li><b>পেলোড</b> — ক্লেইমগুলো। নিবন্ধিত নামগুলো ইচ্ছে করেই ছোট: <code>iss</code> ইস্যুকারী, <code>sub</code> বিষয় (সাধারণত ইউজার আইডি), <code>aud</code> কার জন্য, <code>exp</code> মেয়াদ শেষ, <code>nbf</code> কখন থেকে বৈধ, <code>iat</code> তৈরির সময় আর <code>jti</code> টোকেনের আইডি। সময়গুলো ১৯৭০ সালের ১ জানুয়ারি (UTC) থেকে সেকেন্ডে গোনা; ওপরের টেবিল এগুলোকে আসল তারিখে দেখায়।</li>
+        <li><b>সিগনেচার</b> — প্রমাণ যে প্রথম দুটি অংশ কী-এর মালিকই তৈরি করেছে এবং এরপর কেউ বদলায়নি।</li>
+      </ul>
+      <h3>ডিকোড করা মানেই যাচাই করা নয়</h3>
+      <p>পেলোড পড়লে জানা যায় টোকেনটি কী <em>দাবি</em> করছে, দাবিগুলো সত্যি কি না তা নয়। আক্রমণকারী কয়েক সেকেন্ডেই পেলোড বদলে আবার এনকোড করতে পারে; কেবল সিগনেচার যাচাই করলেই সেটা ধরা পড়ে। আপনার সার্ভারে সবসময় নির্দিষ্ট, প্রত্যাশিত অ্যালগরিদম দিয়ে সিগনেচার যাচাই করুন — <code>alg</code> ফিল্ডকে অন্ধভাবে বিশ্বাস করবেন না, আর <code>alg: none</code> টোকেন বাতিল করুন। মনে রাখবেন পেলোড এনক্রিপ্ট করা থাকে না: এতে পাসওয়ার্ড বা ব্যক্তিগত তথ্য রাখবেন না।</p>
+      <h3>প্রশ্নোত্তর</h3>
+      <details><summary>আসল টোকেন এখানে পেস্ট করা কি নিরাপদ?</summary><p>পেজটি একবার লোড হলে অফলাইনেও চলে এবং কোথাও কিছু পাঠায় না। তবুও চালু টোকেনকে পাসওয়ার্ডের মতোই সাবধানে রাখুন: সম্ভব হলে মেয়াদোত্তীর্ণ বা টেস্ট টোকেন ব্যবহার করুন, আর কখনো প্রাইভেট কী পেস্ট করবেন না — যাচাইয়ের জন্য শুধু পাবলিক কী লাগে।</p></details>
+      <details><summary>এই পেজ বলছে মেয়াদ শেষ, অথচ আমার অ্যাপ টোকেনটি নিচ্ছে কেন?</summary><p>অনেক লাইব্রেরি ঘড়ির সামান্য পার্থক্য (প্রায়ই ৩০–১২০ সেকেন্ড) ছাড় দেয়, আর আপনার ডিভাইসের ঘড়ি সার্ভারের ঘড়ির চেয়ে আলাদা হতে পারে।</p></details>
+      <details><summary>আমার টোকেনে পাঁচটি অংশ।</summary><p>সেটি এনক্রিপ্ট করা JWE। শুধু হেডার পড়া যায়; ভেতরের তথ্য পড়তে প্রাপকের প্রাইভেট কী লাগে।</p></details>
+      <details><summary>যাচাইয়ের সময় বলছে কী-এর ফরম্যাট ভুল।</summary><p><code>BEGIN PUBLIC KEY</code> দিয়ে শুরু হওয়া SPKI কী অথবা পাবলিক JWK ব্যবহার করুন। সার্টিফিকেট বা <code>BEGIN RSA PUBLIC KEY</code> কী আগে রূপান্তর করে নিন (যেমন <code>openssl</code> দিয়ে)।</p></details>
+    </section>
+
+    <section class="more-tools">
+      <h2 data-i18n="tools.more">More free tools</h2>
+      <ul class="tool-grid" data-more-tools></ul>
+    </section>
+  </article>
+
+  <footer class="site-footer">
+    <span>© <span data-year></span> <span data-i18n="brand">JSON Bondhu</span></span>
+    <a href="/privacy.html" data-i18n="footer.privacy">Privacy policy</a>
+    <a href="https://github.com/MosabberUddin/jsonbondhu/issues" rel="noopener" data-i18n="footer.contact">Contact</a>
+  </footer>
+
+  <script src="/ads.js" defer></script>
+</body>
+</html>

@@ -1,14 +1,14 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-tool="json" data-title-key="meta.title" data-desc-key="meta.description">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>JSON Bondhu — Online JSON Formatter, Viewer &amp; Converter</title>
   <meta name="description" content="Free online JSON formatter, validator and tree viewer. Convert JSON to CSV, YAML and XML. Your data never leaves your browser. Available in English and Bangla.">
-  <link rel="canonical" href="https://jsonbondhu.pages.dev/">
-  <link rel="alternate" hreflang="en" href="https://jsonbondhu.pages.dev/?lang=en">
-  <link rel="alternate" hreflang="bn" href="https://jsonbondhu.pages.dev/?lang=bn">
-  <link rel="alternate" hreflang="x-default" href="https://jsonbondhu.pages.dev/">
+  <link rel="canonical" href="https://jsonbondhu.pages.dev/json-formatter/">
+  <link rel="alternate" hreflang="en" href="https://jsonbondhu.pages.dev/json-formatter/?lang=en">
+  <link rel="alternate" hreflang="bn" href="https://jsonbondhu.pages.dev/json-formatter/?lang=bn">
+  <link rel="alternate" hreflang="x-default" href="https://jsonbondhu.pages.dev/json-formatter/">
   <meta property="og:title" content="JSON Bondhu — JSON formatter in English &amp; Bangla">
   <meta property="og:description" content="Format, validate, explore and convert JSON (CSV / YAML / XML) — entirely in your browser.">
   <meta property="og:type" content="website">
@@ -19,10 +19,11 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css">
-  <script src="i18n.js"></script>
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/i18n.js"></script>
+  <script src="/tools.js"></script>
   <script type="application/ld+json">
-  {"@context":"https://schema.org","@type":"WebApplication","name":"JSON Bondhu","alternateName":"JSON বন্ধু","url":"https://jsonbondhu.pages.dev/","applicationCategory":"DeveloperApplication","operatingSystem":"Any","inLanguage":["en","bn"],"offers":{"@type":"Offer","price":"0","priceCurrency":"BDT"}}
+  {"@context":"https://schema.org","@type":"WebApplication","name":"JSON Bondhu","alternateName":"JSON বন্ধু","url":"https://jsonbondhu.pages.dev/json-formatter/","applicationCategory":"DeveloperApplication","operatingSystem":"Any","inLanguage":["en","bn"],"offers":{"@type":"Offer","price":"0","priceCurrency":"BDT"}}
   </script>
   <!-- AdSense: after approval, uncomment and replace ca-pub-XXXXXXXXXXXXXXXX with your publisher ID.
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX" crossorigin="anonymous"></script>
@@ -30,14 +31,15 @@
 </head>
 <body>
   <header class="site-header">
-    <a class="brand" href="./">
+    <a class="brand" href="/">
       <span class="logo" aria-hidden="true">{ }</span>
       <span><strong data-i18n="brand">JSON Bondhu</strong><small data-i18n="tagline">JSON formatter &amp; viewer</small></span>
     </a>
     <nav class="top-nav">
+      <a href="/" data-i18n="nav.tools">All tools</a>
       <a href="#about" data-i18n="nav.about">What is JSON?</a>
       <a href="#faq" data-i18n="nav.faq">FAQ</a>
-      <a href="#premium" class="pill" data-i18n="nav.premium">Go ad-free</a>
+      <a href="/#premium" class="pill" data-i18n="nav.premium">Go ad-free</a>
       <div class="lang-switch" role="group" data-i18n-attr="aria-label:lang.label" aria-label="Language">
         <button type="button" data-set-lang="en" lang="en" aria-pressed="true">EN</button>
         <button type="button" data-set-lang="bn" lang="bn" aria-pressed="false">বাংলা</button>
@@ -48,6 +50,11 @@
   <div class="ad-slot ad-top" data-ad="top" data-i18n-attr="aria-label:ad.label" aria-label="Advertisement">
     <!-- <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-XXXXXXXXXXXXXXXX" data-ad-slot="0000000000" data-ad-format="auto" data-full-width-responsive="true"></ins> -->
     <span data-i18n="ad.placeholder">Ad space</span>
+  </div>
+
+  <div class="tool-head">
+    <h1 data-i18n="tool.json.name">JSON Formatter</h1>
+    <p data-i18n="tool.json.desc">Format, validate, repair and explore JSON as a tree; convert to CSV, YAML, XML.</p>
   </div>
 
   <main class="app">
@@ -167,28 +174,22 @@
       </div>
     </section>
 
-    <section id="premium" class="premium">
-      <div data-lang="en" lang="en">
-        <h2>JSON Bondhu, ad-free</h2>
-        <p>One payment for lifetime ad-free use, plus new features first. Pay with bKash, Nagad or card — <b>coming soon</b>.</p>
-      </div>
-      <div data-lang="bn" lang="bn">
-        <h2>বিজ্ঞাপনমুক্ত JSON বন্ধু</h2>
-        <p>একবার পেমেন্টে আজীবন বিজ্ঞাপনমুক্ত ব্যবহার এবং নতুন ফিচার সবার আগে। বিকাশ/নগদ/কার্ড দিয়ে পেমেন্ট — <b>শীঘ্রই আসছে</b>।</p>
-      </div>
+    <section class="more-tools">
+      <h2 data-i18n="tools.more">More free tools</h2>
+      <ul class="tool-grid" data-more-tools></ul>
     </section>
   </article>
 
   <footer class="site-footer">
-    <span>© <span id="year"></span> <span data-i18n="brand">JSON Bondhu</span></span>
-    <a href="privacy.html" data-i18n="footer.privacy">Privacy policy</a>
+    <span>© <span data-year></span> <span data-i18n="brand">JSON Bondhu</span></span>
+    <a href="/privacy.html" data-i18n="footer.privacy">Privacy policy</a>
     <a href="https://github.com/MosabberUddin/jsonbondhu/issues" rel="noopener" data-i18n="footer.contact">Contact</a>
   </footer>
 
   <div id="toast" class="toast" hidden></div>
 
-  <script src="convert.js"></script>
-  <script src="app.js"></script>
-  <script src="ads.js" defer></script>
+  <script src="/convert.js"></script>
+  <script src="/app.js"></script>
+  <script src="/ads.js" defer></script>
 </body>
 </html>

@@ -5,7 +5,7 @@
   "scripts": {
     "test": "node --test \"tests/*.test.*\"",
     "test:e2e": "playwright test",
-    "dev": "wrangler pages dev ."
+    "dev": "wrangler pages dev"
   },
   "devDependencies": {
     "@playwright/test": "1.55.0",

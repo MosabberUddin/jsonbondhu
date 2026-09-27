@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="en" data-tool="csv" data-title-key="csv.title" data-desc-key="tool.csv.desc">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CSV to JSON &amp; JSON to CSV Converter — free, online | JSON Bondhu</title>
+  <meta name="description" content="Turn CSV into JSON and JSON into CSV, with delimiter and header options.">
+  <link rel="canonical" href="https://jsonbondhu.pages.dev/csv-json/">
+  <link rel="alternate" hreflang="en" href="https://jsonbondhu.pages.dev/csv-json/?lang=en">
+  <link rel="alternate" hreflang="bn" href="https://jsonbondhu.pages.dev/csv-json/?lang=bn">
+  <link rel="alternate" hreflang="x-default" href="https://jsonbondhu.pages.dev/csv-json/">
+  <meta name="theme-color" content="#0f766e">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230f766e'/%3E%3Ctext x='16' y='22' font-size='15' font-family='monospace' font-weight='700' fill='white' text-anchor='middle'%3E%7B%7D%3C/text%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/csv-json/csv.css">
+  <script src="/i18n.js"></script>
+  <script src="/tools.js"></script>
+  <script src="/lib/csv-core.js" defer></script>
+  <script src="/csv-json/csv.js" defer></script>
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"WebApplication","name":"CSV ↔ JSON Converter — JSON Bondhu","url":"https://jsonbondhu.pages.dev/csv-json/","applicationCategory":"DeveloperApplication","operatingSystem":"Any","inLanguage":["en","bn"],"offers":{"@type":"Offer","price":"0","priceCurrency":"BDT"}}
+  </script>
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="/">
+      <span class="logo" aria-hidden="true">{ }</span>
+      <span><strong data-i18n="brand">JSON Bondhu</strong></span>
+    </a>
+    <nav class="top-nav">
+      <a href="/" data-i18n="nav.tools">All tools</a>
+      <a href="/#premium" class="pill" data-i18n="nav.premium">Go ad-free</a>
+      <div class="lang-switch" role="group" data-i18n-attr="aria-label:lang.label" aria-label="Language">
+        <button type="button" data-set-lang="en" lang="en" aria-pressed="true">EN</button>
+        <button type="button" data-set-lang="bn" lang="bn" aria-pressed="false">বাংলা</button>
+      </div>
+    </nav>
+  </header>
+
+  <div class="tool-head">
+    <h1 data-i18n="tool.csv.name">CSV ↔ JSON Converter</h1>
+    <p data-i18n="tool.csv.desc">Turn CSV into JSON and JSON into CSV, with delimiter and header options.</p>
+  </div>
+
+  <div class="ad-slot ad-top" data-ad="top" data-i18n-attr="aria-label:ad.label" aria-label="Advertisement">
+    <span data-i18n="ad.placeholder">Ad space</span>
+  </div>
+
+  <main class="app csv-app">
+    <div class="toolbar">
+      <div class="csv-dir" role="group" data-i18n-attr="aria-label:csv.direction" aria-label="Direction">
+        <button type="button" data-dir="csv2json" aria-pressed="true" data-i18n="csv.dir.csv2json">CSV → JSON</button>
+        <button type="button" data-dir="json2csv" aria-pressed="false" data-i18n="csv.dir.json2csv">JSON → CSV</button>
+      </div>
+      <button type="button" data-act="swap" data-i18n-attr="title:csv.swap.title" title="Use the output as the new input and switch direction" data-i18n="csv.swap">⇄ Swap</button>
+      <span class="sep"></span>
+      <button type="button" data-act="open" data-i18n="btn.open">Open file</button>
+      <button type="button" data-act="paste" data-i18n="btn.paste">Paste</button>
+      <button type="button" data-act="sample" data-i18n="btn.sample">Sample</button>
+      <button type="button" data-act="clear" data-i18n="btn.clear">Clear</button>
+      <input type="file" id="csv-file" accept=".csv,.tsv,.txt,.json,text/csv,text/tab-separated-values,application/json,text/plain" hidden>
+    </div>
+
+    <form id="csv-options" class="options" data-for="csv2json">
+      <label><span data-i18n="csv.delimiter">Delimiter</span>
+        <select id="csv-delim">
+          <option value="auto" data-i18n="csv.delim.auto">Auto-detect</option>
+          <option value="," data-i18n="csv.delim.comma">Comma ,</option>
+          <option value=";" data-i18n="csv.delim.semicolon">Semicolon ;</option>
+          <option value="tab" data-i18n="csv.delim.tab">Tab</option>
+          <option value="|" data-i18n="csv.delim.pipe">Pipe |</option>
+        </select>
+      </label>
+      <label><input id="csv-header" type="checkbox" checked> <span data-i18n="csv.header">First row is header</span></label>
+      <label><span data-i18n="csv.rowsAs">Rows as</span>
+        <select id="csv-rows">
+          <option value="objects" data-i18n="csv.rows.objects">Objects</option>
+          <option value="arrays" data-i18n="csv.rows.arrays">Arrays</option>
+        </select>
+      </label>
+      <label><input id="csv-infer" type="checkbox" checked> <span data-i18n="csv.infer">Detect numbers, true/false, null</span></label>
+      <label><input id="csv-trim" type="checkbox"> <span data-i18n="csv.trim">Trim spaces</span></label>
+      <label><input id="csv-nest" type="checkbox"> <span data-i18n="csv.nest">Rebuild nested objects (a.b → {"a":{"b"}})</span></label>
+    </form>
+
+    <form id="json-options" class="options" data-for="json2csv" hidden>
+      <label><span data-i18n="csv.delimiter">Delimiter</span>
+        <select id="json-delim">
+          <option value="," data-i18n="csv.delim.comma">Comma ,</option>
+          <option value=";" data-i18n="csv.delim.semicolon">Semicolon ;</option>
+          <option value="tab" data-i18n="csv.delim.tab">Tab</option>
+          <option value="|" data-i18n="csv.delim.pipe">Pipe |</option>
+        </select>
+      </label>
+      <label><input id="json-header" type="checkbox" checked> <span data-i18n="csv.headerRow">Include header row</span></label>
+      <label><input id="json-guard" type="checkbox" aria-describedby="guard-help"> <span data-i18n="csv.guard">Protect against spreadsheet formulas</span></label>
+      <p id="guard-help" class="csv-help" data-i18n="csv.guard.help">Cells that start with = + - or @ can run as formulas when the CSV is opened in Excel or Google Sheets. When this is on, such text cells get a leading ' so they are shown as plain text. Leave it off if another program needs the exact values.</p>
+    </form>
+
+    <div class="io-grid">
+      <div class="pane" id="in-pane">
+        <label class="pane-label" for="csv-in" id="in-label" data-i18n="csv.in.csv">CSV input</label>
+        <textarea id="csv-in" spellcheck="false" autocomplete="off" wrap="off"
+          data-i18n-attr="placeholder:csv.in.placeholder" placeholder="Paste CSV or JSON here, or drop a file…&#10;&#10;Your data never leaves your browser."></textarea>
+      </div>
+      <div class="pane">
+        <div class="csv-out-head">
+          <label class="pane-label" for="csv-out" id="out-label" data-i18n="csv.out.json">JSON output</label>
+          <span class="csv-out-actions">
+            <button type="button" class="small" data-act="copy" data-i18n="btn.copy">Copy</button>
+            <button type="button" class="small" data-act="download" data-i18n="btn.download">Download</button>
+          </span>
+        </div>
+        <p id="out-note" class="csv-help csv-out-note" hidden></p>
+        <textarea id="csv-out" readonly spellcheck="false" wrap="off"></textarea>
+      </div>
+    </div>
+
+    <section class="csv-preview" aria-labelledby="preview-title">
+      <h2 id="preview-title" class="pane-label" data-i18n="csv.preview">Preview</h2>
+      <p id="preview-note" class="csv-help"></p>
+      <div class="csv-table-wrap" tabindex="0" data-i18n-attr="aria-label:csv.preview" aria-label="Preview" role="region">
+        <table id="csv-table" class="kv-table csv-table"></table>
+      </div>
+    </section>
+    <div id="status" class="status" role="status" aria-live="polite"></div>
+  </main>
+
+  <div class="ad-slot ad-bottom" data-ad="bottom" data-i18n-attr="aria-label:ad.label" aria-label="Advertisement">
+    <span data-i18n="ad.placeholder">Ad space</span>
+  </div>
+
+  <article class="content">
+    <section data-lang="en" lang="en">
+      <h2>CSV and JSON in a nutshell</h2>
+      <p><b>CSV</b> (comma-separated values) is a plain-text table: one record per line, fields separated by a delimiter. Every spreadsheet can open and save it, which makes it the everyday format for exports, bank statements and mailing lists. <b>JSON</b> describes structured data — objects, lists, numbers, true/false and null — and is what web APIs, JavaScript apps and most databases speak.</p>
+      <p>Convert CSV to JSON when you want to feed a spreadsheet into code, seed a database or mock an API. Convert JSON to CSV when a colleague needs to open API data in Excel or Google Sheets, or you want a quick sortable table of a response.</p>
+      <h3>Delimiters and Excel quirks</h3>
+      <ul>
+        <li>In many European locales Excel saves CSV with <b>semicolons</b>, because the comma is the decimal separator there. The converter detects comma, semicolon, tab and pipe automatically; you can also pick one yourself.</li>
+        <li>Excel reads CSV in the system code page unless the file starts with a byte-order mark. Our CSV downloads include a UTF-8 BOM so Bangla and other scripts show correctly.</li>
+        <li>Spreadsheets like to strip leading zeros and turn long numbers into scientific notation. Type detection here only converts a value when its JSON form is exactly the same text, so <code>00123</code>, <code>01712345678</code> or <code>1.50</code> stay strings.</li>
+        <li>Nested JSON objects become columns such as <code>address.city</code>; tick “Rebuild nested objects” to turn them back. Lists are stored as JSON text inside a cell.</li>
+      </ul>
+      <h3>FAQ</h3>
+      <details><summary>Is my data uploaded?</summary><p>No. Parsing and conversion run entirely in your browser; nothing is sent to a server.</p></details>
+      <details><summary>What happens to rows with too many or too few fields?</summary><p>They are kept. Missing cells become empty (or null), extra cells get columns named col4, col5… and the status bar lists the affected line numbers so you can check them.</p></details>
+      <details><summary>What is the formula protection option?</summary><p>A cell such as <code>=HYPERLINK(…)</code> may run as a formula when the CSV is opened in a spreadsheet — a known attack called CSV injection. The option adds an apostrophe in front of text that starts with = + - or @. It is off by default because it changes the data.</p></details>
+      <details><summary>How big a file can it handle?</summary><p>Files of several megabytes usually convert in about a second on a normal laptop. The preview shows the first 50 rows; the output always contains everything.</p></details>
+    </section>
+    <section data-lang="bn" lang="bn">
+      <h2>সংক্ষেপে CSV আর JSON</h2>
+      <p><b>CSV</b> (কমা দিয়ে আলাদা করা মান) হলো সাধারণ টেক্সটে লেখা একটি টেবিল: প্রতি লাইনে একটি রেকর্ড, আর ঘরগুলো একটি ডিলিমিটার দিয়ে আলাদা। যেকোনো স্প্রেডশিট এটি খুলতে ও সেভ করতে পারে, তাই এক্সপোর্ট, ব্যাংক স্টেটমেন্ট বা ঠিকানার তালিকায় CSV-ই সবচেয়ে বেশি চলে। <b>JSON</b> গোছানো ডেটা প্রকাশ করে — অবজেক্ট, লিস্ট, সংখ্যা, true/false আর null — এবং ওয়েব API, জাভাস্ক্রিপ্ট অ্যাপ ও বেশিরভাগ ডেটাবেস এই ভাষাতেই কথা বলে।</p>
+      <p>স্প্রেডশিটের ডেটা কোডে ব্যবহার করতে, ডেটাবেসে প্রাথমিক ডেটা ঢোকাতে বা নকল API বানাতে CSV থেকে JSON করুন। আর API-র ডেটা কাউকে Excel বা Google Sheets-এ খুলে দেখাতে, কিংবা একটি রেসপন্স টেবিল আকারে সাজিয়ে দেখতে JSON থেকে CSV করুন।</p>
+      <h3>ডিলিমিটার ও Excel-এর ঝামেলা</h3>
+      <ul>
+        <li>অনেক ইউরোপীয় সেটিংসে দশমিকের জন্য কমা ব্যবহার হয়, তাই সেখানে Excel CSV সেভ করে <b>সেমিকোলন</b> দিয়ে। এই কনভার্টার কমা, সেমিকোলন, ট্যাব ও পাইপ নিজেই চিনে নেয়; চাইলে আপনি নিজেও বেছে দিতে পারেন।</li>
+        <li>ফাইলের শুরুতে বাইট-অর্ডার মার্ক (BOM) না থাকলে Excel CSV-কে পুরোনো এনকোডিংয়ে পড়ে, ফলে বাংলা ভেঙে যায়। আমাদের ডাউনলোড করা CSV-তে UTF-8 BOM থাকে, তাই বাংলা ঠিকঠাক দেখা যায়।</li>
+        <li>স্প্রেডশিট প্রায়ই শুরুর শূন্য মুছে ফেলে বা লম্বা সংখ্যাকে বৈজ্ঞানিক রূপে দেখায়। এখানে টাইপ শনাক্তকরণ কেবল তখনই মান বদলায় যখন JSON রূপটি হুবহু একই টেক্সট হয় — তাই <code>00123</code>, <code>01712345678</code> বা <code>1.50</code> স্ট্রিং হিসেবেই থাকে।</li>
+        <li>নেস্টেড JSON অবজেক্ট <code>address.city</code>-এর মতো কলামে পরিণত হয়; আবার আগের রূপে ফেরাতে “নেস্টেড অবজেক্ট আবার তৈরি করুন” চালু করুন। লিস্টগুলো একটি ঘরের ভেতরে JSON টেক্সট হিসেবে থাকে।</li>
+      </ul>
+      <h3>প্রশ্নোত্তর</h3>
+      <details><summary>আমার ডেটা কি আপলোড হয়?</summary><p>না। পার্সিং ও রূপান্তর পুরোটাই আপনার ব্রাউজারে হয়; কোনো সার্ভারে কিছু পাঠানো হয় না।</p></details>
+      <details><summary>কোনো সারিতে ঘর বেশি বা কম থাকলে কী হয়?</summary><p>সারিটি বাদ পড়ে না। না-থাকা ঘর ফাঁকা (বা null) হয়, বাড়তি ঘরগুলো col4, col5… নামের কলামে যায়, আর স্ট্যাটাস বারে কোন কোন লাইনে সমস্যা তা দেখানো হয় যাতে আপনি মিলিয়ে নিতে পারেন।</p></details>
+      <details><summary>ফর্মুলা থেকে সুরক্ষা অপশনটি কী?</summary><p><code>=HYPERLINK(…)</code>-এর মতো কোনো ঘর স্প্রেডশিটে খুললে ফর্মুলা হিসেবে চলে যেতে পারে — এটিকে CSV ইনজেকশন বলে। অপশনটি = + - বা @ দিয়ে শুরু হওয়া টেক্সটের আগে একটি অ্যাপোস্ট্রফি (') যোগ করে। এতে ডেটা বদলে যায়, তাই শুরুতে এটি বন্ধ থাকে।</p></details>
+      <details><summary>কত বড় ফাইল চালানো যায়?</summary><p>সাধারণ ল্যাপটপে কয়েক মেগাবাইটের ফাইল সাধারণত এক সেকেন্ডের মতো সময়ে রূপান্তর হয়। প্রিভিউতে প্রথম ৫০টি সারি দেখায়, তবে আউটপুটে সবকিছুই থাকে।</p></details>
+    </section>
+
+    <section class="more-tools">
+      <h2 data-i18n="tools.more">More free tools</h2>
+      <ul class="tool-grid" data-more-tools></ul>
+    </section>
+  </article>
+
+  <footer class="site-footer">
+    <span>© <span data-year></span> <span data-i18n="brand">JSON Bondhu</span></span>
+    <a href="/privacy.html" data-i18n="footer.privacy">Privacy policy</a>
+    <a href="https://github.com/MosabberUddin/jsonbondhu/issues" rel="noopener" data-i18n="footer.contact">Contact</a>
+  </footer>
+
+  <script src="/ads.js" defer></script>
+</body>
+</html>

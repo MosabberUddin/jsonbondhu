@@ -405,11 +405,8 @@
     loadFile(e.dataTransfer.files[0]);
   });
 
-  function renderYear() { $('#year').textContent = I18N.num(new Date().getFullYear()); }
-  renderYear();
   renderStatus();
   window.addEventListener('jb:langchange', () => {
-    renderYear();
     renderStatus();
     relabelTree();
   });

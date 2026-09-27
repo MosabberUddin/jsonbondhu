@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert');
-const JB = require('../convert.js');
+const JB = require('../public/convert.js');
 
 test('bnNum converts digits', () => {
   assert.strictEqual(JB.bnNum('2026'), '২০২৬');

@@ -17,20 +17,24 @@ Everything runs in the browser. User JSON never leaves the device.
 ## Structure
 | Path | Purpose |
 |---|---|
-| `index.html`, `styles.css`, `app.js` | The tool UI |
-| `convert.js` | Pure logic (repair, converters, error location), unit-tested |
-| `privacy.html` | Privacy policy (required by AdSense) |
-| `ads.js`, `admin/`, `functions/` | Ad serving, admin portal, and API. See `docs/ADS.md` |
-| `docs/MONETIZATION.md` | AdSense, local ad sales, payments, and revenue plan |
-| `robots.txt`, `sitemap.xml`, `ads.txt`, `_headers` | Launch and hosting files |
-| `tests/` | `node --test tests/` |
-| `.github/workflows/ci.yml` | CI runs the tests on every PR |
+| `public/` | Everything that is published (Cloudflare Pages output dir) |
+| `public/index.html` | Hub: tool catalogue with search |
+| `public/<tool>/` | One folder per tool: `index.html` + page script |
+| `public/lib/*-core.js`, `public/convert.js` | Pure tool logic, unit-tested in `tests/` |
+| `public/i18n.js`, `public/tools.js` | Shared: EN/বাংলা strings + switch; tool list, copy/download/toast helpers |
+| `public/ads.js`, `public/admin/`, `functions/` | Ad serving, admin portal, and API. See `docs/ADS.md` |
+| `docs/` | Monetization, ads and release process |
+| `tests/`, `e2e/` | `npm test` (unit/backend), `npm run test:e2e` (Playwright, desktop + mobile) |
+
+### Adding a tool
+Copy `public/uuid-generator/` (page + script) and `public/lib/uuid-core.js` + `tests/uuid.test.js`, add the tool to
+`TOOLS` in `public/tools.js` and its `tool.<id>.name/desc` strings to `public/i18n.js`, and add the URL to `public/sitemap.xml`.
 
 ## Run locally
 ```bash
-python -m http.server 8765
+python -m http.server 8765 --directory public
 ```
-Then open http://localhost:8765. For the ad API and admin portal, use `npx wrangler pages dev .` (see `docs/ADS.md`).
+Then open http://localhost:8765. For the ad API and admin portal, use `npm run dev` (runs `wrangler pages dev`, which serves `public/` + `functions/`) (see `docs/ADS.md`).
 
 ## Deploy (Cloudflare Pages, free)
 1. Push this folder to a GitHub repo.

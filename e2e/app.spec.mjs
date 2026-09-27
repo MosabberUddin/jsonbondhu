@@ -2,7 +2,7 @@
 import { test, expect } from '@playwright/test';
 
 test.beforeEach(async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/json-formatter/');
   await page.evaluate(() => localStorage.clear());
   await page.reload();
 });
@@ -90,7 +90,7 @@ test('user JSON is never sent over the network', async ({ page }) => {
 test('no horizontal scroll and no console errors', async ({ page }) => {
   const errors = [];
   page.on('pageerror', (e) => errors.push(e.message));
-  await page.goto('/');
+  await page.goto('/json-formatter/');
   await page.click('[data-act=sample]');
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
   expect(overflow).toBeLessThanOrEqual(0);
@@ -136,7 +136,7 @@ test.describe('language', () => {
   });
 
   test('?lang=bn opens in Bangla', async ({ page }) => {
-    await page.goto('/?lang=bn');
+    await page.goto('/json-formatter/?lang=bn');
     await expect(page.locator('html')).toHaveAttribute('lang', 'bn');
     await expect(page.locator('[data-tab=tree]')).toHaveText('ট্রি ভিউ');
   });

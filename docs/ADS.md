@@ -277,7 +277,7 @@ so make sure no `.dev.vars` or other local secrets are in it (see Open issues).
 ```powershell
 Copy-Item .dev.vars.example .dev.vars   # DEV_ADMIN_BYPASS=1, ADMIN_EMAILS=...
 npm install                             # dev tools only (wrangler, playwright)
-npx wrangler pages dev .                # http://localhost:8788
+npx wrangler pages dev                # http://localhost:8788
 ```
 
 * Site: http://localhost:8788/. Admin: http://localhost:8788/admin/. Locally you are signed in

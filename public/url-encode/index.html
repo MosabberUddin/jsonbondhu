@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en" data-tool="url" data-title-key="url.title" data-desc-key="tool.url.desc">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>URL Encode / Decode &amp; URL Parser — percent-encoding online | JSON Bondhu</title>
+  <meta name="description" content="Percent-encode or decode text and break a URL into its query parameters.">
+  <link rel="canonical" href="https://jsonbondhu.pages.dev/url-encode/">
+  <link rel="alternate" hreflang="en" href="https://jsonbondhu.pages.dev/url-encode/?lang=en">
+  <link rel="alternate" hreflang="bn" href="https://jsonbondhu.pages.dev/url-encode/?lang=bn">
+  <link rel="alternate" hreflang="x-default" href="https://jsonbondhu.pages.dev/url-encode/">
+  <meta name="theme-color" content="#0f766e">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230f766e'/%3E%3Ctext x='16' y='22' font-size='15' font-family='monospace' font-weight='700' fill='white' text-anchor='middle'%3E%7B%7D%3C/text%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/url-encode/url.css">
+  <script src="/i18n.js"></script>
+  <script src="/tools.js"></script>
+  <script src="/lib/url-core.js" defer></script>
+  <script src="/url-encode/url.js" defer></script>
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"WebApplication","name":"URL Encode / Decode — JSON Bondhu","url":"https://jsonbondhu.pages.dev/url-encode/","applicationCategory":"DeveloperApplication","operatingSystem":"Any","inLanguage":["en","bn"],"offers":{"@type":"Offer","price":"0","priceCurrency":"BDT"}}
+  </script>
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="/">
+      <span class="logo" aria-hidden="true">{ }</span>
+      <span><strong data-i18n="brand">JSON Bondhu</strong></span>
+    </a>
+    <nav class="top-nav">
+      <a href="/" data-i18n="nav.tools">All tools</a>
+      <a href="/#premium" class="pill" data-i18n="nav.premium">Go ad-free</a>
+      <div class="lang-switch" role="group" data-i18n-attr="aria-label:lang.label" aria-label="Language">
+        <button type="button" data-set-lang="en" lang="en" aria-pressed="true">EN</button>
+        <button type="button" data-set-lang="bn" lang="bn" aria-pressed="false">বাংলা</button>
+      </div>
+    </nav>
+  </header>
+
+  <div class="tool-head">
+    <h1 data-i18n="tool.url.name">URL Encode / Decode</h1>
+    <p data-i18n="tool.url.desc">Percent-encode or decode text and break a URL into its query parameters.</p>
+  </div>
+
+  <div class="ad-slot ad-top" data-ad="top" data-i18n-attr="aria-label:ad.label" aria-label="Advertisement">
+    <span data-i18n="ad.placeholder">Ad space</span>
+  </div>
+
+  <main>
+    <div class="app">
+      <div class="toolbar">
+        <div class="url-mode" role="group" data-i18n-attr="aria-label:url.mode" aria-label="Direction">
+          <button type="button" class="primary" data-act="encode" aria-pressed="true" data-i18n="url.encode">Encode</button>
+          <button type="button" data-act="decode" aria-pressed="false" data-i18n="url.decode">Decode</button>
+        </div>
+        <button type="button" data-act="swap" data-i18n-attr="title:url.swap.title" title="Use the output as the new input and switch direction"><span aria-hidden="true">⇄ </span><span data-i18n="url.swap">Swap</span></button>
+        <span class="sep"></span>
+        <button type="button" data-act="copy" data-i18n="btn.copy">Copy</button>
+        <button type="button" data-act="clear" data-i18n="btn.clear">Clear</button>
+      </div>
+      <fieldset class="options url-options">
+        <legend class="url-legend" data-i18n="url.scope">Treat input as</legend>
+        <label><input type="radio" name="url-scope" value="component" checked> <span data-i18n="url.scope.component">Component — encodeURIComponent</span></label>
+        <label><input type="radio" name="url-scope" value="uri"> <span data-i18n="url.scope.uri">Full URL — encodeURI</span></label>
+        <label><input id="url-plus" type="checkbox"> <span data-i18n="url.plus">“+” means space (form encoding)</span></label>
+      </fieldset>
+      <div class="io-grid">
+        <div class="pane">
+          <label class="pane-label" for="url-in" id="url-in-label">Text</label>
+          <textarea id="url-in" spellcheck="false" autocomplete="off"
+            data-i18n-attr="placeholder:url.in.placeholder" placeholder="Type or paste text to encode…"></textarea>
+        </div>
+        <div class="pane">
+          <label class="pane-label" for="url-out" id="url-out-label">Encoded</label>
+          <textarea id="url-out" readonly spellcheck="false"></textarea>
+        </div>
+      </div>
+      <div id="status" class="status" role="status"></div>
+    </div>
+
+    <section class="app url-parse" aria-labelledby="url-parse-h">
+      <h2 id="url-parse-h" class="url-parse-h" data-i18n="url.parse.h">Parse a URL</h2>
+      <div class="options">
+        <label for="url-parse-in" class="visually-hidden" data-i18n="url.parse.label">URL to parse</label>
+        <input id="url-parse-in" type="text" class="mono url-parse-in" autocomplete="off" spellcheck="false" inputmode="url"
+          data-i18n-attr="placeholder:url.parse.placeholder" placeholder="Paste a URL, e.g. https://example.com/search?q=বাংলা">
+        <button type="button" data-act="sample" data-i18n="btn.sample">Sample</button>
+      </div>
+      <table id="url-parts" class="kv-table" aria-live="polite"></table>
+      <h3 id="url-params-h" class="url-params-h" data-i18n="url.params.h" hidden>Query parameters</h3>
+      <table id="url-params" class="kv-table url-params" aria-labelledby="url-params-h" hidden></table>
+    </section>
+  </main>
+
+  <div class="ad-slot ad-bottom" data-ad="bottom" data-i18n-attr="aria-label:ad.label" aria-label="Advertisement">
+    <span data-i18n="ad.placeholder">Ad space</span>
+  </div>
+
+  <article class="content">
+    <section data-lang="en" lang="en">
+      <h2>What is URL encoding?</h2>
+      <p>A URL may only contain a limited set of ASCII characters. Anything else — spaces, Bangla letters, emoji, or characters that already have a job in a URL such as <code>&amp;</code>, <code>=</code>, <code>?</code> and <code>#</code> — has to be written as a <b>percent-encoded</b> sequence: each byte of the character’s UTF-8 form becomes <code>%</code> followed by two hex digits. A space becomes <code>%20</code>, and the Bangla letter <code>ক</code> becomes <code>%E0%A6%95</code>. Decoding reverses the process.</p>
+      <h3>Component or full URL?</h3>
+      <ul>
+        <li><b>Component</b> (<code>encodeURIComponent</code>) encodes everything except letters, digits and <code>- _ . ! ~ * ' ( )</code>. Use it for a single value you are putting into a query string or path segment — a search term, a redirect URL, a file name.</li>
+        <li><b>Full URL</b> (<code>encodeURI</code>) leaves the URL’s structure alone (<code>: / ? # &amp; =</code>) and only encodes characters that are never allowed, like spaces and non-ASCII text. Use it to clean up a whole address someone typed.</li>
+      </ul>
+      <p>A classic bug is encoding a whole URL with the component function (the <code>://</code> turns into <code>%3A%2F%2F</code>), or building a query string with the full-URL function, so an <code>&amp;</code> inside a value silently splits it into two parameters.</p>
+      <h3>What about “+”?</h3>
+      <p>HTML forms submit data as <code>application/x-www-form-urlencoded</code>, where a space is written as <code>+</code> instead of <code>%20</code>. Turn on “+ means space” when you decode form data or query strings produced by forms; leave it off for ordinary paths, where a <code>+</code> is just a plus sign.</p>
+      <h3>FAQ</h3>
+      <details><summary>Why do I get a “malformed” error?</summary><p>The text contains a <code>%</code> that is not followed by two hex digits (like <code>100%</code>), or a byte sequence that is not valid UTF-8 — often text that was encoded with an old Latin-1 encoder. The tool shows where the problem is and still decodes the rest.</p></details>
+      <details><summary>How are repeated query keys handled?</summary><p>The parser lists every occurrence in order, as <code>?tag=a&amp;tag=b</code> is valid and common. Repeated keys are marked so you can spot them quickly.</p></details>
+      <details><summary>Is the URL sent anywhere?</summary><p>No. Everything is processed in your browser with the built-in URL API; nothing is fetched or uploaded.</p></details>
+    </section>
+    <section data-lang="bn" lang="bn">
+      <h2>URL এনকোডিং কী?</h2>
+      <p>একটি URL-এ শুধু নির্দিষ্ট কিছু ASCII অক্ষর থাকতে পারে। বাকি সবকিছু — স্পেস, বাংলা বর্ণ, ইমোজি, কিংবা URL-এ যেসব অক্ষরের আগে থেকেই বিশেষ কাজ আছে যেমন <code>&amp;</code>, <code>=</code>, <code>?</code> ও <code>#</code> — লিখতে হয় <b>পার্সেন্ট-এনকোড</b> করে: অক্ষরটির UTF-8 রূপের প্রতিটি বাইট হয়ে যায় <code>%</code> এবং তার পরে দুটি হেক্স অঙ্ক। যেমন স্পেস হয় <code>%20</code>, আর বাংলা <code>ক</code> হয় <code>%E0%A6%95</code>। ডিকোড করলে এর উল্টোটা হয়।</p>
+      <h3>কম্পোনেন্ট নাকি পুরো URL?</h3>
+      <ul>
+        <li><b>কম্পোনেন্ট</b> (<code>encodeURIComponent</code>) অক্ষর, অঙ্ক এবং <code>- _ . ! ~ * ' ( )</code> ছাড়া সবকিছু এনকোড করে। কুয়েরি স্ট্রিং বা পাথের একটি মান — যেমন সার্চের শব্দ, রিডাইরেক্ট URL বা ফাইলের নাম — বসানোর সময় এটি ব্যবহার করুন।</li>
+        <li><b>পুরো URL</b> (<code>encodeURI</code>) URL-এর কাঠামো (<code>: / ? # &amp; =</code>) অক্ষত রাখে, শুধু যেসব অক্ষর কখনোই চলে না (স্পেস, বাংলা ইত্যাদি) সেগুলো এনকোড করে। কেউ টাইপ করা পুরো ঠিকানা ঠিকঠাক করতে এটি কাজে লাগে।</li>
+      </ul>
+      <p>একটি প্রচলিত ভুল হলো পুরো URL-কে কম্পোনেন্ট ফাংশন দিয়ে এনকোড করা (তখন <code>://</code> হয়ে যায় <code>%3A%2F%2F</code>), অথবা পুরো-URL ফাংশন দিয়ে কুয়েরি স্ট্রিং বানানো — তাতে কোনো মানের ভেতরের <code>&amp;</code> চুপচাপ সেটিকে দুটি প্যারামিটারে ভাগ করে ফেলে।</p>
+      <h3>“+” চিহ্নের ব্যাপারটা কী?</h3>
+      <p>HTML ফর্ম ডেটা পাঠায় <code>application/x-www-form-urlencoded</code> ফরম্যাটে, যেখানে স্পেস লেখা হয় <code>%20</code>-এর বদলে <code>+</code> দিয়ে। ফর্মের ডেটা বা ফর্ম থেকে তৈরি কুয়েরি স্ট্রিং ডিকোড করার সময় “+ মানে স্পেস” চালু করুন; সাধারণ পাথের জন্য বন্ধ রাখুন, কারণ সেখানে <code>+</code> মানে শুধুই যোগ চিহ্ন।</p>
+      <h3>প্রশ্নোত্তর</h3>
+      <details><summary>“ভুল গঠনের” ত্রুটি কেন আসে?</summary><p>টেক্সটে এমন একটি <code>%</code> আছে যার পরে দুটি হেক্স অঙ্ক নেই (যেমন <code>100%</code>), অথবা এমন বাইট-ক্রম আছে যা সঠিক UTF-8 নয় — প্রায়ই পুরোনো Latin-1 এনকোডার দিয়ে এনকোড করা টেক্সটে এমন হয়। টুলটি সমস্যার অবস্থান দেখায় এবং বাকি অংশ তবুও ডিকোড করে।</p></details>
+      <details><summary>একই কী একাধিকবার থাকলে কী হয়?</summary><p>পার্সার প্রতিটি উপস্থিতি ক্রমানুসারে দেখায়, কারণ <code>?tag=a&amp;tag=b</code> বৈধ এবং বহুল ব্যবহৃত। বারবার আসা কী চিহ্নিত করা থাকে, যাতে সহজেই চোখে পড়ে।</p></details>
+      <details><summary>URL কি কোথাও পাঠানো হয়?</summary><p>না। সবকিছু আপনার ব্রাউজারের নিজস্ব URL API দিয়ে প্রসেস হয়; কিছুই ফেচ বা আপলোড করা হয় না।</p></details>
+    </section>
+
+    <section class="more-tools">
+      <h2 data-i18n="tools.more">More free tools</h2>
+      <ul class="tool-grid" data-more-tools></ul>
+    </section>
+  </article>
+
+  <footer class="site-footer">
+    <span>© <span data-year></span> <span data-i18n="brand">JSON Bondhu</span></span>
+    <a href="/privacy.html" data-i18n="footer.privacy">Privacy policy</a>
+    <a href="https://github.com/MosabberUddin/jsonbondhu/issues" rel="noopener" data-i18n="footer.contact">Contact</a>
+  </footer>
+
+  <script src="/ads.js" defer></script>
+</body>
+</html>
