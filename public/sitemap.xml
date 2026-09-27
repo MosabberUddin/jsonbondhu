@@ -8,5 +8,18 @@
   <url><loc>https://jsonbondhu.pages.dev/url-encode/</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url><loc>https://jsonbondhu.pages.dev/uuid-generator/</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url><loc>https://jsonbondhu.pages.dev/timestamp-converter/</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://jsonbondhu.pages.dev/guides/</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://jsonbondhu.pages.dev/guides/fix-json-errors/</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://jsonbondhu.pages.dev/guides/what-is-json/</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://jsonbondhu.pages.dev/guides/json-vs-yaml-vs-xml/</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://jsonbondhu.pages.dev/guides/read-api-json-responses/</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://jsonbondhu.pages.dev/guides/decode-jwt/</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://jsonbondhu.pages.dev/guides/jwt-security-mistakes/</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://jsonbondhu.pages.dev/guides/base64-explained/</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://jsonbondhu.pages.dev/guides/encoding-vs-encryption-vs-hashing/</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://jsonbondhu.pages.dev/guides/csv-to-json-and-excel-bangla/</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://jsonbondhu.pages.dev/guides/url-encoding-explained/</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://jsonbondhu.pages.dev/guides/uuid-v4-vs-v7/</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://jsonbondhu.pages.dev/guides/unix-timestamps-and-time-zones/</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://jsonbondhu.pages.dev/privacy</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
 </urlset>
