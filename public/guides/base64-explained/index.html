@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="en" data-guide="base64-explained" data-title-key="guide.base64-explained.title" data-desc-key="guide.base64-explained.desc">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Base64 explained: what it is, how it works, when to use it</title>
+  <meta name="description" content="Why Base64 exists, how 3 bytes become 4 characters, URL-safe Base64, data URIs, and why the output is 33% bigger.">
+  <link rel="canonical" href="https://jsonbondhu.pages.dev/guides/base64-explained/">
+  <link rel="alternate" hreflang="en" href="https://jsonbondhu.pages.dev/guides/base64-explained/?lang=en">
+  <link rel="alternate" hreflang="bn" href="https://jsonbondhu.pages.dev/guides/base64-explained/?lang=bn">
+  <link rel="alternate" hreflang="x-default" href="https://jsonbondhu.pages.dev/guides/base64-explained/">
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Base64 explained: what it is, how it works, when to use it">
+  <meta name="theme-color" content="#0f766e">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230f766e'/%3E%3Ctext x='16' y='22' font-size='15' font-family='monospace' font-weight='700' fill='white' text-anchor='middle'%3E%7B%7D%3C/text%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/i18n.js"></script>
+  <script src="/tools.js"></script>
+  <script src="/guides/guides.js"></script>
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"TechArticle","headline":"Base64 explained: what it is, how it works, when to use it","alternativeHeadline":"Base64 সহজ ভাষায়: কী, কীভাবে কাজ করে, কখন ব্যবহার করবেন","inLanguage":["en","bn"],"datePublished":"2026-09-27","dateModified":"2026-09-27","author":{"@type":"Organization","name":"JSON Bondhu"},"publisher":{"@type":"Organization","name":"JSON Bondhu","url":"https://jsonbondhu.pages.dev/"},"mainEntityOfPage":"https://jsonbondhu.pages.dev/guides/base64-explained/"}
+  </script>
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="/">
+      <span class="logo" aria-hidden="true">{ }</span>
+      <span><strong data-i18n="brand">JSON Bondhu</strong></span>
+    </a>
+    <nav class="top-nav">
+      <a href="/" data-i18n="nav.tools">All tools</a>
+      <a href="/guides/" data-i18n="nav.guides">Guides</a>
+      <a href="/#premium" class="pill" data-i18n="nav.premium">Go ad-free</a>
+      <div class="lang-switch" role="group" data-i18n-attr="aria-label:lang.label" aria-label="Language">
+        <button type="button" data-set-lang="en" lang="en" aria-pressed="true">EN</button>
+        <button type="button" data-set-lang="bn" lang="bn" aria-pressed="false">বাংলা</button>
+      </div>
+    </nav>
+  </header>
+
+  <div class="ad-slot ad-top" data-ad="top" data-i18n-attr="aria-label:ad.label" aria-label="Advertisement">
+    <span data-i18n="ad.placeholder">Ad space</span>
+  </div>
+
+  <main class="guide">
+    <p class="breadcrumb"><a href="/guides/" data-i18n="guides.back">← All guides</a></p>
+
+    <article data-lang="en" lang="en">
+      <h1>Base64 explained: what it is, how it works, when to use it</h1>
+      <p class="byline" data-guide-updated data-minutes="6"></p>
+
+      <p>You have seen Base64 even if you never asked for it: the <code>eyJ…</code> at the start of a JWT, the <code>data:image/png;base64,…</code> in a stylesheet, the wall of letters inside a raw email attachment. It is one of the most common encodings in software and one of the most misunderstood. This guide explains what problem it solves, walks through exactly how three bytes become four characters, and covers the variants and traps you will meet in real code.</p>
+
+      <h2>Why Base64 exists</h2>
+      <p>Computers store everything as bytes, and a byte can have any of 256 values. Many channels, though, were built to carry <em>text</em>: email (originally 7-bit ASCII only), JSON and XML documents, URLs, HTTP headers, HTML attributes. Push raw binary through them — an image, a PDF, a cryptographic signature — and some byte values get altered, stripped or treated as control characters, and the file arrives corrupted.</p>
+      <p>Base64 solves this by describing any bytes using only 64 characters that survive practically everywhere: <code>A–Z</code>, <code>a–z</code>, <code>0–9</code>, <code>+</code> and <code>/</code>, plus <code>=</code> for padding. It is a <strong>representation</strong>, not protection: anyone can decode it, and no key is involved.</p>
+
+      <h2>How it works: 3 bytes become 4 characters</h2>
+      <p>64 = 2⁶, so each Base64 character carries exactly 6 bits. Three bytes are 24 bits, which divide evenly into four 6-bit groups. The encoder therefore reads the input three bytes at a time and writes four characters for each group. Let’s encode the word <code>Man</code> by hand:</p>
+      <pre><code>Text:      M          a          n
+ASCII:     77         97         110
+Bits:      01001101   01100001   01101110
+
+Regroup the 24 bits into 6-bit chunks:
+           010011  010110  000101  101110
+Values:    19      22      5       46
+Alphabet:  T       W       F       u
+
+Result:    TWFu</code></pre>
+      <p>The alphabet is just an index: 0–25 are <code>A–Z</code>, 26–51 are <code>a–z</code>, 52–61 are <code>0–9</code>, 62 is <code>+</code> and 63 is <code>/</code>. So 19 is <code>T</code> and 46 is <code>u</code>. Decoding simply runs the steps backwards.</p>
+
+      <h2>Padding: what the = signs mean</h2>
+      <p>Input rarely comes in perfect multiples of three bytes. When one or two bytes are left over, the encoder fills the missing bits with zeros and adds <code>=</code> so that the output length is still a multiple of four:</p>
+      <table>
+        <thead><tr><th>Input</th><th>Bytes</th><th>Base64</th><th>Why</th></tr></thead>
+        <tbody>
+          <tr><td><code>Man</code></td><td>3</td><td><code>TWFu</code></td><td>Full group, no padding</td></tr>
+          <tr><td><code>Ma</code></td><td>2</td><td><code>TWE=</code></td><td>16 bits → 3 characters + one <code>=</code></td></tr>
+          <tr><td><code>M</code></td><td>1</td><td><code>TQ==</code></td><td>8 bits → 2 characters + two <code>==</code></td></tr>
+        </tbody>
+      </table>
+      <p>Padding carries no data. Because the original length can be worked out from the number of characters, many formats (JWTs among them) omit it, and good decoders accept both forms.</p>
+
+      <h2>The size cost: about 33% bigger</h2>
+      <p>Every 3 bytes turn into 4 characters, so encoded data is 4/3 the original size — roughly 33% more, plus up to two padding characters. A 1,000-byte file becomes 1,336 characters; a 3 MB photo becomes about 4 MB. Email encoders also insert a line break every 76 characters, adding a little more. That overhead is why Base64 suits small payloads, not bulk file transfer: if you can send binary directly (a normal HTTP upload with <code>multipart/form-data</code>, for example), do that.</p>
+
+      <h2>URL-safe Base64</h2>
+      <p>Two characters of the standard alphabet cause trouble in URLs and file names: <code>+</code> (often read as a space in query strings) and <code>/</code> (a path separator). The URL-safe variant from RFC 4648 swaps them for <code>-</code> and <code>_</code>, and usually drops the <code>=</code> padding as well, because <code>=</code> is also meaningful in query strings.</p>
+      <pre><code>bytes FB FF BF   standard: +/+/    URL-safe: -_-_</code></pre>
+      <p>This is the variant JWTs use for all three parts. If a Base64 string contains <code>-</code> or <code>_</code>, decode it as URL-safe.</p>
+
+      <h2>Data URIs</h2>
+      <p>A data URI puts a whole file inside a URL, so the browser needs no extra request:</p>
+      <pre><code>data:text/plain;base64,SGVsbG8sIERoYWthIQ==
+&lt;img src="data:image/png;base64,iVBORw0KGgo…" alt="icon"&gt;</code></pre>
+      <p>That first one decodes to <code>Hello, Dhaka!</code>. Data URIs are handy for tiny icons and for single-file HTML reports, but because the data is 33% larger and cannot be cached separately from the page, large images are better served as normal files.</p>
+
+      <h2>The UTF-8 trap in JavaScript</h2>
+      <p>The browser functions <code>btoa()</code> and <code>atob()</code> date from a time when strings were assumed to be Latin-1. They work on characters with codes 0–255 only, so anything outside that range fails:</p>
+      <pre><code>btoa('বাংলা');   // InvalidCharacterError: Invalid character</code></pre>
+      <p>Base64 encodes <em>bytes</em>, so first turn the text into UTF-8 bytes, then encode those bytes — and reverse both steps when decoding:</p>
+      <pre><code>// Browser (and Node)
+const bytes = new TextEncoder().encode('বাংলা');           // 15 UTF-8 bytes
+const b64 = btoa(String.fromCharCode(...bytes));           // '4Kas4Ka+4KaC4Kay4Ka+'
+const text = new TextDecoder().decode(
+  Uint8Array.from(atob(b64), (c) =&gt; c.charCodeAt(0))
+);                                                         // 'বাংলা'
+
+// Node.js
+Buffer.from('বাংলা', 'utf8').toString('base64');           // '4Kas4Ka+4KaC4Kay4Ka+'
+Buffer.from('4Kas4Ka+4KaC4Kay4Ka+', 'base64').toString('utf8');
+Buffer.from(bytes).toString('base64url');                  // URL-safe, no padding</code></pre>
+      <p>If you skip <code>TextDecoder</code> and call <code>atob()</code> alone, you get 15 garbled Latin-1 characters instead of five Bangla letters — the classic “mojibake” bug. For very large inputs, encode in chunks, because spreading millions of bytes into <code>String.fromCharCode</code> can exceed the engine’s argument limit.</p>
+      <p>Python and the shell work on bytes explicitly:</p>
+      <pre><code>import base64
+base64.b64encode('বাংলা'.encode('utf-8'))            # b'4Kas4Ka+4KaC4Kay4Ka+'
+base64.urlsafe_b64encode(bytes([0xfb, 0xff, 0xbf]))  # b'-_-_'
+
+$ echo -n 'Hello, Dhaka!' | base64
+SGVsbG8sIERoYWthIQ==</code></pre>
+      <div class="callout warn"><p><strong>Watch the newline:</strong> without <code>-n</code>, <code>echo</code> adds a line break and you get <code>SGVsbG8sIERoYWthIQo=</code> — a different string that decodes with an extra newline at the end.</p></div>
+
+      <h2>Where you will meet it</h2>
+      <ul>
+        <li><strong>JWTs:</strong> header, payload and signature are URL-safe Base64 without padding. That is why a token’s contents are readable by anyone — see <a href="/guides/decode-jwt/">how to decode a JWT</a>.</li>
+        <li><strong>Email:</strong> MIME attachments and non-ASCII message bodies are sent with <code>Content-Transfer-Encoding: base64</code>, split into 76-character lines.</li>
+        <li><strong>HTTP Basic auth:</strong> the header <code>Authorization: Basic dXNlcjpwYXNz</code> is just <code>user:pass</code> in Base64 — which is why Basic auth is only acceptable over HTTPS.</li>
+        <li><strong>APIs and config:</strong> binary fields in JSON, certificates in PEM files, Kubernetes Secrets.</li>
+      </ul>
+      <div class="callout bad"><p><strong>Base64 is not encryption.</strong> Encoding a password or API key in Base64 hides it from nobody. For the difference between encoding, encryption and hashing, read <a href="/guides/encoding-vs-encryption-vs-hashing/">this guide</a>.</p></div>
+
+      <div class="try-tool">
+        <span><strong>Encode or decode in a second.</strong> The Base64 tool handles UTF-8 text, URL-safe output and whole files or images, all inside your browser.</span>
+        <a class="button" href="/base64/" data-i18n="guides.tryTool">Try it now</a>
+      </div>
+
+      <h2>FAQ</h2>
+      <details><summary>Why does my Base64 end with one or two = signs?</summary><p>The input length was not a multiple of three bytes. One leftover byte produces <code>==</code>, two leftover bytes produce <code>=</code>. They are padding only and carry no data.</p></details>
+      <details><summary>Can I use Base64 to shrink data?</summary><p>No — it always makes data about a third larger. If size matters, compress first (for example with gzip) and Base64-encode the compressed bytes only if the channel requires text.</p></details>
+      <details><summary>Why do I get “Invalid character” when decoding?</summary><p>Usually the string is URL-safe (contains <code>-</code> or <code>_</code>) and your decoder expects the standard alphabet, or it contains spaces, quotes or a <code>data:…;base64,</code> prefix that must be removed first.</p></details>
+    </article>
+
+    <article data-lang="bn" lang="bn">
+      <h1>Base64 সহজ ভাষায়: কী, কীভাবে কাজ করে, কখন ব্যবহার করবেন</h1>
+      <p class="byline" data-guide-updated data-minutes="6"></p>
+
+      <p>না চাইলেও Base64 আপনি দেখেছেন: JWT-এর শুরুর <code>eyJ…</code>, স্টাইলশিটের <code>data:image/png;base64,…</code>, কিংবা কাঁচা ইমেইল অ্যাটাচমেন্টের ভেতরের অক্ষরের দেয়াল। সফটওয়্যারে এটা সবচেয়ে বেশি ব্যবহৃত এনকোডিংগুলোর একটি, আবার সবচেয়ে ভুল বোঝা এনকোডিংগুলোরও একটি। এই গাইডে দেখবেন এটা কোন সমস্যার সমাধান করে, তিন বাইট কীভাবে ঠিক চারটি অক্ষর হয়, আর বাস্তব কোডে কোন কোন রূপ ও ফাঁদের মুখোমুখি হবেন।</p>
+
+      <h2>Base64 কেন দরকার</h2>
+      <p>কম্পিউটার সবকিছু বাইট হিসেবে রাখে, আর একটা বাইটের মান ২৫৬ রকমের যেকোনো একটা হতে পারে। কিন্তু অনেক মাধ্যম তৈরি হয়েছে শুধু <em>লেখা</em> বহনের জন্য: ইমেইল (শুরুতে শুধু ৭-বিট ASCII), JSON ও XML ডকুমেন্ট, URL, HTTP হেডার, HTML অ্যাট্রিবিউট। এগুলোর ভেতর দিয়ে কাঁচা বাইনারি — ছবি, PDF, ক্রিপ্টোগ্রাফিক সিগনেচার — পাঠালে কিছু বাইট বদলে যায়, বাদ পড়ে বা কন্ট্রোল ক্যারেক্টার হিসেবে ধরা হয়, আর ফাইল নষ্ট হয়ে পৌঁছায়।</p>
+      <p>Base64 এর সমাধান করে যেকোনো বাইটকে মাত্র ৬৪টি অক্ষর দিয়ে প্রকাশ করে, যেগুলো প্রায় সব জায়গায় অক্ষত থাকে: <code>A–Z</code>, <code>a–z</code>, <code>0–9</code>, <code>+</code> ও <code>/</code>, সাথে প্যাডিংয়ের জন্য <code>=</code>। এটা একটা <strong>প্রকাশের ধরন</strong>, সুরক্ষা নয়: যে কেউ ডিকোড করতে পারে, কোনো কী লাগে না।</p>
+
+      <h2>কীভাবে কাজ করে: ৩ বাইট থেকে ৪ অক্ষর</h2>
+      <p>৬৪ = 2⁶, তাই প্রতিটি Base64 অক্ষর ঠিক ৬ বিট বহন করে। তিন বাইট মানে ২৪ বিট, যা সমানভাবে চারটি ৬-বিটের ভাগে ভাঙে। তাই এনকোডার ইনপুট থেকে একবারে তিন বাইট পড়ে, আর প্রতিটি দলের জন্য চারটি অক্ষর লেখে। চলুন <code>Man</code> শব্দটা হাতে এনকোড করি:</p>
+      <pre><code>Text:      M          a          n
+ASCII:     77         97         110
+Bits:      01001101   01100001   01101110
+
+২৪ বিটকে ৬-বিটের টুকরোয় ভাগ করুন:
+           010011  010110  000101  101110
+Values:    19      22      5       46
+Alphabet:  T       W       F       u
+
+Result:    TWFu</code></pre>
+      <p>বর্ণমালাটা আসলে একটা সূচি: ০–২৫ হলো <code>A–Z</code>, ২৬–৫১ হলো <code>a–z</code>, ৫২–৬১ হলো <code>0–9</code>, ৬২ হলো <code>+</code> আর ৬৩ হলো <code>/</code>। তাই ১৯ মানে <code>T</code>, ৪৬ মানে <code>u</code>। ডিকোড করা মানে এই ধাপগুলো উল্টো দিকে চালানো।</p>
+
+      <h2>প্যাডিং: = চিহ্নের মানে</h2>
+      <p>ইনপুট খুব কমই ঠিক তিন বাইটের গুণিতকে আসে। এক বা দুই বাইট বাকি থাকলে এনকোডার ফাঁকা বিটগুলো শূন্য দিয়ে ভরে, আর <code>=</code> যোগ করে যাতে আউটপুটের দৈর্ঘ্য চারের গুণিতক থাকে:</p>
+      <table>
+        <thead><tr><th>ইনপুট</th><th>বাইট</th><th>Base64</th><th>কেন</th></tr></thead>
+        <tbody>
+          <tr><td><code>Man</code></td><td>3</td><td><code>TWFu</code></td><td>পূর্ণ দল, প্যাডিং নেই</td></tr>
+          <tr><td><code>Ma</code></td><td>2</td><td><code>TWE=</code></td><td>১৬ বিট → ৩টি অক্ষর + একটি <code>=</code></td></tr>
+          <tr><td><code>M</code></td><td>1</td><td><code>TQ==</code></td><td>৮ বিট → ২টি অক্ষর + দুটি <code>==</code></td></tr>
+        </tbody>
+      </table>
+      <p>প্যাডিং কোনো ডেটা বহন করে না। অক্ষরের সংখ্যা থেকেই মূল দৈর্ঘ্য বের করা যায় বলে অনেক ফরম্যাট (JWT-সহ) এটা বাদ দেয়, আর ভালো ডিকোডার দুই রূপই গ্রহণ করে।</p>
+
+      <h2>আকারের খরচ: প্রায় ৩৩% বড়</h2>
+      <p>প্রতি ৩ বাইট ৪টি অক্ষর হয়, তাই এনকোড করা ডেটা মূলের ৪/৩ গুণ — মোটামুটি ৩৩% বেশি, সাথে সর্বোচ্চ দুটি প্যাডিং অক্ষর। ১,০০০ বাইটের ফাইল হয় ১,৩৩৬ অক্ষর; ৩ MB-এর ছবি হয় প্রায় ৪ MB। ইমেইল এনকোডাররা প্রতি ৭৬ অক্ষর পরপর লাইন ব্রেকও দেয়, তাতে আরেকটু বাড়ে। এই বাড়তি খরচের কারণেই Base64 ছোট ডেটার জন্য মানানসই, বড় ফাইল পাঠানোর জন্য নয়: সরাসরি বাইনারি পাঠানো গেলে (যেমন <code>multipart/form-data</code> দিয়ে সাধারণ HTTP আপলোড), সেটাই করুন।</p>
+
+      <h2>URL-safe Base64</h2>
+      <p>স্ট্যান্ডার্ড বর্ণমালার দুটি অক্ষর URL আর ফাইলের নামে ঝামেলা করে: <code>+</code> (query string-এ প্রায়ই স্পেস হিসেবে পড়া হয়) আর <code>/</code> (পাথ বিভাজক)। RFC 4648-এর URL-safe রূপ এগুলোর বদলে <code>-</code> ও <code>_</code> ব্যবহার করে, আর সাধারণত <code>=</code> প্যাডিংও বাদ দেয়, কারণ query string-এ <code>=</code>-এরও আলাদা মানে আছে।</p>
+      <pre><code>bytes FB FF BF   standard: +/+/    URL-safe: -_-_</code></pre>
+      <p>JWT-এর তিনটি অংশই এই রূপে থাকে। কোনো Base64 স্ট্রিংয়ে <code>-</code> বা <code>_</code> দেখলে URL-safe হিসেবে ডিকোড করুন।</p>
+
+      <h2>Data URI</h2>
+      <p>Data URI পুরো একটা ফাইলকে URL-এর ভেতরে বসিয়ে দেয়, ফলে ব্রাউজারকে আলাদা রিকোয়েস্ট করতে হয় না:</p>
+      <pre><code>data:text/plain;base64,SGVsbG8sIERoYWthIQ==
+&lt;img src="data:image/png;base64,iVBORw0KGgo…" alt="icon"&gt;</code></pre>
+      <p>প্রথমটা ডিকোড করলে পাওয়া যায় <code>Hello, Dhaka!</code>। ছোট আইকন বা এক ফাইলের HTML রিপোর্টের জন্য data URI কাজের, কিন্তু ডেটা ৩৩% বড় হয় আর পেজ থেকে আলাদা করে ক্যাশ করা যায় না — তাই বড় ছবি সাধারণ ফাইল হিসেবেই দেওয়া ভালো।</p>
+
+      <h2>JavaScript-এ UTF-8-এর ফাঁদ</h2>
+      <p>ব্রাউজারের <code>btoa()</code> আর <code>atob()</code> সেই যুগের, যখন ধরে নেওয়া হতো স্ট্রিং মানেই Latin-1। এগুলো শুধু ০–২৫৫ কোডের অক্ষর নিয়ে কাজ করে, তাই এর বাইরের কিছু দিলেই ব্যর্থ হয়:</p>
+      <pre><code>btoa('বাংলা');   // InvalidCharacterError: Invalid character</code></pre>
+      <p>Base64 এনকোড করে <em>বাইট</em>, তাই আগে লেখাকে UTF-8 বাইটে রূপান্তর করুন, তারপর সেই বাইট এনকোড করুন — আর ডিকোডের সময় দুটো ধাপই উল্টো করুন:</p>
+      <pre><code>// ব্রাউজার (এবং Node)
+const bytes = new TextEncoder().encode('বাংলা');           // 15 UTF-8 bytes
+const b64 = btoa(String.fromCharCode(...bytes));           // '4Kas4Ka+4KaC4Kay4Ka+'
+const text = new TextDecoder().decode(
+  Uint8Array.from(atob(b64), (c) =&gt; c.charCodeAt(0))
+);                                                         // 'বাংলা'
+
+// Node.js
+Buffer.from('বাংলা', 'utf8').toString('base64');           // '4Kas4Ka+4KaC4Kay4Ka+'
+Buffer.from('4Kas4Ka+4KaC4Kay4Ka+', 'base64').toString('utf8');
+Buffer.from(bytes).toString('base64url');                  // URL-safe, প্যাডিং ছাড়া</code></pre>
+      <p><code>TextDecoder</code> বাদ দিয়ে শুধু <code>atob()</code> চালালে পাঁচটা বাংলা অক্ষরের বদলে পাবেন ১৫টা এলোমেলো Latin-1 অক্ষর — পরিচিত “mojibake” বাগ। খুব বড় ইনপুট হলে টুকরো টুকরো করে এনকোড করুন, কারণ লাখ লাখ বাইট <code>String.fromCharCode</code>-এ spread করলে ইঞ্জিনের আর্গুমেন্ট-সীমা ছাড়িয়ে যেতে পারে।</p>
+      <p>Python আর শেল সরাসরি বাইট নিয়ে কাজ করে:</p>
+      <pre><code>import base64
+base64.b64encode('বাংলা'.encode('utf-8'))            # b'4Kas4Ka+4KaC4Kay4Ka+'
+base64.urlsafe_b64encode(bytes([0xfb, 0xff, 0xbf]))  # b'-_-_'
+
+$ echo -n 'Hello, Dhaka!' | base64
+SGVsbG8sIERoYWthIQ==</code></pre>
+      <div class="callout warn"><p><strong>নিউলাইনের দিকে খেয়াল রাখুন:</strong> <code>-n</code> ছাড়া <code>echo</code> একটা লাইন ব্রেক যোগ করে, ফলে পাবেন <code>SGVsbG8sIERoYWthIQo=</code> — আলাদা একটা স্ট্রিং, যা ডিকোড করলে শেষে বাড়তি একটা নিউলাইন আসে।</p></div>
+
+      <h2>কোথায় কোথায় দেখা পাবেন</h2>
+      <ul>
+        <li><strong>JWT:</strong> হেডার, পেলোড আর সিগনেচার — তিনটিই প্যাডিং ছাড়া URL-safe Base64। এজন্যই টোকেনের ভেতরের তথ্য যে কেউ পড়তে পারে — দেখুন <a href="/guides/decode-jwt/">JWT কীভাবে ডিকোড করবেন</a>।</li>
+        <li><strong>ইমেইল:</strong> MIME অ্যাটাচমেন্ট আর ASCII নয় এমন মেসেজ বডি <code>Content-Transfer-Encoding: base64</code> দিয়ে, ৭৬ অক্ষরের লাইনে ভাগ করে পাঠানো হয়।</li>
+        <li><strong>HTTP Basic auth:</strong> <code>Authorization: Basic dXNlcjpwYXNz</code> হেডারটা আসলে Base64-এ <code>user:pass</code> মাত্র — এজন্যই Basic auth শুধু HTTPS-এর ওপরেই চলতে পারে।</li>
+        <li><strong>API ও কনফিগ:</strong> JSON-এর বাইনারি ফিল্ড, PEM ফাইলের সার্টিফিকেট, Kubernetes Secret।</li>
+      </ul>
+      <div class="callout bad"><p><strong>Base64 এনক্রিপশন নয়।</strong> পাসওয়ার্ড বা API key Base64-এ এনকোড করলে কারও কাছ থেকেই লুকানো যায় না। এনকোডিং, এনক্রিপশন ও হ্যাশিংয়ের পার্থক্য জানতে পড়ুন <a href="/guides/encoding-vs-encryption-vs-hashing/">এই গাইড</a>।</p></div>
+
+      <div class="try-tool">
+        <span><strong>এক সেকেন্ডে এনকোড বা ডিকোড।</strong> Base64 টুল UTF-8 লেখা, URL-safe আউটপুট আর পুরো ফাইল বা ছবি সামলায় — সবকিছু আপনার ব্রাউজারের ভেতরেই।</span>
+        <a class="button" href="/base64/" data-i18n="guides.tryTool">এখনই চেষ্টা করুন</a>
+      </div>
+
+      <h2>প্রশ্নোত্তর</h2>
+      <details><summary>আমার Base64-এর শেষে এক বা দুটি = কেন?</summary><p>ইনপুটের দৈর্ঘ্য তিন বাইটের গুণিতক ছিল না। এক বাইট বাকি থাকলে আসে <code>==</code>, দুই বাইট বাকি থাকলে <code>=</code>। এগুলো শুধুই প্যাডিং, কোনো ডেটা নেই।</p></details>
+      <details><summary>Base64 দিয়ে কি ডেটা ছোট করা যায়?</summary><p>না — এটা সবসময় ডেটা প্রায় এক-তৃতীয়াংশ বড় করে। আকার জরুরি হলে আগে কমপ্রেস করুন (যেমন gzip দিয়ে), আর মাধ্যমটা শুধু লেখা নিলে তবেই কমপ্রেস করা বাইট Base64 করুন।</p></details>
+      <details><summary>ডিকোড করার সময় “Invalid character” আসে কেন?</summary><p>সাধারণত স্ট্রিংটা URL-safe (এতে <code>-</code> বা <code>_</code> আছে) অথচ ডিকোডার স্ট্যান্ডার্ড বর্ণমালা আশা করছে, অথবা এতে স্পেস, কোট বা <code>data:…;base64,</code> প্রিফিক্স আছে যা আগে সরাতে হবে।</p></details>
+    </article>
+
+    <section class="more-tools">
+      <h2 data-i18n="guides.related">Related guides</h2>
+      <ul class="guide-grid" data-related-guides></ul>
+    </section>
+  </main>
+
+  <div class="ad-slot ad-bottom" data-ad="bottom" data-i18n-attr="aria-label:ad.label" aria-label="Advertisement">
+    <span data-i18n="ad.placeholder">Ad space</span>
+  </div>
+
+  <section class="content more-tools">
+    <h2 data-i18n="tools.more">More free tools</h2>
+    <ul class="tool-grid" data-more-tools></ul>
+  </section>
+
+  <footer class="site-footer">
+    <span>© <span data-year></span> <span data-i18n="brand">JSON Bondhu</span></span>
+    <a href="/privacy.html" data-i18n="footer.privacy">Privacy policy</a>
+    <a href="https://github.com/MosabberUddin/jsonbondhu/issues" rel="noopener" data-i18n="footer.contact">Contact</a>
+  </footer>
+
+  <script src="/ads.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="en" data-guide="unix-timestamps-and-time-zones" data-title-key="guide.unix-timestamps-and-time-zones.title" data-desc-key="guide.unix-timestamps-and-time-zones.desc">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Unix timestamps and time zones explained (with Dhaka time)</title>
+  <meta name="description" content="Seconds vs milliseconds, UTC vs local time, storing dates correctly, the Year 2038 problem, and converting to Bangladesh time.">
+  <link rel="canonical" href="https://jsonbondhu.pages.dev/guides/unix-timestamps-and-time-zones/">
+  <link rel="alternate" hreflang="en" href="https://jsonbondhu.pages.dev/guides/unix-timestamps-and-time-zones/?lang=en">
+  <link rel="alternate" hreflang="bn" href="https://jsonbondhu.pages.dev/guides/unix-timestamps-and-time-zones/?lang=bn">
+  <link rel="alternate" hreflang="x-default" href="https://jsonbondhu.pages.dev/guides/unix-timestamps-and-time-zones/">
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Unix timestamps and time zones explained (with Dhaka time)">
+  <meta name="theme-color" content="#0f766e">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230f766e'/%3E%3Ctext x='16' y='22' font-size='15' font-family='monospace' font-weight='700' fill='white' text-anchor='middle'%3E%7B%7D%3C/text%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/i18n.js"></script>
+  <script src="/tools.js"></script>
+  <script src="/guides/guides.js"></script>
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"TechArticle","headline":"Unix timestamps and time zones explained (with Dhaka time)","alternativeHeadline":"ইউনিক্স টাইমস্ট্যাম্প ও টাইম জোন সহজ ভাষায় (ঢাকার সময়সহ)","inLanguage":["en","bn"],"datePublished":"2026-09-27","dateModified":"2026-09-27","author":{"@type":"Organization","name":"JSON Bondhu"},"publisher":{"@type":"Organization","name":"JSON Bondhu","url":"https://jsonbondhu.pages.dev/"},"mainEntityOfPage":"https://jsonbondhu.pages.dev/guides/unix-timestamps-and-time-zones/"}
+  </script>
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="/">
+      <span class="logo" aria-hidden="true">{ }</span>
+      <span><strong data-i18n="brand">JSON Bondhu</strong></span>
+    </a>
+    <nav class="top-nav">
+      <a href="/" data-i18n="nav.tools">All tools</a>
+      <a href="/guides/" data-i18n="nav.guides">Guides</a>
+      <a href="/#premium" class="pill" data-i18n="nav.premium">Go ad-free</a>
+      <div class="lang-switch" role="group" data-i18n-attr="aria-label:lang.label" aria-label="Language">
+        <button type="button" data-set-lang="en" lang="en" aria-pressed="true">EN</button>
+        <button type="button" data-set-lang="bn" lang="bn" aria-pressed="false">বাংলা</button>
+      </div>
+    </nav>
+  </header>
+
+  <div class="ad-slot ad-top" data-ad="top" data-i18n-attr="aria-label:ad.label" aria-label="Advertisement">
+    <span data-i18n="ad.placeholder">Ad space</span>
+  </div>
+
+  <main class="guide">
+    <p class="breadcrumb"><a href="/guides/" data-i18n="guides.back">← All guides</a></p>
+
+    <article data-lang="en" lang="en">
+      <h1>Unix timestamps and time zones explained</h1>
+      <p class="byline" data-guide-updated data-minutes="7"></p>
+
+      <p>An order placed at 1 a.m. in Dhaka shows up in yesterday’s sales report. An API returns <code>1790481600</code> and your app displays a date in January 1970. A user in another country sees a birthday one day early. Every one of these bugs comes from mixing up three things: the <em>moment</em> something happened, the <em>unit</em> it is counted in, and the <em>time zone</em> it is shown in. Keep them separate and date handling becomes predictable.</p>
+
+      <h2>What Unix time is</h2>
+      <p>Unix time is the number of seconds since <strong>1970-01-01T00:00:00Z</strong> (the “epoch”), in UTC. It is a single number for a single moment, the same everywhere on Earth: <code>1790481600</code> is 04:00 UTC on 27 September 2026, which is 10:00 in Dhaka and 06:00 in Berlin at the same instant. Leap seconds are ignored — every Unix day is exactly 86,400 seconds — which keeps the arithmetic simple.</p>
+
+      <h2>Seconds or milliseconds?</h2>
+      <p>Different platforms count in different units, and the numbers look similar enough to confuse:</p>
+      <table>
+        <thead><tr><th>Where</th><th>Returns</th><th>Example (same moment)</th></tr></thead>
+        <tbody>
+          <tr><td>JavaScript <code>Date.now()</code></td><td>milliseconds (integer)</td><td><code>1790481600000</code></td></tr>
+          <tr><td>Python <code>time.time()</code></td><td>seconds (float)</td><td><code>1790481600.0</code></td></tr>
+          <tr><td>Unix shell <code>date +%s</code>, most APIs, JWT <code>exp</code></td><td>seconds (integer)</td><td><code>1790481600</code></td></tr>
+          <tr><td>Java <code>System.currentTimeMillis()</code></td><td>milliseconds</td><td><code>1790481600000</code></td></tr>
+        </tbody>
+      </table>
+      <p>Quick check: a present-day timestamp in seconds has <strong>10 digits</strong>; in milliseconds it has <strong>13</strong>. Mixing them produces very recognisable wrong dates:</p>
+      <pre><code>new Date(1790481600).toISOString()          // "1970-01-21T17:21:21.600Z"  ✗ seconds passed as ms
+new Date(1790481600 * 1000).toISOString()   // "2026-09-27T04:00:00.000Z"  ✓</code></pre>
+      <p>Going the other way — milliseconds passed to a function that expects seconds — lands tens of thousands of years in the future; Python’s <code>datetime.fromtimestamp(1790481600000)</code> simply raises an error. If you see 1970 or an impossible year, check the unit first.</p>
+
+      <h2>UTC, local time and ISO 8601</h2>
+      <p>UTC is the reference clock with no offset and no daylight saving. <em>Local time</em> is UTC plus the offset of a place. When you write a date as text, use <strong>ISO 8601 with an explicit offset</strong>, so there is no guessing:</p>
+      <pre><code>2026-09-27T04:00:00Z         // UTC ("Z" = zero offset)
+2026-09-27T10:00:00+06:00    // the same moment, written as Dhaka local time
+2026-09-27T10:00:00          // ✗ no offset: which 10 o'clock?</code></pre>
+      <p>The rule that prevents most bugs: <strong>store and transmit UTC (or a Unix timestamp), convert to local time only when displaying</strong>. The database, logs and APIs all speak UTC; the user interface translates it into the viewer’s zone at the last moment.</p>
+      <div class="callout warn"><p><strong>An offset is not a time zone.</strong> <code>+06:00</code> describes one moment’s offset. A zone name like <code>Asia/Dhaka</code> carries the full history of rule changes. For future events in a local zone (a meeting at 10 a.m. next month), store the local time plus the zone name, not just a UTC instant.</p></div>
+
+      <h2>Bangladesh time: UTC+6, Asia/Dhaka</h2>
+      <p>Bangladesh Standard Time is <strong>UTC+6</strong>, and the IANA zone name is <code>Asia/Dhaka</code>. There is no daylight saving today. Bangladesh did try it once: from 19 June 2009 until the end of that year, clocks were moved to UTC+7. That one period is recorded in the time-zone database, so always convert with the zone name rather than a hard-coded <code>+6</code> if you handle historical data.</p>
+      <p>Because Dhaka is six hours ahead, <strong>everything from 18:00 UTC onwards is already the next day in Bangladesh</strong>. A “today’s orders” query that uses UTC midnight will put orders made between midnight and 6 a.m. Dhaka time into the previous day.</p>
+
+      <h2>Converting in code</h2>
+      <pre><code>// JavaScript
+const ts = 1790481600;                 // seconds
+const d = new Date(ts * 1000);
+d.toISOString();                       // "2026-09-27T04:00:00.000Z"
+
+new Intl.DateTimeFormat("en-GB", {
+  timeZone: "Asia/Dhaka", dateStyle: "full", timeStyle: "short",
+}).format(d);                          // "Sunday, 27 September 2026 at 10:00"
+
+new Intl.DateTimeFormat("bn-BD", {
+  timeZone: "Asia/Dhaka", dateStyle: "full", timeStyle: "short",
+}).format(d);                          // "রবিবার, ২৭ সেপ্টেম্বর, ২০২৬ এ ১০:০০ AM"
+
+Math.floor(Date.now() / 1000);         // current Unix time in seconds</code></pre>
+      <pre><code># Python
+from datetime import datetime, timezone
+from zoneinfo import ZoneInfo          # on Windows: pip install tzdata
+
+d = datetime.fromtimestamp(1790481600, tz=timezone.utc)
+d.isoformat()                                  # '2026-09-27T04:00:00+00:00'
+d.astimezone(ZoneInfo("Asia/Dhaka")).isoformat()   # '2026-09-27T10:00:00+06:00'
+int(datetime.now(timezone.utc).timestamp())    # current Unix time in seconds</code></pre>
+      <p>In Python, always pass a <code>tz</code>. A “naive” datetime without one is silently treated as the <em>server’s</em> local time by <code>.timestamp()</code>, so the same code gives different results on your laptop and on a UTC server.</p>
+      <pre><code>-- PostgreSQL
+SELECT to_timestamp(1790481600);                          -- timestamptz
+SELECT to_timestamp(1790481600) AT TIME ZONE 'Asia/Dhaka'; -- 2026-09-27 10:00:00
+SELECT extract(epoch FROM now());                         -- current Unix time</code></pre>
+      <p>Prefer <code>timestamptz</code> over <code>timestamp</code> in PostgreSQL: it stores an absolute moment and converts on output. In MySQL, <code>FROM_UNIXTIME()</code> and <code>UNIX_TIMESTAMP()</code> use the session time zone, so set it explicitly.</p>
+
+      <h2>The Year 2038 problem</h2>
+      <p>Systems that store Unix time in a <strong>signed 32-bit integer</strong> can count up to 2,147,483,647 seconds, which is <strong>2038-01-19T03:14:07Z</strong> (09:14:07 in Dhaka). One second later the value overflows to −2,147,483,648 and the date jumps back to 13 December 1901. Modern 64-bit systems, JavaScript and Python are safe, but watch for 32-bit <code>INT</code> columns holding timestamps, old embedded devices, and binary file formats with 32-bit time fields. Anything that calculates dates 15+ years ahead — loans, certificates, subscriptions — can hit it much sooner.</p>
+
+      <h2>Common bugs and fixes</h2>
+      <ul>
+        <li><strong>Seconds vs milliseconds.</strong> Count the digits (10 vs 13) and name variables clearly: <code>createdAtMs</code>, <code>expiresAtSec</code>.</li>
+        <li><strong>JavaScript’s parsing inconsistency.</strong> A date-only ISO string is parsed as <em>UTC</em>, but a date-time without an offset is parsed as <em>local</em> time:
+          <pre><code>new Date("2026-09-27")         // UTC midnight
+new Date("2026-09-27T10:00")   // 10:00 in the computer's local zone
+new Date("2026-09-27T10:00+06:00")   // unambiguous</code></pre>
+          In a US time zone, <code>new Date("2026-09-27").getDate()</code> returns <code>26</code> — that’s the “birthday one day early” bug. Always include an offset or <code>Z</code>.</li>
+        <li><strong>Formatting with the server’s zone.</strong> <code>toLocaleString()</code> without a <code>timeZone</code> option uses whatever zone the machine is in. On a cloud server that is usually UTC; pass <code>timeZone: "Asia/Dhaka"</code> explicitly.</li>
+        <li><strong>Day boundaries in reports.</strong> Compute “today” in the business’s zone, convert its start and end to UTC, then query.</li>
+      </ul>
+
+      <div class="try-tool">
+        <span><strong>Check a timestamp in seconds.</strong> The Unix Timestamp Converter auto-detects seconds, milliseconds, microseconds or nanoseconds and shows the date in UTC, your local time and Dhaka time.</span>
+        <a class="button" href="/timestamp-converter/" data-i18n="guides.tryTool">Try it now</a>
+      </div>
+
+      <h2>FAQ</h2>
+      <details><summary>Should I store dates as Unix timestamps or as database date types?</summary><p>Either works if it is UTC. A native type such as PostgreSQL’s <code>timestamptz</code> is easier to query and read; an integer timestamp is simple to pass between systems. Use 64-bit integers if you choose numbers.</p></details>
+      <details><summary>Does Unix time change with daylight saving?</summary><p>No. Unix time is always UTC-based and never jumps. Only the local-time <em>display</em> changes when a zone switches its clocks.</p></details>
+      <details><summary>Why does my Dhaka time show as GMT+6 in some places and +06:00 in others?</summary><p>They are the same offset written in different styles. <code>Intl</code> output often uses “GMT+6”, while ISO 8601 uses <code>+06:00</code>.</p></details>
+    </article>
+
+    <article data-lang="bn" lang="bn">
+      <h1>ইউনিক্স টাইমস্ট্যাম্প ও টাইম জোন সহজ ভাষায়</h1>
+      <p class="byline" data-guide-updated data-minutes="7"></p>
+
+      <p>ঢাকায় রাত ১টায় দেওয়া অর্ডার চলে গেল গতকালের সেলস রিপোর্টে। API ফেরত দিল <code>1790481600</code>, আর আপনার অ্যাপ দেখাল ১৯৭০ সালের জানুয়ারির একটা তারিখ। অন্য দেশের একজন ইউজার জন্মদিন দেখলেন এক দিন আগে। প্রতিটি বাগের মূলে তিনটি জিনিস গুলিয়ে ফেলা: ঘটনাটা ঘটার <em>মুহূর্ত</em>, সেটা কোন <em>এককে</em> গোনা হচ্ছে, আর কোন <em>টাইম জোনে</em> দেখানো হচ্ছে। এই তিনটি আলাদা রাখলেই তারিখ নিয়ে কাজ অনুমানযোগ্য হয়ে যায়।</p>
+
+      <h2>Unix time কী</h2>
+      <p>Unix time হলো <strong>1970-01-01T00:00:00Z</strong> (“epoch”) থেকে এখন পর্যন্ত কত সেকেন্ড গেছে, UTC-তে। এক মুহূর্তের জন্য একটাই সংখ্যা, পৃথিবীর সব জায়গায় একই: <code>1790481600</code> মানে ২৭ সেপ্টেম্বর ২০২৬, UTC ভোর ৪টা — ঠিক সেই মুহূর্তে ঢাকায় সকাল ১০টা আর বার্লিনে সকাল ৬টা। Leap second হিসাবে ধরা হয় না — Unix-এর প্রতিটি দিন ঠিক ৮৬,৪০০ সেকেন্ড — তাই হিসাব সহজ থাকে।</p>
+
+      <h2>সেকেন্ড নাকি মিলিসেকেন্ড?</h2>
+      <p>একেক প্ল্যাটফর্ম একেক এককে গোনে, আর সংখ্যাগুলো দেখতে এত কাছাকাছি যে সহজেই গুলিয়ে যায়:</p>
+      <table>
+        <thead><tr><th>কোথায়</th><th>কী ফেরত দেয়</th><th>উদাহরণ (একই মুহূর্ত)</th></tr></thead>
+        <tbody>
+          <tr><td>JavaScript <code>Date.now()</code></td><td>মিলিসেকেন্ড (পূর্ণসংখ্যা)</td><td><code>1790481600000</code></td></tr>
+          <tr><td>Python <code>time.time()</code></td><td>সেকেন্ড (float)</td><td><code>1790481600.0</code></td></tr>
+          <tr><td>Unix shell <code>date +%s</code>, বেশিরভাগ API, JWT <code>exp</code></td><td>সেকেন্ড (পূর্ণসংখ্যা)</td><td><code>1790481600</code></td></tr>
+          <tr><td>Java <code>System.currentTimeMillis()</code></td><td>মিলিসেকেন্ড</td><td><code>1790481600000</code></td></tr>
+        </tbody>
+      </table>
+      <p>চট করে চেনার উপায়: এখনকার সময়ের timestamp সেকেন্ডে হলে <strong>১০ অঙ্কের</strong>, মিলিসেকেন্ডে হলে <strong>১৩ অঙ্কের</strong>। গুলিয়ে ফেললে ভুল তারিখটাও খুব চেনা চেহারার হয়:</p>
+      <pre><code>new Date(1790481600).toISOString()          // "1970-01-21T17:21:21.600Z"  ✗ সেকেন্ডকে ms হিসেবে দেওয়া
+new Date(1790481600 * 1000).toISOString()   // "2026-09-27T04:00:00.000Z"  ✓</code></pre>
+      <p>উল্টোটা — যে ফাংশন সেকেন্ড চায় তাকে মিলিসেকেন্ড দেওয়া — তারিখকে হাজার হাজার বছর ভবিষ্যতে নিয়ে যায়; Python-এর <code>datetime.fromtimestamp(1790481600000)</code> সরাসরি এরর দেয়। ১৯৭০ বা অসম্ভব কোনো সাল দেখলে আগে এককটা মিলিয়ে দেখুন।</p>
+
+      <h2>UTC, স্থানীয় সময় আর ISO 8601</h2>
+      <p>UTC হলো রেফারেন্স ঘড়ি — কোনো offset নেই, daylight saving নেই। <em>স্থানীয় সময়</em> হলো UTC-র সাথে কোনো জায়গার offset যোগ করে পাওয়া সময়। তারিখ টেক্সট হিসেবে লিখতে হলে <strong>স্পষ্ট offset-সহ ISO 8601</strong> ব্যবহার করুন, যাতে অনুমানের কিছু না থাকে:</p>
+      <pre><code>2026-09-27T04:00:00Z         // UTC ("Z" = শূন্য offset)
+2026-09-27T10:00:00+06:00    // একই মুহূর্ত, ঢাকার স্থানীয় সময়ে লেখা
+2026-09-27T10:00:00          // ✗ offset নেই: কোন জায়গার ১০টা?</code></pre>
+      <p>যে নিয়মটা বেশিরভাগ বাগ ঠেকায়: <strong>সংরক্ষণ ও আদান-প্রদান করুন UTC (বা Unix timestamp) দিয়ে, স্থানীয় সময়ে রূপান্তর করুন শুধু দেখানোর সময়</strong>। ডেটাবেস, লগ আর API সবাই UTC-তে কথা বলবে; ইউজার ইন্টারফেস একেবারে শেষ মুহূর্তে সেটাকে দর্শকের টাইম জোনে বদলে দেখাবে।</p>
+      <div class="callout warn"><p><strong>Offset আর টাইম জোন এক জিনিস নয়।</strong> <code>+06:00</code> শুধু একটি মুহূর্তের offset বোঝায়। <code>Asia/Dhaka</code>-এর মতো জোনের নামে থাকে নিয়ম বদলের পুরো ইতিহাস। স্থানীয় জোনে ভবিষ্যতের কোনো ঘটনার জন্য (যেমন আগামী মাসে সকাল ১০টার মিটিং) শুধু UTC মুহূর্ত নয়, স্থানীয় সময় আর জোনের নাম দুটোই রাখুন।</p></div>
+
+      <h2>বাংলাদেশের সময়: UTC+6, Asia/Dhaka</h2>
+      <p>বাংলাদেশ স্ট্যান্ডার্ড টাইম হলো <strong>UTC+6</strong>, আর IANA জোনের নাম <code>Asia/Dhaka</code>। এখন কোনো daylight saving নেই। তবে বাংলাদেশ একবার এটা চালু করেছিল: ২০০৯ সালের ১৯ জুন থেকে সেই বছরের শেষ পর্যন্ত ঘড়ি ছিল UTC+7-এ। এই সময়টুকু টাইম জোন ডেটাবেসে লেখা আছে, তাই পুরোনো ডেটা নিয়ে কাজ করলে হার্ড-কোড করা <code>+6</code> নয়, সবসময় জোনের নাম দিয়ে রূপান্তর করুন।</p>
+      <p>ঢাকা ছয় ঘণ্টা এগিয়ে থাকায় <strong>UTC সন্ধ্যা ৬টা (18:00) থেকে বাংলাদেশে পরের দিন শুরু হয়ে যায়</strong>। UTC মধ্যরাত ধরে বানানো “আজকের অর্ডার” কুয়েরি ঢাকার সময় রাত ১২টা থেকে ভোর ৬টার মধ্যের অর্ডারগুলোকে আগের দিনে ফেলে দেবে।</p>
+
+      <h2>কোডে রূপান্তর</h2>
+      <pre><code>// JavaScript
+const ts = 1790481600;                 // সেকেন্ড
+const d = new Date(ts * 1000);
+d.toISOString();                       // "2026-09-27T04:00:00.000Z"
+
+new Intl.DateTimeFormat("en-GB", {
+  timeZone: "Asia/Dhaka", dateStyle: "full", timeStyle: "short",
+}).format(d);                          // "Sunday, 27 September 2026 at 10:00"
+
+new Intl.DateTimeFormat("bn-BD", {
+  timeZone: "Asia/Dhaka", dateStyle: "full", timeStyle: "short",
+}).format(d);                          // "রবিবার, ২৭ সেপ্টেম্বর, ২০২৬ এ ১০:০০ AM"
+
+Math.floor(Date.now() / 1000);         // এখনকার Unix time, সেকেন্ডে</code></pre>
+      <pre><code># Python
+from datetime import datetime, timezone
+from zoneinfo import ZoneInfo          # Windows-এ: pip install tzdata
+
+d = datetime.fromtimestamp(1790481600, tz=timezone.utc)
+d.isoformat()                                  # '2026-09-27T04:00:00+00:00'
+d.astimezone(ZoneInfo("Asia/Dhaka")).isoformat()   # '2026-09-27T10:00:00+06:00'
+int(datetime.now(timezone.utc).timestamp())    # এখনকার Unix time, সেকেন্ডে</code></pre>
+      <p>Python-এ সবসময় <code>tz</code> দিন। জোন ছাড়া “naive” datetime-কে <code>.timestamp()</code> চুপচাপ <em>সার্ভারের</em> স্থানীয় সময় হিসেবে ধরে নেয়, ফলে একই কোড আপনার ল্যাপটপে আর UTC-তে চলা সার্ভারে আলাদা ফল দেয়।</p>
+      <pre><code>-- PostgreSQL
+SELECT to_timestamp(1790481600);                          -- timestamptz
+SELECT to_timestamp(1790481600) AT TIME ZONE 'Asia/Dhaka'; -- 2026-09-27 10:00:00
+SELECT extract(epoch FROM now());                         -- এখনকার Unix time</code></pre>
+      <p>PostgreSQL-এ <code>timestamp</code>-এর বদলে <code>timestamptz</code> নিন: এটা একটা নির্দিষ্ট মুহূর্ত রাখে আর আউটপুটের সময় রূপান্তর করে। MySQL-এ <code>FROM_UNIXTIME()</code> ও <code>UNIX_TIMESTAMP()</code> session-এর টাইম জোন ব্যবহার করে, তাই সেটা স্পষ্ট করে সেট করে দিন।</p>
+
+      <h2>২০৩৮ সালের সমস্যা</h2>
+      <p>যেসব সিস্টেম Unix time রাখে <strong>signed 32-bit integer</strong>-এ, তারা গুনতে পারে 2,147,483,647 সেকেন্ড পর্যন্ত — অর্থাৎ <strong>2038-01-19T03:14:07Z</strong> (ঢাকায় সকাল 09:14:07)। এর এক সেকেন্ড পরে মানটা overflow হয়ে −2,147,483,648 হয়ে যায়, আর তারিখ লাফিয়ে ফেরে ১৯০১ সালের ১৩ ডিসেম্বরে। আধুনিক 64-bit সিস্টেম, JavaScript আর Python নিরাপদ; কিন্তু খেয়াল রাখুন timestamp রাখা 32-bit <code>INT</code> কলাম, পুরোনো embedded ডিভাইস আর 32-bit সময়ের ফিল্ডওয়ালা বাইনারি ফাইল ফরম্যাটের দিকে। যা কিছু ১৫ বছর বা তার বেশি সামনের তারিখ হিসাব করে — লোন, সার্টিফিকেট, সাবস্ক্রিপশন — সেগুলো এই সমস্যায় পড়তে পারে অনেক আগেই।</p>
+
+      <h2>পরিচিত বাগ ও সমাধান</h2>
+      <ul>
+        <li><strong>সেকেন্ড বনাম মিলিসেকেন্ড।</strong> অঙ্ক গুনুন (১০ না ১৩), আর ভ্যারিয়েবলের নাম স্পষ্ট রাখুন: <code>createdAtMs</code>, <code>expiresAtSec</code>।</li>
+        <li><strong>JavaScript-এর পার্সিংয়ের অসংগতি।</strong> শুধু তারিখওয়ালা ISO স্ট্রিং পার্স হয় <em>UTC</em> হিসেবে, কিন্তু offset ছাড়া তারিখ-সময় পার্স হয় <em>স্থানীয়</em> সময় হিসেবে:
+          <pre><code>new Date("2026-09-27")         // UTC মধ্যরাত
+new Date("2026-09-27T10:00")   // কম্পিউটারের স্থানীয় জোনে ১০টা
+new Date("2026-09-27T10:00+06:00")   // দ্ব্যর্থহীন</code></pre>
+          যুক্তরাষ্ট্রের কোনো টাইম জোনে <code>new Date("2026-09-27").getDate()</code> ফেরত দেয় <code>26</code> — এটাই “জন্মদিন এক দিন আগে” বাগ। সবসময় offset বা <code>Z</code> দিন।</li>
+        <li><strong>সার্ভারের জোনে ফরম্যাট করা।</strong> <code>timeZone</code> অপশন ছাড়া <code>toLocaleString()</code> মেশিন যে জোনে আছে সেটাই ব্যবহার করে। ক্লাউড সার্ভারে সেটা সাধারণত UTC; তাই <code>timeZone: "Asia/Dhaka"</code> স্পষ্ট করে দিন।</li>
+        <li><strong>রিপোর্টে দিনের সীমা।</strong> “আজ” হিসাব করুন ব্যবসার জোনে, তার শুরু আর শেষ UTC-তে রূপান্তর করুন, তারপর কুয়েরি চালান।</li>
+      </ul>
+
+      <div class="try-tool">
+        <span><strong>মুহূর্তেই একটা timestamp যাচাই করুন।</strong> ইউনিক্স টাইমস্ট্যাম্প কনভার্টার নিজেই চিনে নেয় সেটা সেকেন্ড, মিলিসেকেন্ড, মাইক্রোসেকেন্ড না ন্যানোসেকেন্ড, আর তারিখ দেখায় UTC, আপনার স্থানীয় সময় ও ঢাকার সময়ে।</span>
+        <a class="button" href="/timestamp-converter/" data-i18n="guides.tryTool">এখনই চেষ্টা করুন</a>
+      </div>
+
+      <h2>প্রশ্নোত্তর</h2>
+      <details><summary>তারিখ কি Unix timestamp হিসেবে রাখব, নাকি ডেটাবেসের date টাইপে?</summary><p>UTC হলে দুটোই চলে। PostgreSQL-এর <code>timestamptz</code>-এর মতো native টাইপে কুয়েরি করা আর পড়া সহজ; integer timestamp এক সিস্টেম থেকে আরেক সিস্টেমে পাঠানো সহজ। সংখ্যা বেছে নিলে 64-bit integer ব্যবহার করুন।</p></details>
+      <details><summary>Daylight saving-এ কি Unix time বদলায়?</summary><p>না। Unix time সবসময় UTC-ভিত্তিক, কখনো লাফ দেয় না। কোনো জোন ঘড়ি বদলালে শুধু স্থানীয় সময়ের <em>প্রদর্শন</em> বদলায়।</p></details>
+      <details><summary>ঢাকার সময় কোথাও GMT+6 আর কোথাও +06:00 দেখায় কেন?</summary><p>একই offset, শুধু লেখার ধরন আলাদা। <code>Intl</code>-এর আউটপুটে প্রায়ই “GMT+6” আসে, আর ISO 8601-এ লেখা হয় <code>+06:00</code>।</p></details>
+    </article>
+
+    <section class="more-tools">
+      <h2 data-i18n="guides.related">Related guides</h2>
+      <ul class="guide-grid" data-related-guides></ul>
+    </section>
+  </main>
+
+  <div class="ad-slot ad-bottom" data-ad="bottom" data-i18n-attr="aria-label:ad.label" aria-label="Advertisement">
+    <span data-i18n="ad.placeholder">Ad space</span>
+  </div>
+
+  <section class="content more-tools">
+    <h2 data-i18n="tools.more">More free tools</h2>
+    <ul class="tool-grid" data-more-tools></ul>
+  </section>
+
+  <footer class="site-footer">
+    <span>© <span data-year></span> <span data-i18n="brand">JSON Bondhu</span></span>
+    <a href="/privacy.html" data-i18n="footer.privacy">Privacy policy</a>
+    <a href="https://github.com/MosabberUddin/jsonbondhu/issues" rel="noopener" data-i18n="footer.contact">Contact</a>
+  </footer>
+
+  <script src="/ads.js" defer></script>
+</body>
+</html>

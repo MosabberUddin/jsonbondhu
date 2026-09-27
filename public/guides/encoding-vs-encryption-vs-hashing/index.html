@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="en" data-guide="encoding-vs-encryption-vs-hashing" data-title-key="guide.encoding-vs-encryption-vs-hashing.title" data-desc-key="guide.encoding-vs-encryption-vs-hashing.desc">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Encoding vs encryption vs hashing: the difference that matters</title>
+  <meta name="description" content="Base64 is not encryption and MD5 is not for passwords. A clear guide to which one protects your data and which one doesn’t.">
+  <link rel="canonical" href="https://jsonbondhu.pages.dev/guides/encoding-vs-encryption-vs-hashing/">
+  <link rel="alternate" hreflang="en" href="https://jsonbondhu.pages.dev/guides/encoding-vs-encryption-vs-hashing/?lang=en">
+  <link rel="alternate" hreflang="bn" href="https://jsonbondhu.pages.dev/guides/encoding-vs-encryption-vs-hashing/?lang=bn">
+  <link rel="alternate" hreflang="x-default" href="https://jsonbondhu.pages.dev/guides/encoding-vs-encryption-vs-hashing/">
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Encoding vs encryption vs hashing: the difference that matters">
+  <meta name="theme-color" content="#0f766e">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230f766e'/%3E%3Ctext x='16' y='22' font-size='15' font-family='monospace' font-weight='700' fill='white' text-anchor='middle'%3E%7B%7D%3C/text%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/i18n.js"></script>
+  <script src="/tools.js"></script>
+  <script src="/guides/guides.js"></script>
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"TechArticle","headline":"Encoding vs encryption vs hashing: the difference that matters","alternativeHeadline":"এনকোডিং, এনক্রিপশন ও হ্যাশিং: যে পার্থক্যটা জরুরি","inLanguage":["en","bn"],"datePublished":"2026-09-27","dateModified":"2026-09-27","author":{"@type":"Organization","name":"JSON Bondhu"},"publisher":{"@type":"Organization","name":"JSON Bondhu","url":"https://jsonbondhu.pages.dev/"},"mainEntityOfPage":"https://jsonbondhu.pages.dev/guides/encoding-vs-encryption-vs-hashing/"}
+  </script>
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="/">
+      <span class="logo" aria-hidden="true">{ }</span>
+      <span><strong data-i18n="brand">JSON Bondhu</strong></span>
+    </a>
+    <nav class="top-nav">
+      <a href="/" data-i18n="nav.tools">All tools</a>
+      <a href="/guides/" data-i18n="nav.guides">Guides</a>
+      <a href="/#premium" class="pill" data-i18n="nav.premium">Go ad-free</a>
+      <div class="lang-switch" role="group" data-i18n-attr="aria-label:lang.label" aria-label="Language">
+        <button type="button" data-set-lang="en" lang="en" aria-pressed="true">EN</button>
+        <button type="button" data-set-lang="bn" lang="bn" aria-pressed="false">বাংলা</button>
+      </div>
+    </nav>
+  </header>
+
+  <div class="ad-slot ad-top" data-ad="top" data-i18n-attr="aria-label:ad.label" aria-label="Advertisement">
+    <span data-i18n="ad.placeholder">Ad space</span>
+  </div>
+
+  <main class="guide">
+    <p class="breadcrumb"><a href="/guides/" data-i18n="guides.back">← All guides</a></p>
+
+    <article data-lang="en" lang="en">
+      <h1>Encoding vs encryption vs hashing: the difference that matters</h1>
+      <p class="byline" data-guide-updated data-minutes="6"></p>
+
+      <p>“We store the passwords in Base64, so they’re encrypted.” “The API key is hashed, so we can send it back to the user later.” Both sentences come from real projects, and both describe security holes. Encoding, encryption and hashing all turn data into something that looks unreadable, which is why they get mixed up — but they answer completely different questions. Choosing the wrong one is how databases full of “protected” passwords end up readable in plain text.</p>
+
+      <h2>Encoding: changing the format, not hiding anything</h2>
+      <p>Encoding transforms data so it can travel safely through a particular channel. The rules are public, there is no key, and anyone can reverse it. Its job is <strong>compatibility</strong>, not secrecy.</p>
+      <pre><code>// Base64: binary-safe text
+Buffer.from('p@ssw0rd').toString('base64');   // 'cEBzc3cwcmQ='
+Buffer.from('cEBzc3cwcmQ=', 'base64').toString(); // 'p@ssw0rd'
+
+// URL (percent) encoding: safe inside a query string
+encodeURIComponent('a b&amp;c=d');                 // 'a%20b%26c%3Dd'</code></pre>
+      <p>Other examples: UTF-8 (text to bytes), hex, HTML entities such as <code>&amp;lt;</code>. If you can decode it without a secret, it protects nothing. See <a href="/guides/base64-explained/">Base64 explained</a> for how the most common one works.</p>
+
+      <h2>Encryption: hiding data from everyone without the key</h2>
+      <p>Encryption turns plaintext into ciphertext that can only be turned back with the right key. It is <strong>reversible by design</strong> — for whoever holds the key. Use it when you need the original data again later: messages, files, database fields like national ID numbers, backups.</p>
+      <ul>
+        <li><strong>Symmetric</strong> (AES): the same key encrypts and decrypts. Fast; used for data at rest and inside TLS.</li>
+        <li><strong>Asymmetric</strong> (RSA, elliptic-curve schemes): a public key encrypts (or verifies), a private key decrypts (or signs). Used to exchange keys and for digital signatures.</li>
+      </ul>
+      <pre><code>import { createCipheriv, createDecipheriv, randomBytes } from 'node:crypto';
+
+const key = randomBytes(32);          // 256-bit key: keep it secret
+const iv = randomBytes(12);           // new random IV for every message
+const cipher = createCipheriv('aes-256-gcm', key, iv);
+const ciphertext = Buffer.concat([cipher.update('Meet at 5pm', 'utf8'), cipher.final()]);
+const tag = cipher.getAuthTag();
+
+const decipher = createDecipheriv('aes-256-gcm', key, iv);
+decipher.setAuthTag(tag);
+Buffer.concat([decipher.update(ciphertext), decipher.final()]).toString('utf8'); // 'Meet at 5pm'</code></pre>
+      <p>AES-GCM also detects tampering: if one byte of the ciphertext changes, <code>decipher.final()</code> throws. The hard part of encryption is rarely the algorithm; it is <strong>key management</strong> — where the key lives, who can read it, and how it is rotated. A key hard-coded next to the data it protects is barely better than no encryption.</p>
+
+      <h2>Hashing: a one-way fingerprint</h2>
+      <p>A cryptographic hash function maps any input to a fixed-size output, and it is <strong>not reversible</strong> — there is no key and no “unhash”. The same input always gives the same hash, and a tiny change in the input changes the output completely:</p>
+      <pre><code>sha256('hello') = 2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824
+sha256('Hello') = 185f8db32271fe25f561a6fc938b2e264306ec304eda518007d1764826381969</code></pre>
+      <p>Hashes are used to check integrity (download checksums, Git commits), to deduplicate data, and as a building block for signatures. You check a hash by hashing the candidate again and comparing.</p>
+
+      <h2>Side by side</h2>
+      <table>
+        <thead><tr><th></th><th>Encoding</th><th>Encryption</th><th>Hashing</th></tr></thead>
+        <tbody>
+          <tr><td>Purpose</td><td>Compatibility / transport</td><td>Confidentiality</td><td>Integrity / fingerprint</td></tr>
+          <tr><td>Reversible?</td><td>Yes, by anyone</td><td>Yes, with the key</td><td>No</td></tr>
+          <tr><td>Needs a key?</td><td>No</td><td>Yes</td><td>No (HMAC adds one)</td></tr>
+          <tr><td>Output size</td><td>Depends on input</td><td>About the input size</td><td>Fixed (e.g. 256 bits)</td></tr>
+          <tr><td>Examples</td><td>Base64, URL encoding, UTF-8</td><td>AES-GCM, RSA-OAEP, ChaCha20-Poly1305</td><td>SHA-256, SHA-3, BLAKE2</td></tr>
+        </tbody>
+      </table>
+
+      <h2>Passwords: slow, salted hashes only</h2>
+      <p>Passwords should be hashed, never encrypted — the server only ever needs to check a login, not read the password. But a <em>fast</em> hash is the wrong tool. SHA-256 is designed to be quick, so a modern GPU can test billions of guesses per second against a leaked hash. MD5 and SHA-1 are even faster and have known weaknesses; unsalted MD5 hashes of common passwords can simply be looked up — search the web for <code>5d41402abc4b2a76b9719d911017c592</code> and you will find it is <code>hello</code>.</p>
+      <p>Use a dedicated password-hashing function: <strong>Argon2id</strong> (first choice for new systems), <strong>scrypt</strong> or <strong>bcrypt</strong>. They are deliberately slow and memory-hard, have a tunable cost, and take a random <strong>salt</strong> per user so that two people with the same password get different hashes and precomputed tables are useless.</p>
+      <pre><code>import { scryptSync, randomBytes, timingSafeEqual } from 'node:crypto';
+
+const PARAMS = { N: 2 ** 17, r: 8, p: 1, maxmem: 256 * 1024 * 1024 };
+
+function hashPassword(password) {
+  const salt = randomBytes(16);
+  const hash = scryptSync(password, salt, 32, PARAMS);
+  return `${salt.toString('hex')}:${hash.toString('hex')}`;
+}
+
+function checkPassword(password, stored) {
+  const [saltHex, hashHex] = stored.split(':');
+  const hash = scryptSync(password, Buffer.from(saltHex, 'hex'), 32, PARAMS);
+  return timingSafeEqual(hash, Buffer.from(hashHex, 'hex'));
+}</code></pre>
+      <p>On a typical laptop each call takes a few hundred milliseconds — unnoticeable for one login, crippling for an attacker. In Python, the <code>argon2-cffi</code> and <code>bcrypt</code> packages do the same job and store the salt and cost inside the hash string for you. Note that bcrypt only uses the first 72 bytes of a password.</p>
+      <div class="callout bad"><p><strong>Never</strong> store passwords as Base64, with reversible encryption, or as plain MD5, SHA-1 or SHA-256 — salted or not.</p></div>
+
+      <h2>HMAC: hashing with a key</h2>
+      <p>An HMAC combines a hash with a secret key. Only someone with the key can produce the right value, so it proves a message came from a key holder and wasn’t changed. Payment gateways use it to sign webhooks; HS256 JWTs are HMAC-SHA256.</p>
+      <pre><code>createHmac('sha256', 'my-secret-key').update('amount=500&amp;to=rahim').digest('hex');
+// '0c91fba74f9d3a7ec543c117d241883b51d6a9a3df886463b813c6cd94dccd3c'</code></pre>
+      <p>Compare HMACs with a constant-time function such as <code>timingSafeEqual</code> or Python’s <code>hmac.compare_digest</code>, not <code>===</code>.</p>
+
+      <h2>Common misconceptions</h2>
+      <ul>
+        <li><strong>“It looks scrambled, so it’s secure.”</strong> Base64 and hex look scrambled too. Ask: can someone reverse it without a secret?</li>
+        <li><strong>“Hashing is encryption you can’t undo.”</strong> Close, but the key difference is intent: hashes are for comparing, encryption is for getting the data back.</li>
+        <li><strong>“A JWT is encrypted.”</strong> A normal signed JWT is only encoded and signed; anyone can read the payload.</li>
+        <li><strong>“SHA-256 with a salt is fine for passwords.”</strong> The salt stops lookup tables, but not billions of fast guesses. Speed is the problem.</li>
+      </ul>
+
+      <div class="try-tool">
+        <span><strong>See for yourself that encoding hides nothing.</strong> Paste any Base64 string into the Base64 tool and it decodes instantly — no key needed, all in your browser.</span>
+        <a class="button" href="/base64/" data-i18n="guides.tryTool">Try it now</a>
+      </div>
+
+      <h2>FAQ</h2>
+      <details><summary>Can a hash be decrypted?</summary><p>No. But a weak or fast hash of a short or common input can be <em>guessed</em>: an attacker hashes candidates until one matches. That is why passwords need slow, salted algorithms.</p></details>
+      <details><summary>Should I encrypt or hash API keys I issue?</summary><p>Hash them (a fast hash such as SHA-256 is fine here, because random keys are too long to guess) and show the full key to the user only once. If you must be able to display a secret again, such as a third-party key your app uses, encrypt it and protect the encryption key.</p></details>
+      <details><summary>Is MD5 still useful for anything?</summary><p>As a non-security checksum to spot accidental corruption, yes. For passwords, signatures or anything an attacker could influence, no — use SHA-256 or better.</p></details>
+    </article>
+
+    <article data-lang="bn" lang="bn">
+      <h1>এনকোডিং, এনক্রিপশন ও হ্যাশিং: যে পার্থক্যটা জরুরি</h1>
+      <p class="byline" data-guide-updated data-minutes="6"></p>
+
+      <p>“আমরা পাসওয়ার্ড Base64-এ রাখি, তাই এগুলো এনক্রিপ্টেড।” “API key হ্যাশ করা আছে, পরে ইউজারকে ফেরত দেখানো যাবে।” দুটো বাক্যই বাস্তব প্রজেক্ট থেকে নেওয়া, আর দুটোই নিরাপত্তার ফাঁক বোঝায়। এনকোডিং, এনক্রিপশন আর হ্যাশিং — তিনটিই ডেটাকে এমন কিছুতে বদলায় যা দেখতে অপাঠ্য, তাই এগুলো গুলিয়ে যায়। কিন্তু তিনটি একেবারে আলাদা প্রশ্নের উত্তর দেয়। ভুলটা বেছে নিলেই “সুরক্ষিত” পাসওয়ার্ডে ভরা ডেটাবেস সাধারণ লেখার মতো পড়া যায়।</p>
+
+      <h2>এনকোডিং: ফরম্যাট বদলানো, কিছু লুকানো নয়</h2>
+      <p>এনকোডিং ডেটাকে এমনভাবে রূপান্তর করে যাতে সেটা নির্দিষ্ট কোনো মাধ্যমে নিরাপদে যেতে পারে। নিয়মগুলো সবার জানা, কোনো কী নেই, আর যে কেউ উল্টো করতে পারে। এর কাজ <strong>সামঞ্জস্য</strong>, গোপনীয়তা নয়।</p>
+      <pre><code>// Base64: বাইনারি-নিরাপদ লেখা
+Buffer.from('p@ssw0rd').toString('base64');   // 'cEBzc3cwcmQ='
+Buffer.from('cEBzc3cwcmQ=', 'base64').toString(); // 'p@ssw0rd'
+
+// URL (percent) এনকোডিং: query string-এর ভেতরে নিরাপদ
+encodeURIComponent('a b&amp;c=d');                 // 'a%20b%26c%3Dd'</code></pre>
+      <p>আরও উদাহরণ: UTF-8 (লেখা থেকে বাইট), hex, <code>&amp;lt;</code>-এর মতো HTML entity। সিক্রেট ছাড়াই ডিকোড করা গেলে সেটা কিছুই রক্ষা করে না। সবচেয়ে প্রচলিতটি কীভাবে কাজ করে জানতে দেখুন <a href="/guides/base64-explained/">Base64 সহজ ভাষায়</a>।</p>
+
+      <h2>এনক্রিপশন: কী ছাড়া সবার কাছ থেকে ডেটা লুকানো</h2>
+      <p>এনক্রিপশন plaintext-কে ciphertext-এ বদলায়, যা কেবল সঠিক কী দিয়েই আগের রূপে ফেরানো যায়। এটা <strong>নকশাগতভাবেই উল্টানো যায়</strong> — যার কাছে কী আছে তার জন্য। যখন পরে আসল ডেটা আবার লাগবে, তখন এটা ব্যবহার করুন: মেসেজ, ফাইল, NID নম্বরের মতো ডেটাবেস ফিল্ড, ব্যাকআপ।</p>
+      <ul>
+        <li><strong>সিমেট্রিক</strong> (AES): একই কী দিয়ে এনক্রিপ্ট ও ডিক্রিপ্ট। দ্রুত; সংরক্ষিত ডেটা আর TLS-এর ভেতরে ব্যবহৃত হয়।</li>
+        <li><strong>অ্যাসিমেট্রিক</strong> (RSA, elliptic-curve পদ্ধতি): পাবলিক কী এনক্রিপ্ট (বা যাচাই) করে, প্রাইভেট কী ডিক্রিপ্ট (বা সাইন) করে। কী বিনিময় আর ডিজিটাল সিগনেচারে ব্যবহৃত হয়।</li>
+      </ul>
+      <pre><code>import { createCipheriv, createDecipheriv, randomBytes } from 'node:crypto';
+
+const key = randomBytes(32);          // ২৫৬-বিট কী: গোপন রাখুন
+const iv = randomBytes(12);           // প্রতিটি মেসেজের জন্য নতুন র‍্যান্ডম IV
+const cipher = createCipheriv('aes-256-gcm', key, iv);
+const ciphertext = Buffer.concat([cipher.update('Meet at 5pm', 'utf8'), cipher.final()]);
+const tag = cipher.getAuthTag();
+
+const decipher = createDecipheriv('aes-256-gcm', key, iv);
+decipher.setAuthTag(tag);
+Buffer.concat([decipher.update(ciphertext), decipher.final()]).toString('utf8'); // 'Meet at 5pm'</code></pre>
+      <p>AES-GCM কারচুপিও ধরে ফেলে: ciphertext-এর একটা বাইট বদলালেই <code>decipher.final()</code> এরর দেয়। এনক্রিপশনের কঠিন অংশ সাধারণত অ্যালগরিদম নয়, বরং <strong>কী ব্যবস্থাপনা</strong> — কী কোথায় থাকে, কে পড়তে পারে, কীভাবে বদলানো হয়। যে ডেটা রক্ষা করছে তার পাশেই হার্ড-কোড করা কী, এনক্রিপশন না থাকার চেয়ে খুব একটা ভালো নয়।</p>
+
+      <h2>হ্যাশিং: একমুখী আঙুলের ছাপ</h2>
+      <p>ক্রিপ্টোগ্রাফিক হ্যাশ ফাংশন যেকোনো ইনপুটকে নির্দিষ্ট আকারের আউটপুটে রূপান্তর করে, আর এটা <strong>উল্টানো যায় না</strong> — কোনো কী নেই, কোনো “unhash” নেই। একই ইনপুট সবসময় একই হ্যাশ দেয়, আর ইনপুটে সামান্য পরিবর্তনেও আউটপুট পুরো বদলে যায়:</p>
+      <pre><code>sha256('hello') = 2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824
+sha256('Hello') = 185f8db32271fe25f561a6fc938b2e264306ec304eda518007d1764826381969</code></pre>
+      <p>হ্যাশ ব্যবহার হয় অখণ্ডতা যাচাইয়ে (ডাউনলোডের checksum, Git commit), ডুপ্লিকেট ডেটা ধরতে, আর সিগনেচারের ভিত্তি হিসেবে। হ্যাশ মেলাতে হলে সম্ভাব্য ইনপুটটা আবার হ্যাশ করে তুলনা করতে হয়।</p>
+
+      <h2>পাশাপাশি তুলনা</h2>
+      <table>
+        <thead><tr><th></th><th>এনকোডিং</th><th>এনক্রিপশন</th><th>হ্যাশিং</th></tr></thead>
+        <tbody>
+          <tr><td>উদ্দেশ্য</td><td>সামঞ্জস্য / পরিবহন</td><td>গোপনীয়তা</td><td>অখণ্ডতা / আঙুলের ছাপ</td></tr>
+          <tr><td>উল্টানো যায়?</td><td>হ্যাঁ, যে কেউ পারে</td><td>হ্যাঁ, কী থাকলে</td><td>না</td></tr>
+          <tr><td>কী লাগে?</td><td>না</td><td>হ্যাঁ</td><td>না (HMAC-এ লাগে)</td></tr>
+          <tr><td>আউটপুটের আকার</td><td>ইনপুটের ওপর নির্ভর করে</td><td>প্রায় ইনপুটের সমান</td><td>নির্দিষ্ট (যেমন ২৫৬ বিট)</td></tr>
+          <tr><td>উদাহরণ</td><td>Base64, URL এনকোডিং, UTF-8</td><td>AES-GCM, RSA-OAEP, ChaCha20-Poly1305</td><td>SHA-256, SHA-3, BLAKE2</td></tr>
+        </tbody>
+      </table>
+
+      <h2>পাসওয়ার্ড: শুধু ধীর, salt-যুক্ত হ্যাশ</h2>
+      <p>পাসওয়ার্ড হ্যাশ করতে হয়, কখনো এনক্রিপ্ট নয় — সার্ভারের শুধু লগইন যাচাই করা দরকার, পাসওয়ার্ড পড়ার দরকার নেই। কিন্তু <em>দ্রুত</em> হ্যাশ এখানে ভুল হাতিয়ার। SHA-256 দ্রুত চলার জন্যই তৈরি, তাই একটা আধুনিক GPU ফাঁস হওয়া হ্যাশের বিপরীতে প্রতি সেকেন্ডে কোটি কোটি অনুমান পরীক্ষা করতে পারে। MD5 আর SHA-1 আরও দ্রুত, আর এদের জানা দুর্বলতাও আছে; সাধারণ পাসওয়ার্ডের salt ছাড়া MD5 হ্যাশ সরাসরি খুঁজেই পাওয়া যায় — ওয়েবে <code>5d41402abc4b2a76b9719d911017c592</code> সার্চ করলেই দেখবেন এটা <code>hello</code>।</p>
+      <p>পাসওয়ার্ডের জন্য বানানো ফাংশন ব্যবহার করুন: <strong>Argon2id</strong> (নতুন সিস্টেমে প্রথম পছন্দ), <strong>scrypt</strong> বা <strong>bcrypt</strong>। এগুলো ইচ্ছে করেই ধীর ও বেশি মেমরি নেয়, খরচ (cost) বাড়ানো-কমানো যায়, আর প্রতিটি ইউজারের জন্য র‍্যান্ডম <strong>salt</strong> নেয় — ফলে একই পাসওয়ার্ডের দুজন ইউজারের হ্যাশ আলাদা হয়, আর আগে থেকে হিসাব করা টেবিল কোনো কাজে আসে না।</p>
+      <pre><code>import { scryptSync, randomBytes, timingSafeEqual } from 'node:crypto';
+
+const PARAMS = { N: 2 ** 17, r: 8, p: 1, maxmem: 256 * 1024 * 1024 };
+
+function hashPassword(password) {
+  const salt = randomBytes(16);
+  const hash = scryptSync(password, salt, 32, PARAMS);
+  return `${salt.toString('hex')}:${hash.toString('hex')}`;
+}
+
+function checkPassword(password, stored) {
+  const [saltHex, hashHex] = stored.split(':');
+  const hash = scryptSync(password, Buffer.from(saltHex, 'hex'), 32, PARAMS);
+  return timingSafeEqual(hash, Buffer.from(hashHex, 'hex'));
+}</code></pre>
+      <p>সাধারণ ল্যাপটপে প্রতিটি কলে কয়েকশো মিলিসেকেন্ড লাগে — একটা লগইনে টের পাওয়া যায় না, কিন্তু অ্যাটাকারের জন্য বিরাট বাধা। Python-এ <code>argon2-cffi</code> আর <code>bcrypt</code> প্যাকেজ একই কাজ করে, আর salt ও cost হ্যাশ স্ট্রিংয়ের ভেতরেই রেখে দেয়। মনে রাখবেন, bcrypt পাসওয়ার্ডের প্রথম ৭২ বাইটই শুধু ব্যবহার করে।</p>
+      <div class="callout bad"><p>পাসওয়ার্ড <strong>কখনোই</strong> Base64-এ, উল্টানো যায় এমন এনক্রিপশনে, বা সাধারণ MD5, SHA-1 বা SHA-256 হিসেবে রাখবেন না — salt থাকুক বা না থাকুক।</p></div>
+
+      <h2>HMAC: কী-সহ হ্যাশিং</h2>
+      <p>HMAC একটা হ্যাশের সাথে গোপন কী জুড়ে দেয়। কী যার কাছে আছে কেবল সে-ই সঠিক মান বানাতে পারে, তাই এটা প্রমাণ করে মেসেজটা কী-ধারীর কাছ থেকে এসেছে এবং বদলানো হয়নি। পেমেন্ট গেটওয়ে webhook সাইন করতে এটা ব্যবহার করে; HS256 JWT আসলে HMAC-SHA256।</p>
+      <pre><code>createHmac('sha256', 'my-secret-key').update('amount=500&amp;to=rahim').digest('hex');
+// '0c91fba74f9d3a7ec543c117d241883b51d6a9a3df886463b813c6cd94dccd3c'</code></pre>
+      <p>HMAC তুলনা করুন <code>timingSafeEqual</code> বা Python-এর <code>hmac.compare_digest</code>-এর মতো constant-time ফাংশন দিয়ে, <code>===</code> দিয়ে নয়।</p>
+
+      <h2>প্রচলিত ভুল ধারণা</h2>
+      <ul>
+        <li><strong>“দেখতে এলোমেলো, তাই নিরাপদ।”</strong> Base64 আর hex-ও দেখতে এলোমেলো। প্রশ্ন করুন: সিক্রেট ছাড়া কি কেউ এটা উল্টাতে পারে?</li>
+        <li><strong>“হ্যাশিং হলো এমন এনক্রিপশন যা ফেরানো যায় না।”</strong> কাছাকাছি, তবে আসল পার্থক্য উদ্দেশ্যে: হ্যাশ তুলনা করার জন্য, এনক্রিপশন ডেটা ফেরত পাওয়ার জন্য।</li>
+        <li><strong>“JWT এনক্রিপ্টেড।”</strong> সাধারণ সাইন করা JWT শুধু এনকোড ও সাইন করা; পেলোড যে কেউ পড়তে পারে।</li>
+        <li><strong>“salt দিয়ে SHA-256 পাসওয়ার্ডের জন্য যথেষ্ট।”</strong> salt লুকআপ টেবিল আটকায়, কিন্তু কোটি কোটি দ্রুত অনুমান আটকায় না। সমস্যাটা গতিতেই।</li>
+      </ul>
+
+      <div class="try-tool">
+        <span><strong>নিজেই দেখুন, এনকোডিং কিছু লুকায় না।</strong> যেকোনো Base64 স্ট্রিং Base64 টুলে পেস্ট করুন — কোনো কী ছাড়াই সাথে সাথে ডিকোড হয়ে যাবে, পুরোটা আপনার ব্রাউজারেই।</span>
+        <a class="button" href="/base64/" data-i18n="guides.tryTool">এখনই চেষ্টা করুন</a>
+      </div>
+
+      <h2>প্রশ্নোত্তর</h2>
+      <details><summary>হ্যাশ কি ডিক্রিপ্ট করা যায়?</summary><p>না। তবে ছোট বা প্রচলিত ইনপুটের দুর্বল বা দ্রুত হ্যাশ <em>অনুমান</em> করা যায়: অ্যাটাকার একের পর এক সম্ভাব্য মান হ্যাশ করতে থাকে যতক্ষণ না মিলে যায়। এজন্যই পাসওয়ার্ডে ধীর, salt-যুক্ত অ্যালগরিদম লাগে।</p></details>
+      <details><summary>আমার দেওয়া API key কি এনক্রিপ্ট করব, না হ্যাশ?</summary><p>হ্যাশ করুন (এখানে SHA-256-এর মতো দ্রুত হ্যাশই চলে, কারণ র‍্যান্ডম কী অনুমান করার পক্ষে অনেক লম্বা) আর পুরো কী ইউজারকে শুধু একবার দেখান। কোনো সিক্রেট যদি পরে আবার দেখাতেই হয় — যেমন আপনার অ্যাপ যে থার্ড-পার্টি কী ব্যবহার করে — তাহলে এনক্রিপ্ট করুন এবং এনক্রিপশন কী সুরক্ষিত রাখুন।</p></details>
+      <details><summary>MD5 কি এখনো কোনো কাজে লাগে?</summary><p>নিরাপত্তার বাইরে, দুর্ঘটনাবশত ফাইল নষ্ট হয়েছে কি না ধরার checksum হিসেবে — হ্যাঁ। পাসওয়ার্ড, সিগনেচার বা অ্যাটাকার প্রভাবিত করতে পারে এমন কিছুর জন্য — না; SHA-256 বা তার চেয়ে ভালো কিছু ব্যবহার করুন।</p></details>
+    </article>
+
+    <section class="more-tools">
+      <h2 data-i18n="guides.related">Related guides</h2>
+      <ul class="guide-grid" data-related-guides></ul>
+    </section>
+  </main>
+
+  <div class="ad-slot ad-bottom" data-ad="bottom" data-i18n-attr="aria-label:ad.label" aria-label="Advertisement">
+    <span data-i18n="ad.placeholder">Ad space</span>
+  </div>
+
+  <section class="content more-tools">
+    <h2 data-i18n="tools.more">More free tools</h2>
+    <ul class="tool-grid" data-more-tools></ul>
+  </section>
+
+  <footer class="site-footer">
+    <span>© <span data-year></span> <span data-i18n="brand">JSON Bondhu</span></span>
+    <a href="/privacy.html" data-i18n="footer.privacy">Privacy policy</a>
+    <a href="https://github.com/MosabberUddin/jsonbondhu/issues" rel="noopener" data-i18n="footer.contact">Contact</a>
+  </footer>
+
+  <script src="/ads.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="en" data-guide="jwt-security-mistakes" data-title-key="guide.jwt-security-mistakes.title" data-desc-key="guide.jwt-security-mistakes.desc">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>8 JWT security mistakes developers still make</title>
+  <meta name="description" content="alg: none, weak secrets, tokens in localStorage, missing expiry and more — what goes wrong and how to do it safely.">
+  <link rel="canonical" href="https://jsonbondhu.pages.dev/guides/jwt-security-mistakes/">
+  <link rel="alternate" hreflang="en" href="https://jsonbondhu.pages.dev/guides/jwt-security-mistakes/?lang=en">
+  <link rel="alternate" hreflang="bn" href="https://jsonbondhu.pages.dev/guides/jwt-security-mistakes/?lang=bn">
+  <link rel="alternate" hreflang="x-default" href="https://jsonbondhu.pages.dev/guides/jwt-security-mistakes/">
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="8 JWT security mistakes developers still make">
+  <meta name="theme-color" content="#0f766e">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230f766e'/%3E%3Ctext x='16' y='22' font-size='15' font-family='monospace' font-weight='700' fill='white' text-anchor='middle'%3E%7B%7D%3C/text%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/i18n.js"></script>
+  <script src="/tools.js"></script>
+  <script src="/guides/guides.js"></script>
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"TechArticle","headline":"8 JWT security mistakes developers still make","alternativeHeadline":"JWT নিয়ে ৮টি নিরাপত্তা-ভুল যা ডেভেলপাররা এখনো করেন","inLanguage":["en","bn"],"datePublished":"2026-09-27","dateModified":"2026-09-27","author":{"@type":"Organization","name":"JSON Bondhu"},"publisher":{"@type":"Organization","name":"JSON Bondhu","url":"https://jsonbondhu.pages.dev/"},"mainEntityOfPage":"https://jsonbondhu.pages.dev/guides/jwt-security-mistakes/"}
+  </script>
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="/">
+      <span class="logo" aria-hidden="true">{ }</span>
+      <span><strong data-i18n="brand">JSON Bondhu</strong></span>
+    </a>
+    <nav class="top-nav">
+      <a href="/" data-i18n="nav.tools">All tools</a>
+      <a href="/guides/" data-i18n="nav.guides">Guides</a>
+      <a href="/#premium" class="pill" data-i18n="nav.premium">Go ad-free</a>
+      <div class="lang-switch" role="group" data-i18n-attr="aria-label:lang.label" aria-label="Language">
+        <button type="button" data-set-lang="en" lang="en" aria-pressed="true">EN</button>
+        <button type="button" data-set-lang="bn" lang="bn" aria-pressed="false">বাংলা</button>
+      </div>
+    </nav>
+  </header>
+
+  <div class="ad-slot ad-top" data-ad="top" data-i18n-attr="aria-label:ad.label" aria-label="Advertisement">
+    <span data-i18n="ad.placeholder">Ad space</span>
+  </div>
+
+  <main class="guide">
+    <p class="breadcrumb"><a href="/guides/" data-i18n="guides.back">← All guides</a></p>
+
+    <article data-lang="en" lang="en">
+      <h1>8 JWT security mistakes developers still make</h1>
+      <p class="byline" data-guide-updated data-minutes="8"></p>
+
+      <p>JSON Web Tokens are not insecure by design, but they give you a lot of rope. The specification leaves many decisions to you — which algorithms to accept, how long tokens live, where the browser keeps them — and most real-world JWT vulnerabilities come from getting one of those decisions wrong. Here are eight mistakes that still show up in code reviews and bug-bounty reports, why each one matters, and what to do instead. If you are new to the format, start with <a href="/guides/decode-jwt/">how to decode a JWT</a>.</p>
+
+      <h2>1. Accepting <code>alg: "none"</code></h2>
+      <p>The JWT standard defines an “unsecured” token whose header says <code>{"alg":"none"}</code> and whose signature is empty. Some early libraries honoured that header, so an attacker could take any token, set the algorithm to <code>none</code>, edit the payload and delete the signature:</p>
+      <pre><code>eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.&lt;edited payload&gt;.
+// header = {"alg":"none","typ":"JWT"}, note the empty last part</code></pre>
+      <p><strong>Fix:</strong> never let the token choose its own algorithm. Configure the verifier with an explicit allow-list and reject everything else. Current versions of mainstream libraries reject <code>none</code> by default, but only if you don’t turn it back on or roll your own parser.</p>
+      <pre><code>// JavaScript (jose)
+await jwtVerify(token, key, { algorithms: ['RS256'], issuer, audience });
+
+# Python (PyJWT)
+jwt.decode(token, key, algorithms=["RS256"], audience=AUD, issuer=ISS)</code></pre>
+
+      <h2>2. Algorithm confusion (RS256 key used as an HS256 secret)</h2>
+      <p>Your API expects RS256 tokens and verifies them with the provider’s <em>public</em> key — which, being public, the attacker also has. If the verification call is generic (“verify this token with this key”) and the library trusts the header’s <code>alg</code>, the attacker can send a token marked <code>HS256</code> and sign it with HMAC, using the public key’s PEM text as the “secret”. The server runs HMAC with the same bytes and the signature matches.</p>
+      <p><strong>Fix:</strong> pin the algorithm (see mistake 1), and keep keys typed: an RSA or EC public key should only ever be passed to an RSA or ECDSA verifier. Modern libraries refuse to use a PEM public key as an HMAC secret, which is another reason to keep them updated.</p>
+
+      <h2>3. Weak or guessable HMAC secrets</h2>
+      <p>With HS256 the whole security of every token rests on one secret. An attacker who has a single valid token can try billions of guesses per second offline — password-cracking tools have a JWT mode built in — without ever touching your server. Secrets like <code>secret</code>, <code>changeme</code>, the app name, or the example value from a tutorial fall in minutes.</p>
+      <p><strong>Fix:</strong> use at least 256 bits of randomness (RFC 7518 requires a key at least as long as the hash output), keep it in a secret manager or environment variable, not in Git, and rotate it if it leaks.</p>
+      <pre><code>node -e "console.log(require('crypto').randomBytes(32).toString('base64url'))"
+python -c "import secrets; print(secrets.token_urlsafe(32))"</code></pre>
+      <p>If several independent services need to verify tokens, switch to RS256 or ES256 so that only the issuer holds a signing key.</p>
+
+      <h2>4. Verifying the signature but not the claims</h2>
+      <p>A valid signature only proves who <em>issued</em> the token. It does not prove the token is still valid or meant for you. Skipping <code>exp</code> means stolen tokens work forever; skipping <code>nbf</code> accepts tokens before their start time; skipping <code>aud</code> lets a token issued for your billing service be replayed against your admin API; skipping <code>iss</code> may accept tokens from a different tenant of the same identity provider.</p>
+      <p><strong>Fix:</strong> pass the expected issuer and audience to the library and make <code>exp</code> required. Allow a small clock skew (30–60 seconds), not hours.</p>
+
+      <h2>5. Putting sensitive data in the payload</h2>
+      <p>A signed JWT is <strong>encoded, not encrypted</strong>. Anyone who sees it — the browser, a proxy, a log file, an analytics script — can read every claim. We regularly see national ID numbers, phone numbers, internal pricing flags and even password hashes in payloads.</p>
+      <p><strong>Fix:</strong> keep the payload to what the receiving API needs to make a decision: a user ID, roles or scopes, expiry. Look everything else up on the server. If a token genuinely must carry confidential data, use encrypted JWE instead of a plain signed JWT.</p>
+
+      <h2>6. Long-lived tokens with no way to revoke them</h2>
+      <p>A JWT is valid until <code>exp</code>, even after the user logs out, changes their password or is banned — the server doesn’t look anything up. A 30-day access token is therefore a 30-day skeleton key if it leaks.</p>
+      <p><strong>Fix:</strong> keep access tokens short (often 5–15 minutes) and pair them with a refresh token that is stored server-side, rotated on every use and revoked on logout. Reuse of an already-rotated refresh token is a strong signal of theft; revoke the whole family. For immediate revocation of access tokens, keep a small deny-list of <code>jti</code> values or a per-user “token version” until their natural expiry.</p>
+
+      <h2>7. Storing tokens where XSS can read them</h2>
+      <p>Tokens in <code>localStorage</code> or <code>sessionStorage</code> are readable by any JavaScript on the page. One cross-site scripting bug, or one compromised npm package or third-party script, can copy the token to an attacker’s server, where it keeps working until it expires.</p>
+      <p>An <code>HttpOnly</code> cookie can’t be read by JavaScript at all:</p>
+      <pre><code>Set-Cookie: session=&lt;token&gt;; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=900</code></pre>
+      <p>This is not a free win, and it’s worth being honest about the trade-off:</p>
+      <table>
+        <thead><tr><th></th><th>localStorage + header</th><th>HttpOnly cookie</th></tr></thead>
+        <tbody>
+          <tr><td>XSS can steal the token</td><td>Yes</td><td>No (but XSS can still make requests as the user while the page is open)</td></tr>
+          <tr><td>CSRF risk</td><td>None — the browser never attaches it automatically</td><td>Yes — the browser sends it automatically; mitigate with <code>SameSite</code> and CSRF tokens for state-changing requests</td></tr>
+          <tr><td>Works across domains</td><td>Easy</td><td>Needs careful CORS and cookie settings</td></tr>
+        </tbody>
+      </table>
+      <p><strong>Fix:</strong> for browser apps, prefer <code>HttpOnly; Secure; SameSite</code> cookies (or a backend-for-frontend that keeps tokens server-side entirely), add CSRF protection, and treat XSS prevention — output escaping and a Content Security Policy — as the real defence either way.</p>
+
+      <h2>8. Pasting production tokens into online tools that upload them</h2>
+      <p>A live access token is a credential. Many “JWT decoder” websites send what you paste to their server, where it may be logged, cached or analysed. If that token hasn’t expired, whoever reads those logs can call your API as that user.</p>
+      <p><strong>Fix:</strong> debug with test tokens where possible; use tools that run entirely in your browser (you can confirm in the browser’s Network tab that nothing is sent); and if a real token was exposed, revoke the session or wait for it to expire rather than assuming nobody saw it.</p>
+
+      <div class="callout"><p><strong>Rule of thumb:</strong> the verifier decides the algorithm, the key and the expected claims. The token only brings data to be checked against those expectations.</p></div>
+
+      <div class="try-tool">
+        <span><strong>Inspect tokens without leaking them.</strong> The JWT Decoder shows every claim, warns about expired or <code>none</code> tokens and verifies signatures locally with Web Crypto — nothing is uploaded.</span>
+        <a class="button" href="/jwt-decoder/" data-i18n="guides.tryTool">Try it now</a>
+      </div>
+
+      <h2>FAQ</h2>
+      <details><summary>Are JWTs less secure than traditional sessions?</summary><p>Not inherently. Server-side sessions are simpler to revoke and harder to misconfigure, so for a single web app they are often the better default. JWTs shine when several services must verify identity without a shared session store. Either way, the mistakes above are what make the difference.</p></details>
+      <details><summary>Is HS256 unsafe? Should I always use RS256?</summary><p>HS256 with a long random secret is secure. Its limitation is that every verifier can also sign. Use RS256 or ES256 when the verifiers are separate services or third parties; ES256 gives much shorter signatures.</p></details>
+      <details><summary>Does HttpOnly protect me from XSS completely?</summary><p>No. It stops a script from <em>reading</em> the token, but a script running in your page can still send requests that the browser authenticates with the cookie. It limits the damage to the time the page is open; it does not replace fixing XSS.</p></details>
+      <details><summary>What should I do if a token leaked?</summary><p>Revoke the related session or refresh token, add the <code>jti</code> to a deny-list if you have one, and if the signing secret itself may have leaked, rotate it — which invalidates every token signed with it.</p></details>
+    </article>
+
+    <article data-lang="bn" lang="bn">
+      <h1>JWT নিয়ে ৮টি নিরাপত্তা-ভুল যা ডেভেলপাররা এখনো করেন</h1>
+      <p class="byline" data-guide-updated data-minutes="8"></p>
+
+      <p>JSON Web Token নিজে থেকে অনিরাপদ নয়, তবে এটা আপনাকে অনেক স্বাধীনতা দেয় — আর সেখানেই বিপদ। কোন অ্যালগরিদম গ্রহণ করবেন, টোকেন কতক্ষণ বৈধ থাকবে, ব্রাউজার কোথায় রাখবে — এমন অনেক সিদ্ধান্ত স্পেসিফিকেশন আপনার ওপর ছেড়ে দেয়, আর বাস্তবের বেশিরভাগ JWT দুর্বলতা আসে এর কোনো একটা ভুল করার ফলে। নিচে এমন আটটি ভুল দেওয়া হলো যা এখনো কোড রিভিউ আর bug-bounty রিপোর্টে দেখা যায় — কেন সমস্যা, আর বদলে কী করবেন। ফরম্যাটটা নতুন হলে আগে পড়ুন <a href="/guides/decode-jwt/">JWT কীভাবে ডিকোড করবেন</a>।</p>
+
+      <h2>১. <code>alg: "none"</code> গ্রহণ করা</h2>
+      <p>JWT স্ট্যান্ডার্ডে একটা “unsecured” টোকেনের ধারণা আছে, যার হেডারে থাকে <code>{"alg":"none"}</code> আর সিগনেচার ফাঁকা। শুরুর দিকের কিছু লাইব্রেরি এই হেডার মেনে নিত, ফলে অ্যাটাকার যেকোনো টোকেন নিয়ে অ্যালগরিদম <code>none</code> করে, পেলোড বদলে, সিগনেচার মুছে পাঠিয়ে দিতে পারত:</p>
+      <pre><code>eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.&lt;edited payload&gt;.
+// header = {"alg":"none","typ":"JWT"}, শেষের অংশটা ফাঁকা</code></pre>
+      <p><strong>সমাধান:</strong> টোকেনকে কখনো নিজের অ্যালগরিদম নিজে বেছে নিতে দেবেন না। ভেরিফায়ারে অনুমোদিত অ্যালগরিদমের স্পষ্ট তালিকা দিন, বাকি সব বাতিল করুন। জনপ্রিয় লাইব্রেরির বর্তমান সংস্করণগুলো ডিফল্টভাবেই <code>none</code> বাতিল করে — যদি না আপনি নিজে আবার চালু করেন বা নিজের পার্সার লেখেন।</p>
+      <pre><code>// JavaScript (jose)
+await jwtVerify(token, key, { algorithms: ['RS256'], issuer, audience });
+
+# Python (PyJWT)
+jwt.decode(token, key, algorithms=["RS256"], audience=AUD, issuer=ISS)</code></pre>
+
+      <h2>২. অ্যালগরিদম কনফিউশন (RS256-এর কী HS256-এর সিক্রেট হিসেবে)</h2>
+      <p>আপনার API RS256 টোকেন আশা করে এবং প্রোভাইডারের <em>পাবলিক</em> কী দিয়ে যাচাই করে — আর পাবলিক বলেই কী-টা অ্যাটাকারের হাতেও আছে। যাচাইয়ের কল যদি সাধারণ হয় (“এই কী দিয়ে এই টোকেন যাচাই করো”) আর লাইব্রেরি হেডারের <code>alg</code>-কে বিশ্বাস করে, তাহলে অ্যাটাকার <code>HS256</code> লেখা একটা টোকেন পাঠাতে পারে, যেটা সে HMAC দিয়ে সাইন করেছে পাবলিক কী-এর PEM লেখাকে “সিক্রেট” বানিয়ে। সার্ভারও একই বাইট দিয়ে HMAC চালায়, আর সিগনেচার মিলে যায়।</p>
+      <p><strong>সমাধান:</strong> অ্যালগরিদম নির্দিষ্ট করে দিন (১ নম্বর দেখুন), আর কী-এর ধরন আলাদা রাখুন: RSA বা EC পাবলিক কী শুধু RSA বা ECDSA ভেরিফায়ারেই যাবে। আধুনিক লাইব্রেরিগুলো PEM পাবলিক কী-কে HMAC সিক্রেট হিসেবে ব্যবহার করতে দেয় না — লাইব্রেরি আপডেট রাখার এটাও একটা কারণ।</p>
+
+      <h2>৩. দুর্বল বা অনুমানযোগ্য HMAC সিক্রেট</h2>
+      <p>HS256-এ সব টোকেনের পুরো নিরাপত্তা একটা সিক্রেটের ওপর দাঁড়িয়ে। যার হাতে একটা বৈধ টোকেন আছে, সে আপনার সার্ভারে না গিয়েই অফলাইনে প্রতি সেকেন্ডে কোটি কোটি অনুমান চালাতে পারে — পাসওয়ার্ড-ক্র্যাকিং টুলে JWT-এর জন্য আলাদা মোডই আছে। <code>secret</code>, <code>changeme</code>, অ্যাপের নাম বা কোনো টিউটোরিয়ালের উদাহরণ-মানের মতো সিক্রেট কয়েক মিনিটেই ভেঙে যায়।</p>
+      <p><strong>সমাধান:</strong> অন্তত ২৫৬ বিট র‍্যান্ডম মান ব্যবহার করুন (RFC 7518 অনুযায়ী কী অন্তত হ্যাশ আউটপুটের সমান লম্বা হতে হবে), এটা Git-এ নয়, secret manager বা environment variable-এ রাখুন, আর ফাঁস হলে বদলে ফেলুন।</p>
+      <pre><code>node -e "console.log(require('crypto').randomBytes(32).toString('base64url'))"
+python -c "import secrets; print(secrets.token_urlsafe(32))"</code></pre>
+      <p>একাধিক আলাদা সার্ভিসকে টোকেন যাচাই করতে হলে RS256 বা ES256-এ চলে যান, যাতে সাইন করার কী শুধু ইস্যুকারীর কাছেই থাকে।</p>
+
+      <h2>৪. সিগনেচার যাচাই করা, কিন্তু ক্লেইম না দেখা</h2>
+      <p>বৈধ সিগনেচার শুধু প্রমাণ করে টোকেনটা কে <em>ইস্যু</em> করেছে। টোকেনটা এখনো বৈধ কি না বা আপনার জন্যই কি না, তা প্রমাণ করে না। <code>exp</code> না দেখলে চুরি হওয়া টোকেন চিরকাল চলবে; <code>nbf</code> না দেখলে শুরুর সময়ের আগেই টোকেন চলবে; <code>aud</code> না দেখলে আপনার বিলিং সার্ভিসের জন্য দেওয়া টোকেন অ্যাডমিন API-তে চালানো যাবে; <code>iss</code> না দেখলে একই আইডেন্টিটি প্রোভাইডারের অন্য কোনো tenant-এর টোকেনও গৃহীত হতে পারে।</p>
+      <p><strong>সমাধান:</strong> লাইব্রেরিকে প্রত্যাশিত issuer ও audience দিয়ে দিন, আর <code>exp</code> বাধ্যতামূলক করুন। ঘড়ির অমিলের জন্য ৩০–৬০ সেকেন্ড ছাড় দিন, ঘণ্টার পর ঘণ্টা নয়।</p>
+
+      <h2>৫. পেলোডে সংবেদনশীল তথ্য রাখা</h2>
+      <p>সাইন করা JWT <strong>এনকোড করা, এনক্রিপ্ট করা নয়</strong>। যে-ই এটা দেখে — ব্রাউজার, প্রক্সি, লগ ফাইল, অ্যানালিটিক্স স্ক্রিপ্ট — সবাই প্রতিটি ক্লেইম পড়তে পারে। পেলোডে NID নম্বর, ফোন নম্বর, ভেতরের প্রাইসিং ফ্ল্যাগ, এমনকি পাসওয়ার্ড হ্যাশও আমরা প্রায়ই দেখি।</p>
+      <p><strong>সমাধান:</strong> পেলোডে শুধু ততটুকুই রাখুন যা দিয়ে গ্রহণকারী API সিদ্ধান্ত নেবে: ইউজার আইডি, role বা scope, মেয়াদ। বাকি সব সার্ভারে খুঁজে নিন। টোকেনে সত্যিই গোপন তথ্য পাঠাতে হলে সাধারণ সাইন করা JWT-র বদলে এনক্রিপ্টেড JWE ব্যবহার করুন।</p>
+
+      <h2>৬. দীর্ঘমেয়াদি টোকেন, বাতিলের কোনো উপায় নেই</h2>
+      <p>JWT <code>exp</code> পর্যন্ত বৈধ থাকে — ইউজার লগআউট করলেও, পাসওয়ার্ড বদলালেও বা ব্যান হলেও, কারণ সার্ভার কিছু খুঁজে দেখে না। তাই ৩০ দিনের access token ফাঁস হলে সেটা ৩০ দিনের মাস্টার-চাবি।</p>
+      <p><strong>সমাধান:</strong> access token ছোট রাখুন (সাধারণত ৫–১৫ মিনিট), সাথে একটা refresh token দিন যা সার্ভারে সংরক্ষিত থাকে, প্রতিবার ব্যবহারে বদলায় (rotate) এবং লগআউটে বাতিল হয়। আগেই বদলে যাওয়া refresh token আবার ব্যবহার হলে সেটা চুরির জোরালো লক্ষণ — তখন পুরো ফ্যামিলি বাতিল করুন। access token তাৎক্ষণিক বাতিল করতে চাইলে মেয়াদ শেষ হওয়া পর্যন্ত <code>jti</code>-এর একটা ছোট deny-list বা প্রতি ইউজারের “token version” রাখুন।</p>
+
+      <h2>৭. এমন জায়গায় টোকেন রাখা যেখান থেকে XSS পড়তে পারে</h2>
+      <p><code>localStorage</code> বা <code>sessionStorage</code>-এর টোকেন পেজের যেকোনো JavaScript পড়তে পারে। একটা cross-site scripting বাগ, বা একটা আক্রান্ত npm প্যাকেজ বা থার্ড-পার্টি স্ক্রিপ্ট টোকেনটা অ্যাটাকারের সার্ভারে পাঠিয়ে দিতে পারে, আর মেয়াদ শেষ না হওয়া পর্যন্ত সেটা কাজ করবে।</p>
+      <p><code>HttpOnly</code> কুকি JavaScript একদমই পড়তে পারে না:</p>
+      <pre><code>Set-Cookie: session=&lt;token&gt;; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=900</code></pre>
+      <p>তবে এটা বিনা মূল্যের জয় নয় — ট্রেড-অফটা সৎভাবে বলা দরকার:</p>
+      <table>
+        <thead><tr><th></th><th>localStorage + হেডার</th><th>HttpOnly কুকি</th></tr></thead>
+        <tbody>
+          <tr><td>XSS টোকেন চুরি করতে পারে</td><td>হ্যাঁ</td><td>না (তবে পেজ খোলা থাকা পর্যন্ত XSS ইউজারের হয়ে রিকোয়েস্ট পাঠাতে পারে)</td></tr>
+          <tr><td>CSRF ঝুঁকি</td><td>নেই — ব্রাউজার নিজে থেকে এটা জুড়ে দেয় না</td><td>আছে — ব্রাউজার নিজে থেকেই পাঠায়; <code>SameSite</code> আর state বদলানো রিকোয়েস্টে CSRF token দিয়ে ঠেকান</td></tr>
+          <tr><td>ভিন্ন ডোমেইনে কাজ করা</td><td>সহজ</td><td>CORS আর কুকি সেটিং সাবধানে করতে হয়</td></tr>
+        </tbody>
+      </table>
+      <p><strong>সমাধান:</strong> ব্রাউজার অ্যাপে <code>HttpOnly; Secure; SameSite</code> কুকি বেছে নিন (অথবা এমন backend-for-frontend, যেখানে টোকেন পুরোপুরি সার্ভারেই থাকে), CSRF সুরক্ষা যোগ করুন, আর যেকোনো ক্ষেত্রেই আসল প্রতিরক্ষা হিসেবে XSS ঠেকানোর দিকে নজর দিন — আউটপুট এসকেপিং আর Content Security Policy।</p>
+
+      <h2>৮. প্রোডাকশন টোকেন এমন অনলাইন টুলে পেস্ট করা যা আপলোড করে</h2>
+      <p>চালু access token একটা ক্রেডেনশিয়াল। অনেক “JWT decoder” ওয়েবসাইট আপনার পেস্ট করা লেখা তাদের সার্ভারে পাঠায়, যেখানে সেটা লগ, ক্যাশ বা বিশ্লেষণ হতে পারে। টোকেনের মেয়াদ শেষ না হলে, ওই লগ যে পড়বে সে-ই ওই ইউজারের হয়ে আপনার API কল করতে পারবে।</p>
+      <p><strong>সমাধান:</strong> সম্ভব হলে টেস্ট টোকেন দিয়ে ডিবাগ করুন; এমন টুল ব্যবহার করুন যা পুরোপুরি ব্রাউজারে চলে (ব্রাউজারের Network ট্যাবে দেখে নিশ্চিত হতে পারেন যে কিছু পাঠানো হচ্ছে না); আর আসল টোকেন ফাঁস হলে “কেউ দেখেনি” ধরে না নিয়ে সেশন বাতিল করুন বা মেয়াদ শেষ হওয়া পর্যন্ত অপেক্ষা করুন।</p>
+
+      <div class="callout"><p><strong>মনে রাখার নিয়ম:</strong> অ্যালগরিদম, কী আর প্রত্যাশিত ক্লেইম ঠিক করবে ভেরিফায়ার। টোকেন শুধু ডেটা নিয়ে আসে, যা ওই প্রত্যাশার সাথে মিলিয়ে দেখা হবে।</p></div>
+
+      <div class="try-tool">
+        <span><strong>টোকেন ফাঁস না করেই পরীক্ষা করুন।</strong> JWT ডিকোডার প্রতিটি ক্লেইম দেখায়, মেয়াদোত্তীর্ণ বা <code>none</code> টোকেন নিয়ে সতর্ক করে আর Web Crypto দিয়ে স্থানীয়ভাবে সিগনেচার যাচাই করে — কিছুই আপলোড হয় না।</span>
+        <a class="button" href="/jwt-decoder/" data-i18n="guides.tryTool">এখনই চেষ্টা করুন</a>
+      </div>
+
+      <h2>প্রশ্নোত্তর</h2>
+      <details><summary>প্রচলিত সেশনের চেয়ে JWT কি কম নিরাপদ?</summary><p>স্বভাবগতভাবে নয়। সার্ভার-সাইড সেশন বাতিল করা সহজ আর ভুল কনফিগার করা কঠিন, তাই একটা মাত্র ওয়েব অ্যাপের জন্য প্রায়ই সেটাই ভালো ডিফল্ট। JWT কাজে লাগে যখন শেয়ার্ড সেশন স্টোর ছাড়াই একাধিক সার্ভিসকে পরিচয় যাচাই করতে হয়। যেকোনো ক্ষেত্রেই পার্থক্য গড়ে দেয় ওপরের ভুলগুলো।</p></details>
+      <details><summary>HS256 কি অনিরাপদ? সবসময় কি RS256 ব্যবহার করব?</summary><p>লম্বা র‍্যান্ডম সিক্রেটসহ HS256 নিরাপদ। এর সীমাবদ্ধতা হলো যে যাচাই করতে পারে সে সাইনও করতে পারে। যাচাইকারী আলাদা সার্ভিস বা থার্ড পার্টি হলে RS256 বা ES256 ব্যবহার করুন; ES256-এর সিগনেচার অনেক ছোট।</p></details>
+      <details><summary>HttpOnly কি XSS থেকে পুরোপুরি বাঁচায়?</summary><p>না। এটা স্ক্রিপ্টকে টোকেন <em>পড়তে</em> দেয় না, কিন্তু আপনার পেজে চলা স্ক্রিপ্ট এমন রিকোয়েস্ট পাঠাতে পারে যেটা ব্রাউজার কুকি দিয়ে অথেন্টিকেট করবে। এতে ক্ষতি পেজ খোলা থাকার সময়ে সীমিত থাকে; XSS ঠিক করার বিকল্প এটা নয়।</p></details>
+      <details><summary>টোকেন ফাঁস হলে কী করব?</summary><p>সংশ্লিষ্ট সেশন বা refresh token বাতিল করুন, deny-list থাকলে <code>jti</code> যোগ করুন, আর সাইন করার সিক্রেটই ফাঁস হয়ে থাকতে পারলে সেটা বদলে ফেলুন — এতে ওই সিক্রেট দিয়ে সাইন করা সব টোকেন অবৈধ হয়ে যাবে।</p></details>
+    </article>
+
+    <section class="more-tools">
+      <h2 data-i18n="guides.related">Related guides</h2>
+      <ul class="guide-grid" data-related-guides></ul>
+    </section>
+  </main>
+
+  <div class="ad-slot ad-bottom" data-ad="bottom" data-i18n-attr="aria-label:ad.label" aria-label="Advertisement">
+    <span data-i18n="ad.placeholder">Ad space</span>
+  </div>
+
+  <section class="content more-tools">
+    <h2 data-i18n="tools.more">More free tools</h2>
+    <ul class="tool-grid" data-more-tools></ul>
+  </section>
+
+  <footer class="site-footer">
+    <span>© <span data-year></span> <span data-i18n="brand">JSON Bondhu</span></span>
+    <a href="/privacy.html" data-i18n="footer.privacy">Privacy policy</a>
+    <a href="https://github.com/MosabberUddin/jsonbondhu/issues" rel="noopener" data-i18n="footer.contact">Contact</a>
+  </footer>
+
+  <script src="/ads.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,280 @@
+<!doctype html>
+<html lang="en" data-guide="csv-to-json-and-excel-bangla" data-title-key="guide.csv-to-json-and-excel-bangla.title" data-desc-key="guide.csv-to-json-and-excel-bangla.desc">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Convert CSV to JSON — and open Bangla CSV files correctly in Excel</title>
+  <meta name="description" content="Delimiters, quotes, headers and data types explained, plus the UTF-8 BOM trick that stops Excel from breaking Bangla text.">
+  <link rel="canonical" href="https://jsonbondhu.pages.dev/guides/csv-to-json-and-excel-bangla/">
+  <link rel="alternate" hreflang="en" href="https://jsonbondhu.pages.dev/guides/csv-to-json-and-excel-bangla/?lang=en">
+  <link rel="alternate" hreflang="bn" href="https://jsonbondhu.pages.dev/guides/csv-to-json-and-excel-bangla/?lang=bn">
+  <link rel="alternate" hreflang="x-default" href="https://jsonbondhu.pages.dev/guides/csv-to-json-and-excel-bangla/">
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Convert CSV to JSON — and open Bangla CSV files correctly in Excel">
+  <meta name="theme-color" content="#0f766e">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230f766e'/%3E%3Ctext x='16' y='22' font-size='15' font-family='monospace' font-weight='700' fill='white' text-anchor='middle'%3E%7B%7D%3C/text%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/i18n.js"></script>
+  <script src="/tools.js"></script>
+  <script src="/guides/guides.js"></script>
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"TechArticle","headline":"Convert CSV to JSON — and open Bangla CSV files correctly in Excel","alternativeHeadline":"CSV থেকে JSON — এবং এক্সেলে বাংলা CSV ঠিকমতো খোলার উপায়","inLanguage":["en","bn"],"datePublished":"2026-09-27","dateModified":"2026-09-27","author":{"@type":"Organization","name":"JSON Bondhu"},"publisher":{"@type":"Organization","name":"JSON Bondhu","url":"https://jsonbondhu.pages.dev/"},"mainEntityOfPage":"https://jsonbondhu.pages.dev/guides/csv-to-json-and-excel-bangla/"}
+  </script>
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="/">
+      <span class="logo" aria-hidden="true">{ }</span>
+      <span><strong data-i18n="brand">JSON Bondhu</strong></span>
+    </a>
+    <nav class="top-nav">
+      <a href="/" data-i18n="nav.tools">All tools</a>
+      <a href="/guides/" data-i18n="nav.guides">Guides</a>
+      <a href="/#premium" class="pill" data-i18n="nav.premium">Go ad-free</a>
+      <div class="lang-switch" role="group" data-i18n-attr="aria-label:lang.label" aria-label="Language">
+        <button type="button" data-set-lang="en" lang="en" aria-pressed="true">EN</button>
+        <button type="button" data-set-lang="bn" lang="bn" aria-pressed="false">বাংলা</button>
+      </div>
+    </nav>
+  </header>
+
+  <div class="ad-slot ad-top" data-ad="top" data-i18n-attr="aria-label:ad.label" aria-label="Advertisement">
+    <span data-i18n="ad.placeholder">Ad space</span>
+  </div>
+
+  <main class="guide">
+    <p class="breadcrumb"><a href="/guides/" data-i18n="guides.back">← All guides</a></p>
+
+    <article data-lang="en" lang="en">
+      <h1>Convert CSV to JSON — and open Bangla CSV in Excel</h1>
+      <p class="byline" data-guide-updated data-minutes="7"></p>
+
+      <p>Someone exports a customer list from an admin panel and sends it over. You need it as JSON for an API import — and your manager needs to open it in Excel. Two things go wrong again and again: the conversion quietly damages data (phone numbers lose their leading 0, a comma inside an address shifts every column), and Excel shows the Bangla names as <code>à¦°à¦¹à¦¿à¦®</code> instead of রহিম. This guide explains why both happen and how to fix them for good.</p>
+
+      <h2>What a CSV file really is</h2>
+      <p>CSV (“comma-separated values”) looks too simple to need rules, which is exactly why people get it wrong. The closest thing to a standard is RFC 4180:</p>
+      <ul>
+        <li>One record per line; lines end with CRLF (<code>\r\n</code>), though most readers also accept <code>\n</code>.</li>
+        <li>Fields are separated by commas. The first line is often, but not always, a header with column names.</li>
+        <li>A field that contains a comma, a double quote or a line break <strong>must be wrapped in double quotes</strong>.</li>
+        <li>A double quote inside a quoted field is written twice: <code>""</code>.</li>
+      </ul>
+      <pre><code>name,phone,note,address
+"Uddin, Rahim",01712345678,"He said ""call after 5pm""","House 12, Road 5
+Dhanmondi, Dhaka"
+Karim,01812345678,,Sylhet</code></pre>
+      <p>That file has <strong>two</strong> records, not three: the second line break is inside a quoted address. This is why you must never parse CSV with <code>split(',')</code>:</p>
+      <pre><code>'"Uddin, Rahim",01712345678'.split(',')
+// [ '"Uddin', ' Rahim"', '01712345678' ]   ✗ three fields instead of two</code></pre>
+      <p>Use a real parser: Python’s built-in <code>csv</code> module, a library such as Papa Parse in JavaScript, or a converter that follows the quoting rules.</p>
+
+      <h3>Not every “CSV” uses commas</h3>
+      <p>In countries where the decimal separator is a comma (much of Europe, for example), Excel saves “CSV” with <strong>semicolons</strong>, because <code>1250,50</code> would otherwise be split in two. You will also meet tab-separated files (TSV) and pipes (<code>|</code>). Check the first line before converting, or use a tool that detects the delimiter.</p>
+
+      <h2>Headers become keys</h2>
+      <p>When converting to JSON, each header becomes a key and each row becomes an object. Clean headers make clean JSON: <code>Customer Name</code> works as a key but is awkward to use in code; <code>customer_name</code> is easier. Watch for empty and duplicate header cells — two columns named <code>phone</code> cannot both be keys of one object, so a converter has to rename one or lose data.</p>
+
+      <h2>The type-guessing trap</h2>
+      <p>CSV has no types; every cell is text. A converter that “helpfully” turns numeric-looking text into numbers can destroy data:</p>
+      <table>
+        <thead><tr><th>Cell text</th><th>Naive conversion</th><th>What went wrong</th></tr></thead>
+        <tbody>
+          <tr><td><code>01712345678</code></td><td><code>1712345678</code></td><td>Mobile number lost its leading 0</td></tr>
+          <tr><td><code>1250.50</code></td><td><code>1250.5</code></td><td>Formatting of an amount changed</td></tr>
+          <tr><td><code>0012</code> (product code)</td><td><code>12</code></td><td>Different code</td></tr>
+          <tr><td><code>১২৩</code> (Bangla digits)</td><td><code>NaN</code></td><td><code>Number()</code> only understands 0–9</td></tr>
+        </tbody>
+      </table>
+      <p>Rule of thumb: <strong>identifiers are text</strong>, even when they look like numbers — phone numbers, NID and account numbers, postcodes, invoice numbers. Only convert columns you will actually calculate with. Excel has the same problem when it opens a CSV: it strips leading zeros and keeps only 15 significant digits, so long ID numbers can be permanently changed if you save the file again.</p>
+      <div class="callout"><p><strong>How JSON Bondhu handles it:</strong> with “Detect numbers, true/false, null” on, a cell only becomes a number if it converts back to exactly the same text. <code>980</code> becomes <code>980</code>, but <code>01712345678</code> and <code>1250.50</code> stay strings.</p></div>
+
+      <h2>Nested data: dot keys and flattening</h2>
+      <p>JSON can nest; CSV is flat. The usual bridge is <strong>dot notation</strong> in the headers:</p>
+      <pre><code>id,customer.name,customer.city
+1,রহিম,Dhaka
+
+→ [ { "id": 1, "customer": { "name": "রহিম", "city": "Dhaka" } } ]</code></pre>
+      <p>Going the other way, JSON → CSV <em>flattens</em> nested objects into dot keys. Arrays have no natural place in a table, so they are usually written as JSON text inside one cell (note the doubled quotes):</p>
+      <pre><code>[{ "id": 1, "customer": { "name": "রহিম", "city": "Dhaka" }, "tags": ["new", "cod"] }]
+
+→ id,customer.name,customer.city,tags
+  1,রহিম,Dhaka,"[""new"",""cod""]"</code></pre>
+      <p>If different objects have different keys, the CSV gets the union of all columns and missing values become empty cells.</p>
+
+      <h2>Why Excel breaks Bangla text</h2>
+      <p>Bangla characters take three bytes each in UTF-8. When you double-click a CSV, Excel on Windows usually has no way to know the file is UTF-8, so it reads the bytes with the system’s legacy code page (typically Windows-1252). Each Bangla letter becomes three Latin characters, and রহিম turns into <code>à¦°à¦¹à¦¿à¦®</code>. The file itself is fine — only the reading is wrong. There are three reliable fixes.</p>
+      <h3>Fix 1: save the CSV with a UTF-8 BOM</h3>
+      <p>A byte-order mark is three bytes (<code>EF BB BF</code>) at the very start of the file. Excel sees them and reads the file as UTF-8. When you generate CSV for Excel users, add it:</p>
+      <pre><code>// Node.js
+import { writeFileSync } from 'node:fs';
+const csv = 'name,phone,city\r\nরহিম,01712345678,ঢাকা\r\n';
+writeFileSync('customers.csv', '﻿' + csv, 'utf8');
+
+# Python: "utf-8-sig" writes the BOM (and strips it when reading)
+import csv
+with open("customers.csv", "w", encoding="utf-8-sig", newline="") as f:
+    csv.writer(f).writerows([["name", "phone"], ["রহিম", "01712345678"]])
+
+# pandas
+df.to_csv("customers.csv", index=False, encoding="utf-8-sig")</code></pre>
+      <h3>Fix 2: import instead of double-clicking</h3>
+      <p>For a file you received without a BOM: open a blank workbook, go to <strong>Data → From Text/CSV</strong>, pick the file, set <strong>File Origin</strong> to <strong>65001: Unicode (UTF-8)</strong> and check that the delimiter is right. The preview should show proper Bangla; then click <strong>Load</strong>. You can also set the phone column to Text here so the leading zeros survive.</p>
+      <h3>Fix 3: save from Excel as “CSV UTF-8”</h3>
+      <p>When you save a sheet containing Bangla, choose <strong>CSV UTF-8 (Comma delimited)</strong>, not plain “CSV (Comma delimited)”. The plain option uses the legacy code page and Bangla characters come out as question marks.</p>
+      <p><strong>Google Sheets</strong> has none of these problems: File → Import reads UTF-8 correctly, and its CSV download is UTF-8.</p>
+      <div class="callout warn"><p><strong>The BOM cuts both ways.</strong> Programs that don’t expect it may read the first header as <code>"﻿name"</code> instead of <code>"name"</code>, so <code>row.name</code> is undefined. When reading CSV in code, strip it: <code>encoding="utf-8-sig"</code> in Python, or <code>text.replace(/^﻿/, '')</code> in JavaScript.</p></div>
+
+      <h2>A complete CSV → JSON script in Python</h2>
+      <pre><code>import csv, json
+
+with open("orders.csv", encoding="utf-8-sig", newline="") as f:
+    rows = list(csv.DictReader(f))   # every value stays a string, so 017… is safe
+
+with open("orders.json", "w", encoding="utf-8") as f:
+    json.dump(rows, f, ensure_ascii=False, indent=2)</code></pre>
+      <p><code>newline=""</code> lets the <code>csv</code> module handle line breaks inside quoted fields, and <code>ensure_ascii=False</code> keeps Bangla readable in the output instead of <code>র</code> escapes.</p>
+
+      <h2>One security note: CSV injection</h2>
+      <p>If a CSV you export contains user-supplied text starting with <code>=</code>, <code>+</code>, <code>-</code> or <code>@</code>, Excel or Google Sheets may treat it as a formula when the file is opened. A common defence is to prefix such cells with an apostrophe so they display as plain text — only do this for files meant for spreadsheets, since it changes the value.</p>
+
+      <div class="try-tool">
+        <span><strong>Convert both ways, Bangla-safe.</strong> The CSV ↔ JSON converter detects the delimiter, keeps phone numbers as text, and its CSV download includes the UTF-8 BOM so Excel shows Bangla correctly.</span>
+        <a class="button" href="/csv-json/" data-i18n="guides.tryTool">Try it now</a>
+      </div>
+
+      <h2>FAQ</h2>
+      <details><summary>I added a BOM but Excel still shows everything in one column. Why?</summary><p>That is a delimiter problem, not an encoding one. Your Excel probably expects semicolons because of regional settings. Use Data → From Text/CSV and choose the delimiter manually, or export with semicolons for those users.</p></details>
+      <details><summary>How do I keep leading zeros when opening a CSV in Excel?</summary><p>Import it with Data → From Text/CSV and set that column’s type to Text before loading. Double-clicking the file lets Excel guess, and it will turn <code>01712345678</code> into a number.</p></details>
+      <details><summary>Should empty cells become null or an empty string?</summary><p>It depends on the receiving system. <code>null</code> usually means “unknown”, <code>""</code> means “known to be empty”. Pick one rule per column and document it; for numeric columns <code>null</code> is almost always right.</p></details>
+    </article>
+
+    <article data-lang="bn" lang="bn">
+      <h1>CSV থেকে JSON — আর এক্সেলে বাংলা CSV ঠিকমতো খোলা</h1>
+      <p class="byline" data-guide-updated data-minutes="7"></p>
+
+      <p>কেউ অ্যাডমিন প্যানেল থেকে কাস্টমারের লিস্ট এক্সপোর্ট করে পাঠালেন। API-তে ইমপোর্ট করতে আপনার দরকার JSON — আর আপনার ম্যানেজার ফাইলটা খুলবেন এক্সেলে। এখানে দুটো সমস্যা বারবার ঘটে: কনভার্ট করার সময় ডেটা নিঃশব্দে নষ্ট হয় (ফোন নম্বরের শুরুর 0 হারিয়ে যায়, ঠিকানার ভেতরের একটা কমা সব কলাম এক ঘর সরিয়ে দেয়), আর এক্সেলে বাংলা নাম রহিম-এর বদলে দেখায় <code>à¦°à¦¹à¦¿à¦®</code>। কেন এমন হয় আর কীভাবে স্থায়ীভাবে ঠিক করবেন — এই গাইডে সেটাই।</p>
+
+      <h2>CSV ফাইল আসলে কী</h2>
+      <p>CSV (“comma-separated values”) দেখতে এতই সহজ যে মনে হয় কোনো নিয়ম লাগে না — আর ঠিক এ কারণেই মানুষ ভুল করে। স্ট্যান্ডার্ড বলতে সবচেয়ে কাছের জিনিস হলো RFC 4180:</p>
+      <ul>
+        <li>প্রতি লাইনে একটি রেকর্ড; লাইন শেষ হয় CRLF (<code>\r\n</code>) দিয়ে, যদিও বেশিরভাগ রিডার <code>\n</code>-ও মেনে নেয়।</li>
+        <li>ফিল্ডগুলো কমা দিয়ে আলাদা। প্রথম লাইন প্রায়ই (তবে সবসময় নয়) কলামের নামসহ হেডার।</li>
+        <li>যে ফিল্ডে কমা, ডাবল কোট বা লাইন-ব্রেক আছে, সেটা <strong>অবশ্যই ডাবল কোটে মুড়তে হবে</strong>।</li>
+        <li>কোটের ভেতরের ফিল্ডে ডাবল কোট লিখতে হয় দুবার: <code>""</code>।</li>
+      </ul>
+      <pre><code>name,phone,note,address
+"Uddin, Rahim",01712345678,"He said ""call after 5pm""","House 12, Road 5
+Dhanmondi, Dhaka"
+Karim,01812345678,,Sylhet</code></pre>
+      <p>এই ফাইলে রেকর্ড <strong>দুটি</strong>, তিনটি নয়: দ্বিতীয় লাইন-ব্রেকটা কোটের ভেতরের ঠিকানার অংশ। এ কারণেই কখনো <code>split(',')</code> দিয়ে CSV পার্স করবেন না:</p>
+      <pre><code>'"Uddin, Rahim",01712345678'.split(',')
+// [ '"Uddin', ' Rahim"', '01712345678' ]   ✗ দুটির বদলে তিনটি ফিল্ড</code></pre>
+      <p>আসল পার্সার ব্যবহার করুন: Python-এর বিল্ট-ইন <code>csv</code> মডিউল, JavaScript-এ Papa Parse-এর মতো লাইব্রেরি, অথবা কোটের নিয়ম মেনে চলে এমন কোনো কনভার্টার।</p>
+
+      <h3>সব “CSV”-তে কমা থাকে না</h3>
+      <p>যেসব দেশে দশমিক চিহ্ন হিসেবে কমা ব্যবহার হয় (যেমন ইউরোপের অনেক দেশ), সেখানে এক্সেল “CSV” সেভ করে <strong>সেমিকোলন</strong> দিয়ে, কারণ নইলে <code>1250,50</code> দুই ভাগ হয়ে যেত। ট্যাব দিয়ে আলাদা করা ফাইল (TSV) আর পাইপ (<code>|</code>)-ও দেখবেন। কনভার্ট করার আগে প্রথম লাইনটা দেখে নিন, অথবা এমন টুল ব্যবহার করুন যা ডিলিমিটার নিজেই চিনে নেয়।</p>
+
+      <h2>হেডার হয়ে যায় কী</h2>
+      <p>JSON-এ রূপান্তরের সময় প্রতিটি হেডার হয় একটি কী, আর প্রতিটি সারি হয় একটি অবজেক্ট। হেডার পরিষ্কার হলে JSON-ও পরিষ্কার: <code>Customer Name</code> কী হিসেবে চলে, কিন্তু কোডে ব্যবহার করা ঝামেলার; <code>customer_name</code> অনেক সহজ। ফাঁকা বা একই নামের হেডার সম্পর্কে সতর্ক থাকুন — <code>phone</code> নামের দুটি কলাম একই অবজেক্টের দুটি কী হতে পারে না, তাই কনভার্টারকে হয় একটির নাম বদলাতে হবে, নয়তো ডেটা হারাবে।</p>
+
+      <h2>টাইপ অনুমানের ফাঁদ</h2>
+      <p>CSV-তে কোনো টাইপ নেই; প্রতিটি ঘরই লেখা। যে কনভার্টার “উপকার করতে গিয়ে” সংখ্যার মতো দেখতে লেখাকে সংখ্যা বানিয়ে দেয়, সে ডেটা নষ্ট করতে পারে:</p>
+      <table>
+        <thead><tr><th>ঘরের লেখা</th><th>অসতর্ক রূপান্তর</th><th>কী ভুল হলো</th></tr></thead>
+        <tbody>
+          <tr><td><code>01712345678</code></td><td><code>1712345678</code></td><td>মোবাইল নম্বরের শুরুর 0 হারিয়ে গেল</td></tr>
+          <tr><td><code>1250.50</code></td><td><code>1250.5</code></td><td>টাকার অঙ্কের ফরম্যাট বদলে গেল</td></tr>
+          <tr><td><code>0012</code> (প্রোডাক্ট কোড)</td><td><code>12</code></td><td>অন্য কোড হয়ে গেল</td></tr>
+          <tr><td><code>১২৩</code> (বাংলা অঙ্ক)</td><td><code>NaN</code></td><td><code>Number()</code> শুধু 0–9 বোঝে</td></tr>
+        </tbody>
+      </table>
+      <p>মূল নিয়ম: <strong>পরিচয়সূচক জিনিস সবসময় লেখা</strong>, দেখতে সংখ্যার মতো হলেও — ফোন নম্বর, NID ও অ্যাকাউন্ট নম্বর, পোস্টকোড, ইনভয়েস নম্বর। শুধু সেই কলামগুলো সংখ্যায় রূপান্তর করুন, যেগুলো দিয়ে সত্যিই হিসাব করবেন। CSV খোলার সময় এক্সেলেরও একই সমস্যা: শুরুর শূন্য ফেলে দেয় আর মাত্র ১৫টি significant digit রাখে, ফলে ফাইলটা আবার সেভ করলে লম্বা আইডি নম্বর স্থায়ীভাবে বদলে যেতে পারে।</p>
+      <div class="callout"><p><strong>JSON বন্ধু যেভাবে সামলায়:</strong> “সংখ্যা, true/false, null চিনে নিন” চালু থাকলে একটি ঘর তখনই সংখ্যা হয়, যখন সেটা আবার হুবহু একই লেখায় ফেরত যায়। <code>980</code> হয় <code>980</code>, কিন্তু <code>01712345678</code> আর <code>1250.50</code> স্ট্রিংই থাকে।</p></div>
+
+      <h2>নেস্টেড ডেটা: ডট কী আর ফ্ল্যাটেনিং</h2>
+      <p>JSON-এ নেস্টিং চলে; CSV সমতল। দুটির মধ্যে সেতু সাধারণত হেডারে <strong>ডট নোটেশন</strong>:</p>
+      <pre><code>id,customer.name,customer.city
+1,রহিম,Dhaka
+
+→ [ { "id": 1, "customer": { "name": "রহিম", "city": "Dhaka" } } ]</code></pre>
+      <p>উল্টো দিকে, JSON → CSV করার সময় নেস্টেড অবজেক্ট <em>ফ্ল্যাটেন</em> হয়ে ডট কী হয়ে যায়। টেবিলে অ্যারের কোনো স্বাভাবিক জায়গা নেই, তাই সাধারণত সেগুলো এক ঘরের ভেতরে JSON লেখা হিসেবে বসানো হয় (দ্বিগুণ কোট খেয়াল করুন):</p>
+      <pre><code>[{ "id": 1, "customer": { "name": "রহিম", "city": "Dhaka" }, "tags": ["new", "cod"] }]
+
+→ id,customer.name,customer.city,tags
+  1,রহিম,Dhaka,"[""new"",""cod""]"</code></pre>
+      <p>আলাদা অবজেক্টে আলাদা কী থাকলে CSV-তে সব কলামের মিলিত তালিকা আসে, আর যেখানে মান নেই সেখানে ঘর ফাঁকা থাকে।</p>
+
+      <h2>এক্সেল কেন বাংলা লেখা ভেঙে ফেলে</h2>
+      <p>UTF-8-এ প্রতিটি বাংলা অক্ষর তিন বাইট জায়গা নেয়। CSV-তে ডাবল-ক্লিক করলে Windows-এর এক্সেল সাধারণত বুঝতে পারে না ফাইলটা UTF-8, তাই সিস্টেমের পুরোনো code page (সাধারণত Windows-1252) দিয়ে বাইটগুলো পড়ে। ফলে প্রতিটি বাংলা অক্ষর হয়ে যায় তিনটি ল্যাটিন অক্ষর, আর রহিম হয়ে যায় <code>à¦°à¦¹à¦¿à¦®</code>। ফাইলে কোনো সমস্যা নেই — ভুলটা শুধু পড়ায়। ঠিক করার তিনটি নির্ভরযোগ্য উপায় আছে।</p>
+      <h3>উপায় ১: UTF-8 BOM দিয়ে CSV সেভ করুন</h3>
+      <p>Byte-order mark হলো ফাইলের একেবারে শুরুতে তিনটি বাইট (<code>EF BB BF</code>)। এগুলো দেখলে এক্সেল ফাইলটা UTF-8 হিসেবে পড়ে। এক্সেল ব্যবহারকারীদের জন্য CSV বানালে এটা যোগ করুন:</p>
+      <pre><code>// Node.js
+import { writeFileSync } from 'node:fs';
+const csv = 'name,phone,city\r\nরহিম,01712345678,ঢাকা\r\n';
+writeFileSync('customers.csv', '﻿' + csv, 'utf8');
+
+# Python: "utf-8-sig" BOM লেখে (আর পড়ার সময় বাদ দেয়)
+import csv
+with open("customers.csv", "w", encoding="utf-8-sig", newline="") as f:
+    csv.writer(f).writerows([["name", "phone"], ["রহিম", "01712345678"]])
+
+# pandas
+df.to_csv("customers.csv", index=False, encoding="utf-8-sig")</code></pre>
+      <h3>উপায় ২: ডাবল-ক্লিক না করে ইমপোর্ট করুন</h3>
+      <p>BOM ছাড়া যে ফাইল আপনার হাতে এসেছে, তার জন্য: একটি ফাঁকা workbook খুলে <strong>Data → From Text/CSV</strong>-এ যান, ফাইলটা বেছে নিন, <strong>File Origin</strong>-এ দিন <strong>65001: Unicode (UTF-8)</strong>, আর ডিলিমিটার ঠিক আছে কি না দেখুন। প্রিভিউতে বাংলা ঠিকঠাক দেখালে <strong>Load</strong> চাপুন। চাইলে এখানেই ফোন নম্বরের কলামকে Text করে দিতে পারেন, যাতে শুরুর শূন্য থেকে যায়।</p>
+      <h3>উপায় ৩: এক্সেল থেকে “CSV UTF-8” হিসেবে সেভ করুন</h3>
+      <p>বাংলা লেখাসহ শিট সেভ করার সময় সাধারণ “CSV (Comma delimited)” নয়, বেছে নিন <strong>CSV UTF-8 (Comma delimited)</strong>। সাধারণ অপশনটি পুরোনো code page ব্যবহার করে, ফলে বাংলা অক্ষরগুলো প্রশ্নবোধক চিহ্ন হয়ে যায়।</p>
+      <p><strong>Google Sheets</strong>-এ এসব সমস্যা নেই: File → Import ঠিকভাবেই UTF-8 পড়ে, আর এর CSV ডাউনলোডও UTF-8।</p>
+      <div class="callout warn"><p><strong>BOM-এর উল্টো দিকও আছে।</strong> যে প্রোগ্রাম এটা আশা করে না, সে প্রথম হেডারকে <code>"name"</code>-এর বদলে পড়তে পারে <code>"﻿name"</code>, ফলে <code>row.name</code> হয় undefined। কোডে CSV পড়ার সময় এটা বাদ দিন: Python-এ <code>encoding="utf-8-sig"</code>, JavaScript-এ <code>text.replace(/^﻿/, '')</code>।</p></div>
+
+      <h2>Python-এ পূর্ণাঙ্গ CSV → JSON স্ক্রিপ্ট</h2>
+      <pre><code>import csv, json
+
+with open("orders.csv", encoding="utf-8-sig", newline="") as f:
+    rows = list(csv.DictReader(f))   # প্রতিটি মান স্ট্রিং থাকে, তাই 017… নিরাপদ
+
+with open("orders.json", "w", encoding="utf-8") as f:
+    json.dump(rows, f, ensure_ascii=False, indent=2)</code></pre>
+      <p><code>newline=""</code> দিলে কোটের ভেতরের লাইন-ব্রেক <code>csv</code> মডিউল নিজেই সামলায়, আর <code>ensure_ascii=False</code> দিলে আউটপুটে বাংলা <code>র</code>-এর মতো এসকেপ না হয়ে পড়ার উপযোগী থাকে।</p>
+
+      <h2>একটি নিরাপত্তা নোট: CSV ইনজেকশন</h2>
+      <p>আপনার এক্সপোর্ট করা CSV-তে যদি ব্যবহারকারীর দেওয়া এমন লেখা থাকে যা <code>=</code>, <code>+</code>, <code>-</code> বা <code>@</code> দিয়ে শুরু, তাহলে ফাইল খোলার সময় Excel বা Google Sheets সেটাকে ফর্মুলা হিসেবে ধরতে পারে। প্রচলিত প্রতিরোধ হলো এমন ঘরের শুরুতে একটি অ্যাপোস্ট্রফি (') বসানো, যাতে সেটা সাধারণ লেখা হিসেবে দেখায় — তবে এতে মান বদলে যায়, তাই শুধু স্প্রেডশিটের জন্য বানানো ফাইলে এটা করুন।</p>
+
+      <div class="try-tool">
+        <span><strong>দুই দিকেই রূপান্তর, বাংলা নিরাপদে।</strong> CSV ↔ JSON কনভার্টার ডিলিমিটার নিজেই চেনে, ফোন নম্বর লেখা হিসেবে রাখে, আর এর CSV ডাউনলোডে UTF-8 BOM থাকে, তাই এক্সেলে বাংলা ঠিকঠাক দেখায়।</span>
+        <a class="button" href="/csv-json/" data-i18n="guides.tryTool">এখনই চেষ্টা করুন</a>
+      </div>
+
+      <h2>প্রশ্নোত্তর</h2>
+      <details><summary>BOM যোগ করেছি, তবু এক্সেলে সবকিছু এক কলামে দেখাচ্ছে। কেন?</summary><p>এটা এনকোডিং নয়, ডিলিমিটারের সমস্যা। রিজিওনাল সেটিংসের কারণে আপনার এক্সেল সম্ভবত সেমিকোলন আশা করছে। Data → From Text/CSV দিয়ে হাতে ডিলিমিটার বেছে নিন, অথবা ওই ব্যবহারকারীদের জন্য সেমিকোলন দিয়ে এক্সপোর্ট করুন।</p></details>
+      <details><summary>এক্সেলে CSV খোলার সময় শুরুর শূন্য কীভাবে রাখব?</summary><p>Data → From Text/CSV দিয়ে ইমপোর্ট করুন, আর Load করার আগে ওই কলামের টাইপ Text করে দিন। ফাইলে ডাবল-ক্লিক করলে এক্সেল নিজে অনুমান করে, আর <code>01712345678</code>-কে সংখ্যা বানিয়ে ফেলে।</p></details>
+      <details><summary>ফাঁকা ঘর null হবে, না ফাঁকা স্ট্রিং?</summary><p>যে সিস্টেম ডেটা নেবে তার ওপর নির্ভর করে। <code>null</code> সাধারণত বোঝায় “জানা নেই”, আর <code>""</code> বোঝায় “জানা আছে যে ফাঁকা”। প্রতিটি কলামের জন্য একটা নিয়ম ঠিক করে লিখে রাখুন; সংখ্যার কলামে প্রায় সবসময় <code>null</code>-ই ঠিক।</p></details>
+    </article>
+
+    <section class="more-tools">
+      <h2 data-i18n="guides.related">Related guides</h2>
+      <ul class="guide-grid" data-related-guides></ul>
+    </section>
+  </main>
+
+  <div class="ad-slot ad-bottom" data-ad="bottom" data-i18n-attr="aria-label:ad.label" aria-label="Advertisement">
+    <span data-i18n="ad.placeholder">Ad space</span>
+  </div>
+
+  <section class="content more-tools">
+    <h2 data-i18n="tools.more">More free tools</h2>
+    <ul class="tool-grid" data-more-tools></ul>
+  </section>
+
+  <footer class="site-footer">
+    <span>© <span data-year></span> <span data-i18n="brand">JSON Bondhu</span></span>
+    <a href="/privacy.html" data-i18n="footer.privacy">Privacy policy</a>
+    <a href="https://github.com/MosabberUddin/jsonbondhu/issues" rel="noopener" data-i18n="footer.contact">Contact</a>
+  </footer>
+
+  <script src="/ads.js" defer></script>
+</body>
+</html>

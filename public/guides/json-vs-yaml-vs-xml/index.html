@@ -1,0 +1,274 @@
+<!doctype html>
+<html lang="en" data-guide="json-vs-yaml-vs-xml" data-title-key="guide.json-vs-yaml-vs-xml.title" data-desc-key="guide.json-vs-yaml-vs-xml.desc">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>JSON vs YAML vs XML: which one should you use?</title>
+  <meta name="description" content="The same data in three formats, what each is good at, and how to choose for APIs, config files and documents.">
+  <link rel="canonical" href="https://jsonbondhu.pages.dev/guides/json-vs-yaml-vs-xml/">
+  <link rel="alternate" hreflang="en" href="https://jsonbondhu.pages.dev/guides/json-vs-yaml-vs-xml/?lang=en">
+  <link rel="alternate" hreflang="bn" href="https://jsonbondhu.pages.dev/guides/json-vs-yaml-vs-xml/?lang=bn">
+  <link rel="alternate" hreflang="x-default" href="https://jsonbondhu.pages.dev/guides/json-vs-yaml-vs-xml/">
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="JSON vs YAML vs XML: which one should you use?">
+  <meta name="theme-color" content="#0f766e">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230f766e'/%3E%3Ctext x='16' y='22' font-size='15' font-family='monospace' font-weight='700' fill='white' text-anchor='middle'%3E%7B%7D%3C/text%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/i18n.js"></script>
+  <script src="/tools.js"></script>
+  <script src="/guides/guides.js"></script>
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"TechArticle","headline":"JSON vs YAML vs XML: which one should you use?","alternativeHeadline":"JSON, YAML না XML: কোনটি ব্যবহার করবেন?","inLanguage":["en","bn"],"datePublished":"2026-09-27","dateModified":"2026-09-27","author":{"@type":"Organization","name":"JSON Bondhu"},"publisher":{"@type":"Organization","name":"JSON Bondhu","url":"https://jsonbondhu.pages.dev/"},"mainEntityOfPage":"https://jsonbondhu.pages.dev/guides/json-vs-yaml-vs-xml/"}
+  </script>
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="/">
+      <span class="logo" aria-hidden="true">{ }</span>
+      <span><strong data-i18n="brand">JSON Bondhu</strong></span>
+    </a>
+    <nav class="top-nav">
+      <a href="/" data-i18n="nav.tools">All tools</a>
+      <a href="/guides/" data-i18n="nav.guides">Guides</a>
+      <a href="/#premium" class="pill" data-i18n="nav.premium">Go ad-free</a>
+      <div class="lang-switch" role="group" data-i18n-attr="aria-label:lang.label" aria-label="Language">
+        <button type="button" data-set-lang="en" lang="en" aria-pressed="true">EN</button>
+        <button type="button" data-set-lang="bn" lang="bn" aria-pressed="false">বাংলা</button>
+      </div>
+    </nav>
+  </header>
+
+  <div class="ad-slot ad-top" data-ad="top" data-i18n-attr="aria-label:ad.label" aria-label="Advertisement">
+    <span data-i18n="ad.placeholder">Ad space</span>
+  </div>
+
+  <main class="guide">
+    <p class="breadcrumb"><a href="/guides/" data-i18n="guides.back">← All guides</a></p>
+
+    <article data-lang="en" lang="en">
+      <h1>JSON vs YAML vs XML: which one should you use?</h1>
+      <p class="byline" data-guide-updated data-minutes="6"></p>
+
+      <p>Your API returns JSON, your Docker Compose and CI files are YAML, and the bank or government system you have to integrate with still speaks XML. All three formats store the same kind of thing — structured data — but they were designed for different jobs, and each has traps that only show up in production. This guide puts the same data side by side, compares them honestly, and gives you a simple rule for choosing.</p>
+
+      <h2>The same data in three formats</h2>
+      <p>Here is a small service configuration: a name, a port, a flag, a country code, a version, a list of admins and a nested database block.</p>
+      <h3>JSON</h3>
+      <pre><code>{
+  "service": "checkout",
+  "port": 8080,
+  "debug": false,
+  "country": "NO",
+  "version": "3.10",
+  "admins": ["rahim@example.com", "karim@example.com"],
+  "database": { "host": "db.internal", "pool": 10 }
+}</code></pre>
+      <h3>YAML</h3>
+      <pre><code># Checkout service settings
+service: checkout
+port: 8080
+debug: false
+country: "NO"       # quoted on purpose, see below
+version: "3.10"
+admins:
+  - rahim@example.com
+  - karim@example.com
+database:
+  host: db.internal
+  pool: 10</code></pre>
+      <h3>XML</h3>
+      <pre><code>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;!-- Checkout service settings --&gt;
+&lt;service name="checkout"&gt;
+  &lt;port&gt;8080&lt;/port&gt;
+  &lt;debug&gt;false&lt;/debug&gt;
+  &lt;country&gt;NO&lt;/country&gt;
+  &lt;version&gt;3.10&lt;/version&gt;
+  &lt;admins&gt;
+    &lt;admin&gt;rahim@example.com&lt;/admin&gt;
+    &lt;admin&gt;karim@example.com&lt;/admin&gt;
+  &lt;/admins&gt;
+  &lt;database host="db.internal" pool="10"/&gt;
+&lt;/service&gt;</code></pre>
+      <p>Three things stand out. YAML is the shortest and allows comments. JSON is compact and unambiguous. XML is the most verbose, but it has two ways to hold data — child elements and attributes (<code>name="checkout"</code>) — and in XML every value is just text: <code>8080</code> and <code>false</code> are strings unless a schema says otherwise.</p>
+
+      <h2>Side-by-side comparison</h2>
+      <table>
+        <thead><tr><th></th><th>JSON</th><th>YAML</th><th>XML</th></tr></thead>
+        <tbody>
+          <tr><td>Readability</td><td>Good; noisy with many quotes and braces</td><td>Best for humans when short; hard to follow when deeply nested</td><td>Verbose; closing tags double the size</td></tr>
+          <tr><td>Comments</td><td>No</td><td>Yes (<code>#</code>)</td><td>Yes (<code>&lt;!-- --&gt;</code>)</td></tr>
+          <tr><td>Data types</td><td>string, number, boolean, null, object, array</td><td>Same plus more; types are guessed from the text unless quoted or tagged</td><td>Everything is text; types come from a schema</td></tr>
+          <tr><td>Schema / validation</td><td>JSON Schema</td><td>Usually JSON Schema (YAML maps onto the same data model)</td><td>XSD, DTD, RELAX NG — the most mature</td></tr>
+          <tr><td>Strictness</td><td>Very strict, tiny grammar</td><td>Large, complex spec; parsers differ</td><td>Strict, well-formedness is checked</td></tr>
+          <tr><td>Tooling</td><td>Built into every language and browser</td><td>Needs a library in most languages</td><td>Mature libraries, XPath, XSLT</td></tr>
+          <tr><td>Typical uses</td><td>REST APIs, web apps, <code>package.json</code>, NoSQL documents</td><td>Kubernetes, Docker Compose, GitHub Actions, OpenAPI specs</td><td>SOAP services, RSS/Atom feeds, SVG, Office files, Android layouts, Maven</td></tr>
+        </tbody>
+      </table>
+
+      <h2>JSON: the default for data exchange</h2>
+      <p>JSON’s strength is that it is boring. There is exactly one way to write a string, a number or a boolean, so two programs in different languages always agree on what the data means. <code>JSON.parse</code> is built into every browser, and parsing is fast. The price is that it is unpleasant to hand-edit: no comments, no trailing commas, and every key needs quotes. That is why it is ideal between programs and less ideal for files people maintain by hand.</p>
+
+      <h2>YAML: friendly, but with sharp edges</h2>
+      <p>YAML was designed for humans: indentation instead of brackets, comments, multi-line strings, and anchors (<code>&amp;</code>/<code>*</code>) to reuse blocks. YAML 1.2 is (almost) a superset of JSON, so most valid JSON is also valid YAML. But the friendliness comes from guessing, and guessing goes wrong:</p>
+      <div class="callout warn">
+        <p><strong>The Norway problem.</strong> In YAML 1.1, unquoted <code>yes</code>, <code>no</code>, <code>on</code>, <code>off</code> (in several capitalisations) are booleans. So <code>country: NO</code> becomes <code>country: false</code>. YAML 1.2 fixed this, but popular parsers such as Python’s PyYAML still follow 1.1. Quote any value that could be mistaken for something else.</p>
+      </div>
+      <ul>
+        <li><strong>Numbers that aren’t numbers.</strong> <code>version: 3.10</code> is read as the float <code>3.1</code>. Version strings, postcodes and phone numbers need quotes.</li>
+        <li><strong>Indentation is the structure.</strong> Tabs are not allowed for indentation, and moving a line two spaces left silently moves it to a different parent. A diff that looks like a whitespace change can change meaning.</li>
+        <li><strong>Many ways to say the same thing.</strong> Strings can be plain, single-quoted, double-quoted, <code>|</code> literal or <code>&gt;</code> folded, each with its own escaping and newline rules.</li>
+        <li><strong>Unsafe loading.</strong> Some YAML loaders can create arbitrary objects from tags. In Python always use <code>yaml.safe_load()</code> for untrusted input.</li>
+      </ul>
+
+      <h2>XML: verbose, but built for documents</h2>
+      <p>XML predates JSON and was designed for marked-up documents as much as for data. It supports mixed content (text with tags inside it, like HTML), namespaces for combining vocabularies, and the most powerful schema and transformation tools of the three: XSD for validation, XPath for querying and XSLT for transforming. That is why formats such as SVG, RSS, DOCX/XLSX internals and many financial and government interfaces are XML. The costs are size, verbosity and a design choice with no single right answer — element or attribute? For new web APIs, XML is rarely chosen today; for integrating with systems that already use it, you simply follow their schema.</p>
+      <div class="callout bad"><p><strong>Security note:</strong> an XML parser that resolves external entities can be tricked into reading local files (an “XXE” attack). When parsing XML from outside, make sure DTD and external entity processing is disabled in your library.</p></div>
+
+      <h2>How to choose</h2>
+      <ul>
+        <li><strong>Programs talking to programs (APIs, messages, storage):</strong> JSON.</li>
+        <li><strong>Config files that people edit and review:</strong> YAML if the ecosystem expects it (Kubernetes, CI); otherwise JSON, or a JSON-with-comments variant your tool supports. Keep YAML flat and quote anything ambiguous.</li>
+        <li><strong>Documents, or a partner who requires it:</strong> XML, validated against their XSD.</li>
+      </ul>
+      <p>You don’t have to commit forever. Because all three describe trees of values, converting between them is mechanical — just check that nothing was re-typed along the way.</p>
+
+      <div class="try-tool">
+        <span><strong>Convert JSON to YAML or XML.</strong> Paste JSON into the formatter, open the Convert tab and pick YAML or XML — ambiguous values like <code>"NO"</code> are quoted for you.</span>
+        <a class="button" href="/json-formatter/" data-i18n="guides.tryTool">Try it now</a>
+      </div>
+
+      <h2>FAQ</h2>
+      <details><summary>Is YAML a superset of JSON?</summary><p>Since YAML 1.2, practically yes: a JSON document can be loaded by a YAML 1.2 parser. The reverse is not true — comments, anchors and unquoted strings are not JSON.</p></details>
+      <details><summary>Is JSON faster than XML?</summary><p>Usually JSON is smaller on the wire and quicker to parse, especially in browsers where the parser is built in. For most apps the difference matters far less than network time, so choose by fit, not speed.</p></details>
+      <details><summary>Why did my YAML value turn into true or a different number?</summary><p>YAML guesses types for unquoted values. Words like <code>no</code> or <code>on</code> can become booleans in YAML 1.1 parsers, and <code>3.10</code> becomes <code>3.1</code>. Put such values in quotes.</p></details>
+      <details><summary>Can I validate YAML with JSON Schema?</summary><p>Yes, this is common. Load the YAML into data, then validate that data with a JSON Schema validator; many editors do this for Kubernetes and CI files.</p></details>
+    </article>
+
+    <article data-lang="bn" lang="bn">
+      <h1>JSON, YAML না XML: কোনটি ব্যবহার করবেন?</h1>
+      <p class="byline" data-guide-updated data-minutes="6"></p>
+
+      <p>আপনার API ফেরত দেয় JSON, Docker Compose আর CI ফাইলগুলো YAML-এ, আর যে ব্যাংক বা সরকারি সিস্টেমের সাথে ইন্টিগ্রেশন করতে হবে, সেটা এখনো XML-এ কথা বলে। তিনটি ফরম্যাটই একই ধরনের জিনিস রাখে — গোছানো ডেটা — কিন্তু তৈরি হয়েছে আলাদা আলাদা কাজের জন্য, আর প্রতিটিরই এমন কিছু ফাঁদ আছে যা ধরা পড়ে একেবারে প্রোডাকশনে গিয়ে। এই গাইডে একই ডেটা পাশাপাশি রেখে তিনটির সৎ তুলনা করা হয়েছে, আর বেছে নেওয়ার একটা সহজ নিয়মও দেওয়া হয়েছে।</p>
+
+      <h2>একই ডেটা তিন ফরম্যাটে</h2>
+      <p>নিচে একটি ছোট সার্ভিস কনফিগারেশন: একটি নাম, পোর্ট, একটি ফ্ল্যাগ, দেশের কোড, ভার্সন, অ্যাডমিনদের তালিকা আর নেস্টেড একটি ডেটাবেস ব্লক।</p>
+      <h3>JSON</h3>
+      <pre><code>{
+  "service": "checkout",
+  "port": 8080,
+  "debug": false,
+  "country": "NO",
+  "version": "3.10",
+  "admins": ["rahim@example.com", "karim@example.com"],
+  "database": { "host": "db.internal", "pool": 10 }
+}</code></pre>
+      <h3>YAML</h3>
+      <pre><code># Checkout সার্ভিসের সেটিংস
+service: checkout
+port: 8080
+debug: false
+country: "NO"       # ইচ্ছা করেই কোটে রাখা, নিচে দেখুন
+version: "3.10"
+admins:
+  - rahim@example.com
+  - karim@example.com
+database:
+  host: db.internal
+  pool: 10</code></pre>
+      <h3>XML</h3>
+      <pre><code>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;!-- Checkout সার্ভিসের সেটিংস --&gt;
+&lt;service name="checkout"&gt;
+  &lt;port&gt;8080&lt;/port&gt;
+  &lt;debug&gt;false&lt;/debug&gt;
+  &lt;country&gt;NO&lt;/country&gt;
+  &lt;version&gt;3.10&lt;/version&gt;
+  &lt;admins&gt;
+    &lt;admin&gt;rahim@example.com&lt;/admin&gt;
+    &lt;admin&gt;karim@example.com&lt;/admin&gt;
+  &lt;/admins&gt;
+  &lt;database host="db.internal" pool="10"/&gt;
+&lt;/service&gt;</code></pre>
+      <p>তিনটি জিনিস চোখে পড়ে। YAML সবচেয়ে ছোট আর কমেন্ট লেখা যায়। JSON সংক্ষিপ্ত আর দ্ব্যর্থহীন। XML সবচেয়ে লম্বা, আর এতে ডেটা রাখার দুটি উপায় আছে — চাইল্ড এলিমেন্ট আর অ্যাট্রিবিউট (<code>name="checkout"</code>)। তা ছাড়া XML-এ প্রতিটি মানই আসলে লেখা: স্কিমা আলাদা করে না বললে <code>8080</code> আর <code>false</code> দুটোই স্ট্রিং।</p>
+
+      <h2>পাশাপাশি তুলনা</h2>
+      <table>
+        <thead><tr><th></th><th>JSON</th><th>YAML</th><th>XML</th></tr></thead>
+        <tbody>
+          <tr><td>পড়ার সুবিধা</td><td>ভালো; তবে কোট আর ব্রেসের ভিড়</td><td>ছোট ফাইলে মানুষের জন্য সেরা; গভীর নেস্টিংয়ে অনুসরণ করা কঠিন</td><td>লম্বা; ক্লোজিং ট্যাগে আকার প্রায় দ্বিগুণ</td></tr>
+          <tr><td>কমেন্ট</td><td>নেই</td><td>আছে (<code>#</code>)</td><td>আছে (<code>&lt;!-- --&gt;</code>)</td></tr>
+          <tr><td>ডেটা টাইপ</td><td>string, number, boolean, null, object, array</td><td>এগুলোসহ আরও; কোট বা ট্যাগ না থাকলে টাইপ লেখা দেখে অনুমান করা হয়</td><td>সবই লেখা; টাইপ আসে স্কিমা থেকে</td></tr>
+          <tr><td>স্কিমা / যাচাই</td><td>JSON Schema</td><td>সাধারণত JSON Schema (YAML-এর ডেটা মডেল একই)</td><td>XSD, DTD, RELAX NG — সবচেয়ে পরিণত</td></tr>
+          <tr><td>কড়াকড়ি</td><td>খুব কড়া, ছোট্ট ব্যাকরণ</td><td>বড় ও জটিল স্পেক; পার্সারভেদে আচরণ আলাদা</td><td>কড়া, well-formed কি না যাচাই হয়</td></tr>
+          <tr><td>টুলিং</td><td>প্রতিটি ভাষা ও ব্রাউজারে বিল্ট-ইন</td><td>বেশিরভাগ ভাষায় আলাদা লাইব্রেরি লাগে</td><td>পরিণত লাইব্রেরি, XPath, XSLT</td></tr>
+          <tr><td>যেখানে বেশি দেখা যায়</td><td>REST API, ওয়েব অ্যাপ, <code>package.json</code>, NoSQL ডকুমেন্ট</td><td>Kubernetes, Docker Compose, GitHub Actions, OpenAPI স্পেক</td><td>SOAP সার্ভিস, RSS/Atom ফিড, SVG, Office ফাইল, Android লেআউট, Maven</td></tr>
+        </tbody>
+      </table>
+
+      <h2>JSON: ডেটা আদান-প্রদানের ডিফল্ট</h2>
+      <p>JSON-এর শক্তি হলো এটা একঘেয়ে। একটি স্ট্রিং, সংখ্যা বা boolean লেখার ঠিক একটাই উপায়, তাই আলাদা ভাষায় লেখা দুটি প্রোগ্রাম ডেটার মানে নিয়ে সবসময় একমত হয়। <code>JSON.parse</code> প্রতিটি ব্রাউজারে বিল্ট-ইন, আর পার্সিংও দ্রুত। বিনিময়ে হাতে এডিট করা ঝামেলার: কমেন্ট নেই, শেষে কমা দেওয়া যায় না, প্রতিটি কী-তে কোট লাগে। তাই প্রোগ্রামে-প্রোগ্রামে কথাবার্তার জন্য JSON আদর্শ, কিন্তু মানুষ হাতে যে ফাইল রক্ষণাবেক্ষণ করে, তার জন্য ততটা নয়।</p>
+
+      <h2>YAML: বন্ধুসুলভ, কিন্তু ধারালো কিনারা আছে</h2>
+      <p>YAML বানানো হয়েছে মানুষের কথা ভেবে: ব্র্যাকেটের বদলে ইনডেন্টেশন, কমেন্ট, একাধিক লাইনের স্ট্রিং, আর ব্লক পুনর্ব্যবহারের জন্য অ্যাংকর (<code>&amp;</code>/<code>*</code>)। YAML 1.2 (প্রায়) JSON-এর সুপারসেট, তাই বেশিরভাগ বৈধ JSON বৈধ YAML-ও। কিন্তু এই বন্ধুত্বপূর্ণ ভাব আসে অনুমান থেকে, আর অনুমান ভুলও হয়:</p>
+      <div class="callout warn">
+        <p><strong>নরওয়ে সমস্যা।</strong> YAML 1.1-এ কোট ছাড়া <code>yes</code>, <code>no</code>, <code>on</code>, <code>off</code> (বিভিন্ন ছোট-বড় হাতের রূপে) boolean হিসেবে পড়া হয়। ফলে <code>country: NO</code> হয়ে যায় <code>country: false</code>। YAML 1.2 এটা ঠিক করেছে, কিন্তু Python-এর PyYAML-এর মতো জনপ্রিয় পার্সার এখনো 1.1 মেনে চলে। অন্য কিছু বলে ভুল হতে পারে এমন যেকোনো মান কোটে রাখুন।</p>
+      </div>
+      <ul>
+        <li><strong>যে সংখ্যা আসলে সংখ্যা নয়।</strong> <code>version: 3.10</code> পড়া হয় float <code>3.1</code> হিসেবে। ভার্সন, পোস্টকোড, ফোন নম্বর — এসব কোটে রাখতে হবে।</li>
+        <li><strong>ইনডেন্টেশনই কাঠামো।</strong> ইনডেন্টেশনে ট্যাব চলে না, আর একটি লাইন দুই স্পেস বাঁয়ে সরালে সেটা নিঃশব্দে অন্য প্যারেন্টের অধীনে চলে যায়। যে diff দেখতে শুধু স্পেসের পরিবর্তন, সেটাও মানে বদলে দিতে পারে।</li>
+        <li><strong>একই কথা বলার অনেক উপায়।</strong> স্ট্রিং হতে পারে প্লেইন, সিঙ্গেল-কোটেড, ডাবল-কোটেড, <code>|</code> literal বা <code>&gt;</code> folded — প্রতিটির এসকেপিং আর নিউলাইনের নিয়ম আলাদা।</li>
+        <li><strong>অনিরাপদ লোডিং।</strong> কিছু YAML লোডার ট্যাগ দেখে যেকোনো অবজেক্ট তৈরি করে ফেলতে পারে। Python-এ অবিশ্বস্ত ইনপুটের জন্য সবসময় <code>yaml.safe_load()</code> ব্যবহার করুন।</li>
+      </ul>
+
+      <h2>XML: লম্বা, কিন্তু ডকুমেন্টের জন্য তৈরি</h2>
+      <p>XML এসেছে JSON-এর আগে, আর এটা ডেটার পাশাপাশি মার্কআপ করা ডকুমেন্টের কথা ভেবেও বানানো। এতে mixed content (HTML-এর মতো লেখার ভেতরে ট্যাগ), আলাদা ভোকাবুলারি একসাথে মেশানোর জন্য namespace, আর তিনটির মধ্যে সবচেয়ে শক্তিশালী স্কিমা ও রূপান্তরের টুল আছে: যাচাইয়ের জন্য XSD, খোঁজার জন্য XPath, রূপান্তরের জন্য XSLT। এ কারণেই SVG, RSS, DOCX/XLSX-এর ভেতরের ফাইল আর অনেক আর্থিক ও সরকারি ইন্টারফেস XML-এ। খরচ হলো আকার, বাড়তি শব্দ, আর এমন একটা সিদ্ধান্ত যার কোনো একক সঠিক উত্তর নেই — এলিমেন্ট না অ্যাট্রিবিউট? নতুন ওয়েব API-এর জন্য এখন XML কমই বেছে নেওয়া হয়; যে সিস্টেম আগে থেকেই XML ব্যবহার করে, তার সাথে কাজ করলে শুধু তাদের স্কিমা মেনে চলুন।</p>
+      <div class="callout bad"><p><strong>নিরাপত্তা নোট:</strong> যে XML পার্সার external entity রিজলভ করে, তাকে দিয়ে কৌশলে সার্ভারের লোকাল ফাইল পড়িয়ে নেওয়া যায় (“XXE” অ্যাটাক)। বাইরে থেকে আসা XML পার্স করার সময় নিশ্চিত করুন আপনার লাইব্রেরিতে DTD আর external entity প্রসেসিং বন্ধ আছে।</p></div>
+
+      <h2>কীভাবে বেছে নেবেন</h2>
+      <ul>
+        <li><strong>প্রোগ্রামের সাথে প্রোগ্রামের কথা (API, মেসেজ, স্টোরেজ):</strong> JSON।</li>
+        <li><strong>যে কনফিগ ফাইল মানুষ এডিট ও রিভিউ করে:</strong> ইকোসিস্টেম YAML চাইলে (Kubernetes, CI) YAML; নইলে JSON, অথবা আপনার টুল সমর্থন করলে কমেন্টসহ JSON-এর কোনো রূপ। YAML যতটা সম্ভব সমতল রাখুন আর দ্ব্যর্থক সবকিছু কোটে দিন।</li>
+        <li><strong>ডকুমেন্ট, অথবা পার্টনার যদি দাবি করে:</strong> XML, তাদের XSD দিয়ে যাচাই করে।</li>
+      </ul>
+      <p>চিরকালের জন্য বাঁধা পড়ার দরকার নেই। তিনটিই যেহেতু মানের ট্রি বর্ণনা করে, একটি থেকে আরেকটিতে রূপান্তর যান্ত্রিক কাজ — শুধু দেখে নিন পথে কোনো মানের টাইপ বদলে গেল কি না।</p>
+
+      <div class="try-tool">
+        <span><strong>JSON থেকে YAML বা XML-এ রূপান্তর করুন।</strong> ফরম্যাটারে JSON পেস্ট করে Convert ট্যাব খুলুন আর YAML বা XML বেছে নিন — <code>"NO"</code>-এর মতো দ্ব্যর্থক মান নিজে থেকেই কোটে রাখা হয়।</span>
+        <a class="button" href="/json-formatter/" data-i18n="guides.tryTool">এখনই চেষ্টা করুন</a>
+      </div>
+
+      <h2>প্রশ্নোত্তর</h2>
+      <details><summary>YAML কি JSON-এর সুপারসেট?</summary><p>YAML 1.2 থেকে কার্যত হ্যাঁ: একটি JSON ডকুমেন্ট YAML 1.2 পার্সার দিয়ে লোড করা যায়। উল্টোটা সত্য নয় — কমেন্ট, অ্যাংকর আর কোট ছাড়া স্ট্রিং JSON নয়।</p></details>
+      <details><summary>JSON কি XML-এর চেয়ে দ্রুত?</summary><p>সাধারণত JSON নেটওয়ার্কে আকারে ছোট আর পার্স করতে দ্রুত, বিশেষ করে ব্রাউজারে, যেখানে পার্সার বিল্ট-ইন। তবে বেশিরভাগ অ্যাপে এই পার্থক্যের চেয়ে নেটওয়ার্কের সময় অনেক বেশি গুরুত্বপূর্ণ, তাই গতি নয়, কাজের সাথে মিল দেখে বেছে নিন।</p></details>
+      <details><summary>আমার YAML-এর মান কেন true বা অন্য সংখ্যা হয়ে গেল?</summary><p>কোট ছাড়া মানের টাইপ YAML অনুমান করে। YAML 1.1 পার্সারে <code>no</code> বা <code>on</code>-এর মতো শব্দ boolean হয়ে যেতে পারে, আর <code>3.10</code> হয়ে যায় <code>3.1</code>। এমন মান কোটে রাখুন।</p></details>
+      <details><summary>YAML কি JSON Schema দিয়ে যাচাই করা যায়?</summary><p>হ্যাঁ, এটা বেশ প্রচলিত। YAML লোড করে ডেটায় রূপান্তর করুন, তারপর সেই ডেটা JSON Schema ভ্যালিডেটর দিয়ে যাচাই করুন; অনেক এডিটর Kubernetes আর CI ফাইলের জন্য এটা নিজেই করে।</p></details>
+    </article>
+
+    <section class="more-tools">
+      <h2 data-i18n="guides.related">Related guides</h2>
+      <ul class="guide-grid" data-related-guides></ul>
+    </section>
+  </main>
+
+  <div class="ad-slot ad-bottom" data-ad="bottom" data-i18n-attr="aria-label:ad.label" aria-label="Advertisement">
+    <span data-i18n="ad.placeholder">Ad space</span>
+  </div>
+
+  <section class="content more-tools">
+    <h2 data-i18n="tools.more">More free tools</h2>
+    <ul class="tool-grid" data-more-tools></ul>
+  </section>
+
+  <footer class="site-footer">
+    <span>© <span data-year></span> <span data-i18n="brand">JSON Bondhu</span></span>
+    <a href="/privacy.html" data-i18n="footer.privacy">Privacy policy</a>
+    <a href="https://github.com/MosabberUddin/jsonbondhu/issues" rel="noopener" data-i18n="footer.contact">Contact</a>
+  </footer>
+
+  <script src="/ads.js" defer></script>
+</body>
+</html>

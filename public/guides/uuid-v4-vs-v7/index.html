@@ -1,0 +1,300 @@
+<!doctype html>
+<html lang="en" data-guide="uuid-v4-vs-v7" data-title-key="guide.uuid-v4-vs-v7.title" data-desc-key="guide.uuid-v4-vs-v7.desc">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>UUID v4 vs v7: which one to use for database keys</title>
+  <meta name="description" content="How UUIDs are built, why random v4 keys slow down database indexes, and when time-ordered v7 is the better choice.">
+  <link rel="canonical" href="https://jsonbondhu.pages.dev/guides/uuid-v4-vs-v7/">
+  <link rel="alternate" hreflang="en" href="https://jsonbondhu.pages.dev/guides/uuid-v4-vs-v7/?lang=en">
+  <link rel="alternate" hreflang="bn" href="https://jsonbondhu.pages.dev/guides/uuid-v4-vs-v7/?lang=bn">
+  <link rel="alternate" hreflang="x-default" href="https://jsonbondhu.pages.dev/guides/uuid-v4-vs-v7/">
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="UUID v4 vs v7: which one to use for database keys">
+  <meta name="theme-color" content="#0f766e">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230f766e'/%3E%3Ctext x='16' y='22' font-size='15' font-family='monospace' font-weight='700' fill='white' text-anchor='middle'%3E%7B%7D%3C/text%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/i18n.js"></script>
+  <script src="/tools.js"></script>
+  <script src="/guides/guides.js"></script>
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"TechArticle","headline":"UUID v4 vs v7: which one to use for database keys","alternativeHeadline":"UUID v4 না v7: ডেটাবেস কী-এর জন্য কোনটি","inLanguage":["en","bn"],"datePublished":"2026-09-27","dateModified":"2026-09-27","author":{"@type":"Organization","name":"JSON Bondhu"},"publisher":{"@type":"Organization","name":"JSON Bondhu","url":"https://jsonbondhu.pages.dev/"},"mainEntityOfPage":"https://jsonbondhu.pages.dev/guides/uuid-v4-vs-v7/"}
+  </script>
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="/">
+      <span class="logo" aria-hidden="true">{ }</span>
+      <span><strong data-i18n="brand">JSON Bondhu</strong></span>
+    </a>
+    <nav class="top-nav">
+      <a href="/" data-i18n="nav.tools">All tools</a>
+      <a href="/guides/" data-i18n="nav.guides">Guides</a>
+      <a href="/#premium" class="pill" data-i18n="nav.premium">Go ad-free</a>
+      <div class="lang-switch" role="group" data-i18n-attr="aria-label:lang.label" aria-label="Language">
+        <button type="button" data-set-lang="en" lang="en" aria-pressed="true">EN</button>
+        <button type="button" data-set-lang="bn" lang="bn" aria-pressed="false">বাংলা</button>
+      </div>
+    </nav>
+  </header>
+
+  <div class="ad-slot ad-top" data-ad="top" data-i18n-attr="aria-label:ad.label" aria-label="Advertisement">
+    <span data-i18n="ad.placeholder">Ad space</span>
+  </div>
+
+  <main class="guide">
+    <p class="breadcrumb"><a href="/guides/" data-i18n="guides.back">← All guides</a></p>
+
+    <article data-lang="en" lang="en">
+      <h1>UUID v4 vs v7: which one to use for database keys</h1>
+      <p class="byline" data-guide-updated data-minutes="6"></p>
+
+      <p>UUIDs are popular primary keys: any server, phone or browser can create one without asking the database, and they don’t reveal how many orders or users you have. But teams that switch from auto-increment integers to random UUIDs often notice inserts slowing down as a table grows into the millions. The cause is not UUIDs in general — it is <em>random</em> UUIDs. Version 7 fixes that, with one trade-off you should understand before adopting it.</p>
+
+      <h2>Anatomy of a UUID</h2>
+      <p>A UUID is a 128-bit number, usually written as 32 hex digits in five groups: <code>8-4-4-4-12</code>. The current standard is <strong>RFC 9562</strong> (2024), which replaced RFC 4122 and added versions 6, 7 and 8. Two fields are fixed in every modern UUID:</p>
+      <ul>
+        <li><strong>Version</strong> — 4 bits, the first hex digit of the third group. A <code>4</code> there means v4, a <code>7</code> means v7.</li>
+        <li><strong>Variant</strong> — the top 2 bits of the fourth group are <code>10</code>, so its first hex digit is always <code>8</code>, <code>9</code>, <code>a</code> or <code>b</code>.</li>
+      </ul>
+      <pre><code>7a8d7dc8-90c5-<strong>4</strong>29d-<strong>9</strong>850-667f47584c94   ← v4 (version 4, variant digit 9)
+01a0e105-0e00-<strong>7</strong>014-<strong>8</strong>d82-8f82c27a30ca   ← v7 (version 7, variant digit 8)</code></pre>
+      <p>That leaves 122 bits for the actual content. What goes into those bits is the whole difference between v4 and v7.</p>
+
+      <h2>v4: 122 random bits</h2>
+      <p>A v4 UUID is pure randomness from a cryptographically secure generator. How likely is a collision? By the birthday problem, with <em>n</em> UUIDs the probability of any duplicate is about <code>n² / (2 × 2¹²²)</code>:</p>
+      <table>
+        <thead><tr><th>UUIDs generated</th><th>Chance of at least one duplicate</th></tr></thead>
+        <tbody>
+          <tr><td>1 billion (10⁹)</td><td>about 9.4 × 10⁻²⁰</td></tr>
+          <tr><td>1 trillion (10¹²)</td><td>about 9.4 × 10⁻¹⁴</td></tr>
+          <tr><td>2.7 × 10¹⁸</td><td>about 50%</td></tr>
+        </tbody>
+      </table>
+      <p>Reaching a 50% chance would take a billion UUIDs per second for roughly 86 years. In practice, v4 collisions come from bugs — a badly seeded or non-cryptographic random generator, or cloned virtual machines — not from the math. Always use your platform’s secure generator, never <code>Math.random()</code>.</p>
+
+      <h2>Why random keys hurt B-tree indexes</h2>
+      <p>Most databases store primary keys in a B-tree, kept in sorted order in fixed-size pages. With an auto-increment key, each new row goes at the right-hand end of the tree: the same few pages stay hot in memory and fill up completely. With v4 keys, each insert lands on a <strong>random page</strong> anywhere in the index. That causes:</p>
+      <ul>
+        <li><strong>Page splits.</strong> When a full page receives a new key in the middle, the database splits it into two half-full pages. The index gets bigger and more fragmented than it needs to be.</li>
+        <li><strong>Poor locality.</strong> Because any page may be needed next, the whole index must fit in memory to stay fast. Once it doesn’t, inserts start waiting on disk reads.</li>
+        <li><strong>More write volume.</strong> Touching many different pages means more dirty pages to flush and, in PostgreSQL, more full-page images in the write-ahead log.</li>
+      </ul>
+      <p>In MySQL’s InnoDB the effect is stronger, because the table itself is stored in primary-key order (a clustered index), and every secondary index stores the primary key too.</p>
+      <div class="callout"><p><strong>When does it matter?</strong> For a table with a few hundred thousand rows, almost never — the index fits in memory and you won’t measure a difference. It starts to matter with tens of millions of rows, high insert rates, or indexes larger than RAM. Don’t rewrite a small app for this; do choose carefully for a new high-volume table.</p></div>
+
+      <h2>v7: timestamp first, then randomness</h2>
+      <p>A v7 UUID starts with a <strong>48-bit Unix timestamp in milliseconds</strong>, followed by the version, then random bits (74 in total after the version and variant). Because the time is at the front, new UUIDs sort after old ones, and inserts go to the end of the index — like auto-increment, but still generated anywhere without coordination.</p>
+      <table>
+        <thead><tr><th>Bits</th><th>Field</th></tr></thead>
+        <tbody>
+          <tr><td>48</td><td>Unix time in milliseconds (big-endian)</td></tr>
+          <tr><td>4</td><td>Version (<code>0111</code> = 7)</td></tr>
+          <tr><td>12</td><td>Random, or extra sub-millisecond precision / counter</td></tr>
+          <tr><td>2</td><td>Variant (<code>10</code>)</td></tr>
+          <tr><td>62</td><td>Random</td></tr>
+        </tbody>
+      </table>
+      <p>48 bits of milliseconds lasts until the year 10889, so overflow is not a concern. Two details to know:</p>
+      <ul>
+        <li><strong>Order inside one millisecond is not guaranteed</strong> unless your generator uses the optional counter method from RFC 9562. Treat v7 as “roughly time-ordered”, not as a strict sequence.</li>
+        <li><strong>It leaks creation time.</strong> Anyone who sees the ID can read when it was created. For public IDs such as an invoice or a user profile URL, decide whether that is acceptable.</li>
+      </ul>
+      <pre><code>// Read the creation time from a v7 UUID
+const id = "01a0e105-0e00-7014-8d82-8f82c27a30ca";
+new Date(parseInt(id.replace(/-/g, "").slice(0, 12), 16)).toISOString();
+// "2026-09-27T04:00:00.000Z"</code></pre>
+
+      <h2>Alternatives in brief</h2>
+      <ul>
+        <li><strong>Auto-increment integers</strong> — smallest (4 or 8 bytes) and fastest, but need the database to assign them, and they reveal counts. Still the right choice for many internal tables.</li>
+        <li><strong>ULID</strong> — the same idea as v7 (48-bit millisecond time + 80 random bits), written as 26 Crockford Base32 characters. It predates v7; for new work, v7 has the advantage of fitting native UUID columns and tools.</li>
+      </ul>
+
+      <h2>Generating UUIDs</h2>
+      <pre><code>// JavaScript: v4 is built in (browsers in secure contexts, Node.js)
+crypto.randomUUID();   // "7a8d7dc8-90c5-429d-9850-667f47584c94"
+
+// v7 by hand, following the RFC 9562 layout
+function uuidv7() {
+  const bytes = crypto.getRandomValues(new Uint8Array(16));
+  let ms = BigInt(Date.now());
+  for (let i = 5; i &gt;= 0; i--) { bytes[i] = Number(ms &amp; 0xffn); ms &gt;&gt;= 8n; }
+  bytes[6] = (bytes[6] &amp; 0x0f) | 0x70;   // version 7
+  bytes[8] = (bytes[8] &amp; 0x3f) | 0x80;   // variant 10
+  const hex = [...bytes].map((b) =&gt; b.toString(16).padStart(2, "0")).join("");
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
+}</code></pre>
+      <p>In production, the widely used <code>uuid</code> npm package also provides <code>v7()</code>.</p>
+      <pre><code>-- PostgreSQL
+SELECT gen_random_uuid();   -- v4, built in since PostgreSQL 13
+SELECT uuidv7();            -- v7, PostgreSQL 18 and later
+
+CREATE TABLE orders (
+  id uuid PRIMARY KEY DEFAULT uuidv7(),
+  created_at timestamptz NOT NULL DEFAULT now()
+);</code></pre>
+      <pre><code># Python
+import uuid
+uuid.uuid4()   # every version of Python 3
+uuid.uuid7()   # Python 3.14 and later</code></pre>
+
+      <h2>Store them as 16 bytes, not text</h2>
+      <p>The text form is 36 characters; the value is 16 bytes. Storing text more than doubles the size of the key and of every index and foreign key that contains it, and string comparison is slower than byte comparison.</p>
+      <ul>
+        <li><strong>PostgreSQL:</strong> use the native <code>uuid</code> type (16 bytes).</li>
+        <li><strong>MySQL:</strong> use <code>BINARY(16)</code> with <code>UUID_TO_BIN()</code> and <code>BIN_TO_UUID()</code>. Don’t pass the “swap” flag for v7 — it reorders the bytes for v1 and would break v7’s time ordering.</li>
+        <li><strong>JSON and APIs:</strong> the standard lowercase hyphenated string is fine; convert at the database boundary.</li>
+      </ul>
+
+      <div class="try-tool">
+        <span><strong>Generate v4 or v7 UUIDs in bulk.</strong> The UUID Generator creates either version, lets you copy or download them, and checks the version of any UUID you paste.</span>
+        <a class="button" href="/uuid-generator/" data-i18n="guides.tryTool">Try it now</a>
+      </div>
+
+      <h2>FAQ</h2>
+      <details><summary>Should I migrate my existing v4 keys to v7?</summary><p>Usually not. Changing primary keys means rewriting every foreign key. If inserts are fine today, keep v4 and use v7 for new tables. Migrate only if you’ve measured an index problem.</p></details>
+      <details><summary>Is v7 less secure than v4?</summary><p>It has fewer random bits (74 vs 122), which is still far too many to guess. The real difference is the readable timestamp. Neither version should be used as a secret, such as a password-reset token — use a dedicated random token for that.</p></details>
+      <details><summary>Can I sort by a v7 UUID instead of a <code>created_at</code> column?</summary><p>Roughly, yes, at millisecond precision — but clocks on different servers drift, and order within one millisecond may be random. Keep a real timestamp column if exact ordering or reporting matters.</p></details>
+    </article>
+
+    <article data-lang="bn" lang="bn">
+      <h1>UUID v4 না v7: ডেটাবেস কী-এর জন্য কোনটি</h1>
+      <p class="byline" data-guide-updated data-minutes="6"></p>
+
+      <p>Primary key হিসেবে UUID বেশ জনপ্রিয়: যেকোনো সার্ভার, ফোন বা ব্রাউজার ডেটাবেসকে জিজ্ঞেস না করেই একটা তৈরি করতে পারে, আর এতে বোঝা যায় না আপনার কতগুলো অর্ডার বা ইউজার আছে। কিন্তু auto-increment integer ছেড়ে র‍্যান্ডম UUID-তে যাওয়া অনেক টিম দেখে, টেবিল লাখ-কোটিতে বড় হতে থাকলে insert ধীর হয়ে যাচ্ছে। দোষটা UUID-এর নয় — দোষ <em>র‍্যান্ডম</em> UUID-এর। Version 7 এই সমস্যা মেটায়, তবে একটা ছাড় দিয়ে, যা ব্যবহারের আগে বুঝে নেওয়া দরকার।</p>
+
+      <h2>UUID-এর গঠন</h2>
+      <p>UUID হলো একটি 128-bit সংখ্যা, সাধারণত লেখা হয় পাঁচ ভাগে ৩২টি hex অঙ্কে: <code>8-4-4-4-12</code>। বর্তমান স্ট্যান্ডার্ড <strong>RFC 9562</strong> (2024), যা RFC 4122-এর জায়গা নিয়েছে এবং version 6, 7 ও 8 যোগ করেছে। আধুনিক প্রতিটি UUID-এ দুটি ফিল্ড নির্দিষ্ট:</p>
+      <ul>
+        <li><strong>Version</strong> — 4 bit, তৃতীয় গ্রুপের প্রথম hex অঙ্ক। সেখানে <code>4</code> মানে v4, <code>7</code> মানে v7।</li>
+        <li><strong>Variant</strong> — চতুর্থ গ্রুপের ওপরের 2 bit হলো <code>10</code>, তাই এর প্রথম hex অঙ্ক সবসময় <code>8</code>, <code>9</code>, <code>a</code> বা <code>b</code>।</li>
+      </ul>
+      <pre><code>7a8d7dc8-90c5-<strong>4</strong>29d-<strong>9</strong>850-667f47584c94   ← v4 (version 4, variant digit 9)
+01a0e105-0e00-<strong>7</strong>014-<strong>8</strong>d82-8f82c27a30ca   ← v7 (version 7, variant digit 8)</code></pre>
+      <p>বাকি থাকে আসল তথ্যের জন্য 122 bit। এই bit-গুলোতে কী বসে, সেটাই v4 আর v7-এর পুরো পার্থক্য।</p>
+
+      <h2>v4: 122টি র‍্যান্ডম bit</h2>
+      <p>v4 UUID পুরোটাই ক্রিপ্টোগ্রাফিকভাবে নিরাপদ জেনারেটরের র‍্যান্ডমনেস। collision বা একই মান দুবার হওয়ার সম্ভাবনা কত? birthday problem অনুযায়ী, <em>n</em>টি UUID থাকলে কোনো একটি duplicate হওয়ার সম্ভাবনা মোটামুটি <code>n² / (2 × 2¹²²)</code>:</p>
+      <table>
+        <thead><tr><th>কতগুলো UUID</th><th>অন্তত একটি duplicate-এর সম্ভাবনা</th></tr></thead>
+        <tbody>
+          <tr><td>১০০ কোটি (10⁹)</td><td>প্রায় 9.4 × 10⁻²⁰</td></tr>
+          <tr><td>১ লাখ কোটি (10¹²)</td><td>প্রায় 9.4 × 10⁻¹⁴</td></tr>
+          <tr><td>2.7 × 10¹⁸</td><td>প্রায় ৫০%</td></tr>
+        </tbody>
+      </table>
+      <p>৫০% সম্ভাবনায় পৌঁছাতে প্রতি সেকেন্ডে ১০০ কোটি UUID বানাতে হবে টানা প্রায় ৮৬ বছর। বাস্তবে v4 collision আসে বাগ থেকে — ঠিকমতো seed না করা বা non-cryptographic র‍্যান্ডম জেনারেটর, কিংবা clone করা ভার্চুয়াল মেশিন — অঙ্ক থেকে নয়। সবসময় প্ল্যাটফর্মের নিরাপদ জেনারেটর ব্যবহার করুন, কখনো <code>Math.random()</code> নয়।</p>
+
+      <h2>র‍্যান্ডম কী কেন B-tree ইনডেক্সের ক্ষতি করে</h2>
+      <p>বেশিরভাগ ডেটাবেস primary key রাখে B-tree-তে, নির্দিষ্ট আকারের page-এ সাজানো ক্রমে। auto-increment কী হলে প্রতিটি নতুন row যায় tree-এর একেবারে ডান প্রান্তে: একই কয়েকটা page মেমরিতে গরম থাকে আর পুরোপুরি ভরে ওঠে। v4 কী হলে প্রতিটি insert পড়ে ইনডেক্সের <strong>যেকোনো র‍্যান্ডম page-এ</strong>। এর ফল:</p>
+      <ul>
+        <li><strong>Page split।</strong> ভরা page-এর মাঝখানে নতুন কী ঢুকলে ডেটাবেস সেটাকে ভেঙে অর্ধেক-ভরা দুটি page বানায়। ইনডেক্স দরকারের চেয়ে বড় আর বেশি খণ্ডিত হয়ে যায়।</li>
+        <li><strong>দুর্বল locality।</strong> পরের insert যেকোনো page-এ যেতে পারে, তাই দ্রুত থাকতে হলে পুরো ইনডেক্স মেমরিতে থাকতে হয়। না ধরলে insert-কে ডিস্ক থেকে পড়ার জন্য অপেক্ষা করতে হয়।</li>
+        <li><strong>বেশি write।</strong> অনেক আলাদা page ছোঁয়া মানে flush করার মতো বেশি dirty page, আর PostgreSQL-এ write-ahead log-এ বেশি full-page image।</li>
+      </ul>
+      <p>MySQL-এর InnoDB-তে প্রভাবটা আরও বেশি, কারণ টেবিলটাই primary key-এর ক্রমে রাখা হয় (clustered index), আর প্রতিটি secondary index-এও primary key থাকে।</p>
+      <div class="callout"><p><strong>কখন এটা আসলে গুরুত্বপূর্ণ?</strong> কয়েক লাখ row-এর টেবিলে প্রায় কখনোই না — ইনডেক্স মেমরিতে এঁটে যায়, পার্থক্য মাপতেও পারবেন না। সমস্যা শুরু হয় কোটি কোটি row, খুব বেশি insert-এর হার, বা RAM-এর চেয়ে বড় ইনডেক্সে। ছোট অ্যাপ এর জন্য নতুন করে লিখবেন না; তবে নতুন বড়-ভলিউমের টেবিলের বেলায় ভেবে বেছে নিন।</p></div>
+
+      <h2>v7: আগে সময়, তারপর র‍্যান্ডমনেস</h2>
+      <p>v7 UUID শুরু হয় <strong>মিলিসেকেন্ডে 48-bit Unix timestamp</strong> দিয়ে, তারপর version, তারপর র‍্যান্ডম bit (version ও variant বাদে মোট 74টি)। সময়টা সামনে থাকায় নতুন UUID পুরোনোগুলোর পরে সাজে, আর insert যায় ইনডেক্সের শেষ প্রান্তে — auto-increment-এর মতোই, অথচ কোনো সমন্বয় ছাড়াই যেকোনো জায়গায় তৈরি করা যায়।</p>
+      <table>
+        <thead><tr><th>Bit</th><th>ফিল্ড</th></tr></thead>
+        <tbody>
+          <tr><td>48</td><td>মিলিসেকেন্ডে Unix সময় (big-endian)</td></tr>
+          <tr><td>4</td><td>Version (<code>0111</code> = 7)</td></tr>
+          <tr><td>12</td><td>র‍্যান্ডম, অথবা মিলিসেকেন্ডের চেয়ে সূক্ষ্ম সময় / counter</td></tr>
+          <tr><td>2</td><td>Variant (<code>10</code>)</td></tr>
+          <tr><td>62</td><td>র‍্যান্ডম</td></tr>
+        </tbody>
+      </table>
+      <p>48 bit মিলিসেকেন্ড চলবে 10889 সাল পর্যন্ত, তাই overflow নিয়ে ভাবনা নেই। দুটি বিষয় জেনে রাখুন:</p>
+      <ul>
+        <li><strong>একই মিলিসেকেন্ডের ভেতরে ক্রম নিশ্চিত নয়</strong>, যদি না আপনার জেনারেটর RFC 9562-এর ঐচ্ছিক counter পদ্ধতি ব্যবহার করে। v7-কে “মোটামুটি সময়ের ক্রমে” ধরুন, নিখুঁত sequence হিসেবে নয়।</li>
+        <li><strong>এটি তৈরির সময় ফাঁস করে।</strong> ID দেখলেই যে কেউ পড়তে পারে কখন সেটা তৈরি হয়েছে। ইনভয়েস বা ইউজার প্রোফাইলের URL-এর মতো পাবলিক ID-তে এটা মেনে নেওয়া যায় কি না, ভেবে ঠিক করুন।</li>
+      </ul>
+      <pre><code>// v7 UUID থেকে তৈরির সময় পড়া
+const id = "01a0e105-0e00-7014-8d82-8f82c27a30ca";
+new Date(parseInt(id.replace(/-/g, "").slice(0, 12), 16)).toISOString();
+// "2026-09-27T04:00:00.000Z"</code></pre>
+
+      <h2>বিকল্পগুলো সংক্ষেপে</h2>
+      <ul>
+        <li><strong>Auto-increment integer</strong> — সবচেয়ে ছোট (4 বা 8 বাইট) আর দ্রুত, কিন্তু ডেটাবেসকেই মান দিতে হয়, আর মোট সংখ্যা বোঝা যায়। অনেক ইন্টারনাল টেবিলের জন্য এখনো এটাই সঠিক পছন্দ।</li>
+        <li><strong>ULID</strong> — v7-এর মতোই ধারণা (48-bit মিলিসেকেন্ড সময় + 80টি র‍্যান্ডম bit), লেখা হয় ২৬টি Crockford Base32 অক্ষরে। এটা v7-এর আগের; নতুন কাজে v7-এর সুবিধা হলো এটা native UUID কলাম আর টুলে সরাসরি বসে যায়।</li>
+      </ul>
+
+      <h2>UUID তৈরি করা</h2>
+      <pre><code>// JavaScript: v4 বিল্ট-ইন (secure context-এ ব্রাউজার, Node.js)
+crypto.randomUUID();   // "7a8d7dc8-90c5-429d-9850-667f47584c94"
+
+// RFC 9562-এর লেআউট মেনে হাতে v7
+function uuidv7() {
+  const bytes = crypto.getRandomValues(new Uint8Array(16));
+  let ms = BigInt(Date.now());
+  for (let i = 5; i &gt;= 0; i--) { bytes[i] = Number(ms &amp; 0xffn); ms &gt;&gt;= 8n; }
+  bytes[6] = (bytes[6] &amp; 0x0f) | 0x70;   // version 7
+  bytes[8] = (bytes[8] &amp; 0x3f) | 0x80;   // variant 10
+  const hex = [...bytes].map((b) =&gt; b.toString(16).padStart(2, "0")).join("");
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
+}</code></pre>
+      <p>প্রোডাকশনে বহুল ব্যবহৃত <code>uuid</code> npm প্যাকেজেও <code>v7()</code> আছে।</p>
+      <pre><code>-- PostgreSQL
+SELECT gen_random_uuid();   -- v4, PostgreSQL 13 থেকে বিল্ট-ইন
+SELECT uuidv7();            -- v7, PostgreSQL 18 ও পরের সংস্করণ
+
+CREATE TABLE orders (
+  id uuid PRIMARY KEY DEFAULT uuidv7(),
+  created_at timestamptz NOT NULL DEFAULT now()
+);</code></pre>
+      <pre><code># Python
+import uuid
+uuid.uuid4()   # Python 3-এর সব সংস্করণে
+uuid.uuid7()   # Python 3.14 ও পরের সংস্করণে</code></pre>
+
+      <h2>টেক্সট নয়, ১৬ বাইট হিসেবে রাখুন</h2>
+      <p>টেক্সট রূপটা ৩৬ অক্ষরের; আসল মান ১৬ বাইট। টেক্সট হিসেবে রাখলে কী-এর আকার দ্বিগুণেরও বেশি হয় — সাথে যেসব ইনডেক্স ও foreign key-তে এটা আছে সেগুলোরও — আর স্ট্রিং তুলনা বাইট তুলনার চেয়ে ধীর।</p>
+      <ul>
+        <li><strong>PostgreSQL:</strong> native <code>uuid</code> টাইপ ব্যবহার করুন (১৬ বাইট)।</li>
+        <li><strong>MySQL:</strong> <code>BINARY(16)</code> ব্যবহার করুন, সাথে <code>UUID_TO_BIN()</code> ও <code>BIN_TO_UUID()</code>। v7-এর জন্য “swap” ফ্ল্যাগ দেবেন না — এটা v1-এর জন্য বাইটগুলো সাজিয়ে দেয়, আর v7-এর সময়ভিত্তিক ক্রম ভেঙে ফেলে।</li>
+        <li><strong>JSON ও API:</strong> প্রচলিত ছোট হাতের হাইফেনসহ স্ট্রিংই ঠিক আছে; ডেটাবেসে ঢোকার মুখে রূপান্তর করুন।</li>
+      </ul>
+
+      <div class="try-tool">
+        <span><strong>একসাথে অনেক v4 বা v7 UUID তৈরি করুন।</strong> UUID জেনারেটর যেকোনো version বানায়, কপি বা ডাউনলোড করতে দেয়, আর পেস্ট করা যেকোনো UUID-এর version যাচাই করে।</span>
+        <a class="button" href="/uuid-generator/" data-i18n="guides.tryTool">এখনই চেষ্টা করুন</a>
+      </div>
+
+      <h2>প্রশ্নোত্তর</h2>
+      <details><summary>আমার পুরোনো v4 কী-গুলো কি v7-এ বদলে ফেলা উচিত?</summary><p>সাধারণত না। primary key বদলানো মানে প্রতিটি foreign key নতুন করে লেখা। আজ insert ঠিকঠাক চললে v4 রেখে দিন, নতুন টেবিলে v7 নিন। ইনডেক্সের সমস্যা মেপে নিশ্চিত হলে তবেই মাইগ্রেট করুন।</p></details>
+      <details><summary>v7 কি v4-এর চেয়ে কম নিরাপদ?</summary><p>এতে র‍্যান্ডম bit কম (122-এর বদলে 74), তবু অনুমান করে বের করার পক্ষে তা অনেক বেশি। আসল পার্থক্য হলো পড়া যায় এমন timestamp। কোনো version-ই গোপন মান হিসেবে — যেমন পাসওয়ার্ড রিসেট টোকেন — ব্যবহার করবেন না; সেজন্য আলাদা র‍্যান্ডম টোকেন নিন।</p></details>
+      <details><summary><code>created_at</code> কলামের বদলে কি v7 UUID দিয়ে sort করা যায়?</summary><p>মোটামুটি হ্যাঁ, মিলিসেকেন্ড পর্যন্ত — কিন্তু আলাদা সার্ভারের ঘড়ি একটু এদিক-ওদিক হয়, আর একই মিলিসেকেন্ডের ভেতরের ক্রম র‍্যান্ডম হতে পারে। নিখুঁত ক্রম বা রিপোর্টিং দরকার হলে আসল timestamp কলাম রাখুন।</p></details>
+    </article>
+
+    <section class="more-tools">
+      <h2 data-i18n="guides.related">Related guides</h2>
+      <ul class="guide-grid" data-related-guides></ul>
+    </section>
+  </main>
+
+  <div class="ad-slot ad-bottom" data-ad="bottom" data-i18n-attr="aria-label:ad.label" aria-label="Advertisement">
+    <span data-i18n="ad.placeholder">Ad space</span>
+  </div>
+
+  <section class="content more-tools">
+    <h2 data-i18n="tools.more">More free tools</h2>
+    <ul class="tool-grid" data-more-tools></ul>
+  </section>
+
+  <footer class="site-footer">
+    <span>© <span data-year></span> <span data-i18n="brand">JSON Bondhu</span></span>
+    <a href="/privacy.html" data-i18n="footer.privacy">Privacy policy</a>
+    <a href="https://github.com/MosabberUddin/jsonbondhu/issues" rel="noopener" data-i18n="footer.contact">Contact</a>
+  </footer>
+
+  <script src="/ads.js" defer></script>
+</body>
+</html>
