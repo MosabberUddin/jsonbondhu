@@ -1,0 +1,322 @@
+<!doctype html>
+<html lang="en" data-guide="read-api-json-responses" data-title-key="guide.read-api-json-responses.title" data-desc-key="guide.read-api-json-responses.desc">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>How to read and debug JSON API responses</title>
+  <meta name="description" content="Inspect API responses with the browser, curl and Postman, find the value you need with a JSON path, and spot common API mistakes.">
+  <link rel="canonical" href="https://jsonbondhu.pages.dev/guides/read-api-json-responses/">
+  <link rel="alternate" hreflang="en" href="https://jsonbondhu.pages.dev/guides/read-api-json-responses/?lang=en">
+  <link rel="alternate" hreflang="bn" href="https://jsonbondhu.pages.dev/guides/read-api-json-responses/?lang=bn">
+  <link rel="alternate" hreflang="x-default" href="https://jsonbondhu.pages.dev/guides/read-api-json-responses/">
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="How to read and debug JSON API responses">
+  <meta name="theme-color" content="#0f766e">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230f766e'/%3E%3Ctext x='16' y='22' font-size='15' font-family='monospace' font-weight='700' fill='white' text-anchor='middle'%3E%7B%7D%3C/text%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/i18n.js"></script>
+  <script src="/tools.js"></script>
+  <script src="/guides/guides.js"></script>
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"TechArticle","headline":"How to read and debug JSON API responses","alternativeHeadline":"API-এর JSON রেসপন্স কীভাবে পড়বেন ও ডিবাগ করবেন","inLanguage":["en","bn"],"datePublished":"2026-09-27","dateModified":"2026-09-27","author":{"@type":"Organization","name":"JSON Bondhu"},"publisher":{"@type":"Organization","name":"JSON Bondhu","url":"https://jsonbondhu.pages.dev/"},"mainEntityOfPage":"https://jsonbondhu.pages.dev/guides/read-api-json-responses/"}
+  </script>
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="/">
+      <span class="logo" aria-hidden="true">{ }</span>
+      <span><strong data-i18n="brand">JSON Bondhu</strong></span>
+    </a>
+    <nav class="top-nav">
+      <a href="/" data-i18n="nav.tools">All tools</a>
+      <a href="/guides/" data-i18n="nav.guides">Guides</a>
+      <a href="/#premium" class="pill" data-i18n="nav.premium">Go ad-free</a>
+      <div class="lang-switch" role="group" data-i18n-attr="aria-label:lang.label" aria-label="Language">
+        <button type="button" data-set-lang="en" lang="en" aria-pressed="true">EN</button>
+        <button type="button" data-set-lang="bn" lang="bn" aria-pressed="false">বাংলা</button>
+      </div>
+    </nav>
+  </header>
+
+  <div class="ad-slot ad-top" data-ad="top" data-i18n-attr="aria-label:ad.label" aria-label="Advertisement">
+    <span data-i18n="ad.placeholder">Ad space</span>
+  </div>
+
+  <main class="guide">
+    <p class="breadcrumb"><a href="/guides/" data-i18n="guides.back">← All guides</a></p>
+
+    <article data-lang="en" lang="en">
+      <h1>How to read and debug JSON API responses</h1>
+      <p class="byline" data-guide-updated data-minutes="7"></p>
+
+      <p>The checkout page shows “৳NaN”, the app crashes with “Unexpected token &lt;”, or a list is simply empty. Nine times out of ten the bug is not in your code but in a wrong assumption about what the API actually sent. The fastest way to debug is to stop guessing and look at the raw response: its status code, its headers and its body. This guide shows how to do that with the browser, curl and Postman, how to point at exactly the value you need, and which API habits cause the most trouble.</p>
+
+      <h2>1. Inspect it in the browser’s DevTools</h2>
+      <p>For anything your web page requests, the browser already has the full answer.</p>
+      <ol>
+        <li>Press <kbd>F12</kbd> (or <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>I</kbd>) and open the <strong>Network</strong> tab.</li>
+        <li>Click the <strong>Fetch/XHR</strong> filter so you only see API calls, then reload the page or repeat the action.</li>
+        <li>Click a request. <strong>Headers</strong> shows the URL, method, status code and <code>Content-Type</code>; <strong>Preview</strong> shows the JSON as a collapsible tree; <strong>Response</strong> shows the raw text exactly as received.</li>
+      </ol>
+      <p>Two features save a lot of time. <strong>Preserve log</strong> keeps requests when the page redirects. And right-clicking a request gives <strong>Copy → Copy as cURL</strong>, which reproduces the exact request — headers, cookies and body — in a terminal.</p>
+      <div class="callout warn"><p><strong>Careful when sharing:</strong> a copied cURL command contains your cookies and <code>Authorization</code> token. Remove them before pasting it into a chat or a bug report.</p></div>
+
+      <h2>2. Use curl in the terminal</h2>
+      <p>curl ships with Linux, macOS and current Windows 10/11. The flags you need most:</p>
+      <pre><code># -i: show the status line and response headers above the body
+curl -i https://api.example.com/v1/products?page=1
+
+# -s: silent (no progress bar), so the output can be piped to a formatter
+curl -s https://api.example.com/v1/products | python -m json.tool
+
+# with jq you can also pick out one value
+curl -s https://api.example.com/v1/products | jq '.data.items[0].price'
+
+# send JSON and a token
+curl -s -X POST https://api.example.com/v1/orders \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  --data @order.json</code></pre>
+      <p>On Windows PowerShell 5.1, <code>curl</code> is an alias for <code>Invoke-WebRequest</code>, so type <code>curl.exe</code> to get the real curl. Putting the request body in a file with <code>--data @order.json</code> also avoids painful quote escaping in Windows shells.</p>
+
+      <h2>3. Use Postman (or a similar client)</h2>
+      <p>Postman, Insomnia, Bruno and VS Code REST extensions are handy when you call the same endpoints repeatedly. They show the status, time and size next to the body; the <strong>Pretty</strong> view formats JSON, and the headers are in a separate tab. Save requests in a collection, keep tokens in environment variables rather than in the URL, and paste a cURL command from DevTools to import a request in one step.</p>
+
+      <h2>4. Read the status and Content-Type first</h2>
+      <p>Before you look at the body, check these two things. They tell you whether the body is what you expect at all.</p>
+      <table>
+        <thead><tr><th>Status</th><th>Meaning</th><th>What the body usually is</th></tr></thead>
+        <tbody>
+          <tr><td>200, 201</td><td>Success / created</td><td>The data you asked for</td></tr>
+          <tr><td>204</td><td>Success, no content</td><td>Empty — calling <code>JSON.parse("")</code> throws</td></tr>
+          <tr><td>400, 422</td><td>Your input was rejected</td><td>A JSON error object; read it, it usually names the field</td></tr>
+          <tr><td>401, 403</td><td>Not logged in / not allowed</td><td>JSON error, or an HTML login page</td></tr>
+          <tr><td>404</td><td>Wrong URL or missing record</td><td>Often an HTML page from the web server</td></tr>
+          <tr><td>429</td><td>Too many requests</td><td>Check the <code>Retry-After</code> header</td></tr>
+          <tr><td>500, 502, 503, 504</td><td>Server or gateway failure</td><td>Frequently HTML from a proxy or load balancer</td></tr>
+        </tbody>
+      </table>
+      <p>The <code>Content-Type</code> header should be <code>application/json</code> (possibly with <code>; charset=utf-8</code>). If it is <code>text/html</code>, parsing will fail no matter what. A defensive fetch helper checks both before parsing:</p>
+      <pre><code>async function getJson(url, options = {}) {
+  const res = await fetch(url, { ...options, headers: { Accept: 'application/json', ...options.headers } });
+  const type = res.headers.get('content-type') || '';
+  const text = await res.text();
+  if (!type.includes('application/json')) {
+    throw new Error(`Expected JSON but got ${res.status} ${type}: ${text.slice(0, 120)}`);
+  }
+  const body = text ? JSON.parse(text) : null;
+  if (!res.ok) {
+    throw new Error(`API error ${res.status}: ${JSON.stringify(body)}`);
+  }
+  return body;
+}</code></pre>
+      <p>Reading the body as text first means that when something goes wrong, your error message contains the start of what the server actually sent — usually enough to see the problem immediately.</p>
+
+      <h2>5. Point at the exact value with a JSON path</h2>
+      <p>Large responses are easier to talk about with a path. The common notation starts with <code>$</code> for the root, uses dots for keys and brackets for array positions (starting at 0):</p>
+      <pre><code>{
+  "data": {
+    "items": [
+      { "id": 501, "name": "Rice 5kg", "price": 420 },
+      { "id": 502, "name": "Lentils 1kg", "price": 145 }
+    ]
+  }
+}
+
+$.data.items[0].price      → 420
+$.data.items[1].name       → "Lentils 1kg"</code></pre>
+      <p>The same path works almost unchanged in code: <code>body.data.items[0].price</code> in JavaScript, <code>body["data"]["items"][0]["price"]</code> in Python, or <code>.data.items[0].price</code> in jq. Keys with spaces or hyphens need brackets: <code>$["order-id"]</code>. In JavaScript, optional chaining (<code>body.data?.items?.[0]?.price</code>) avoids a crash when part of the path is missing.</p>
+      <div class="callout"><p><strong>Tip:</strong> in the formatter’s <em>Tree view</em>, click any key and the path bar shows its full path, ready to copy into a bug report or your code.</p></div>
+
+      <h2>6. Recognise envelopes and pagination</h2>
+      <p>Few APIs return a bare list. Most wrap the data in an <strong>envelope</strong> with metadata, and split long lists into pages. Two common shapes:</p>
+      <pre><code>// Page numbers
+{ "data": [ ... ], "meta": { "page": 2, "per_page": 20, "total": 134 } }
+
+// Cursor
+{ "data": [ ... ], "next_cursor": "eyJpZCI6NTIwfQ" }</code></pre>
+      <p>With cursors you keep requesting until the cursor is empty:</p>
+      <pre><code>async function fetchAll(baseUrl) {
+  const all = [];
+  let cursor = null;
+  do {
+    const url = cursor ? `${baseUrl}?cursor=${encodeURIComponent(cursor)}` : baseUrl;
+    const page = await getJson(url);
+    all.push(...page.data);
+    cursor = page.next_cursor;
+  } while (cursor);
+  return all;
+}</code></pre>
+      <p>If a list looks “randomly” short, check for <code>meta.total</code> or a <code>next</code> link — you are probably looking at page one.</p>
+
+      <h2>7. Common API mistakes to watch for</h2>
+      <ul>
+        <li><strong>HTML error pages.</strong> “Unexpected token &lt;” means the body starts with <code>&lt;!DOCTYPE html&gt;</code>. Check the status and URL; a proxy or a login redirect answered instead of the API.</li>
+        <li><strong>Numbers as strings.</strong> If <code>"total": "1250.50"</code> is a string, then <code>total + 50</code> gives <code>"1250.5050"</code> in JavaScript. Convert explicitly, and for money prefer integer poisha/cents or a decimal library.</li>
+        <li><strong>null vs missing.</strong> <code>"discount": null</code> and no <code>discount</code> key at all may mean different things. In JavaScript both read as “nothing” with <code>== null</code>, but <code>"discount" in body</code> tells them apart.</li>
+        <li><strong>Big integers losing precision.</strong> JavaScript numbers are exact only up to <code>9007199254740991</code>. <code>JSON.parse('{"id": 1234567890123456789}')</code> gives <code>1234567890123456800</code> — a different ID. Ask the API to send such IDs as strings (many do, e.g. an <code>id_str</code> field). Python’s <code>json</code> module keeps them exact.</li>
+        <li><strong>Inconsistent date formats.</strong> Epoch seconds, epoch milliseconds, <code>"2026-09-27T10:30:00Z"</code> and <code>"27/09/2026"</code> can appear in the same API. <code>new Date("27/09/2026")</code> is an Invalid Date. Prefer ISO 8601 with a time zone, and check whether a timestamp has 10 digits (seconds) or 13 (milliseconds).</li>
+      </ul>
+
+      <div class="try-tool">
+        <span><strong>Make a messy response readable.</strong> Paste the raw body into the formatter, switch to Tree view and click any value to copy its path.</span>
+        <a class="button" href="/json-formatter/" data-i18n="guides.tryTool">Try it now</a>
+      </div>
+
+      <h2>FAQ</h2>
+      <details><summary>Why do I get a CORS error when the same URL works in curl?</summary><p>CORS is enforced only by browsers. The server must send headers such as <code>Access-Control-Allow-Origin</code> for your site. curl and Postman ignore CORS, so the fix belongs on the server (or a backend proxy), not in your fetch call.</p></details>
+      <details><summary>Preview shows data but my code gets undefined. Why?</summary><p>Usually the path is one level off — the data is inside an envelope such as <code>body.data</code>, or you forgot to <code>await res.json()</code>. Copy the exact path from a tree view and compare.</p></details>
+      <details><summary>How do I handle IDs larger than 2<sup>53</sup> in JavaScript?</summary><p>Best: have the API send them as strings. If you can’t, newer runtimes (including current Node.js and Chrome) pass the original text to a <code>JSON.parse</code> reviver as <code>context.source</code>, which you can turn into a <code>BigInt</code>; check browser support before relying on it.</p></details>
+    </article>
+
+    <article data-lang="bn" lang="bn">
+      <h1>API-এর JSON রেসপন্স কীভাবে পড়বেন ও ডিবাগ করবেন</h1>
+      <p class="byline" data-guide-updated data-minutes="7"></p>
+
+      <p>চেকআউট পেজে দেখাচ্ছে “৳NaN”, অ্যাপ ক্র্যাশ করছে “Unexpected token &lt;” বলে, কিংবা লিস্টটা স্রেফ ফাঁকা। দশবারের মধ্যে নয়বারই বাগটা আপনার কোডে নয় — API আসলে কী পাঠিয়েছে, সে সম্পর্কে একটা ভুল ধারণায়। ডিবাগ করার সবচেয়ে দ্রুত উপায় হলো অনুমান বাদ দিয়ে মূল রেসপন্সটা দেখা: স্ট্যাটাস কোড, হেডার আর বডি। এই গাইডে দেখানো হয়েছে ব্রাউজার, curl আর Postman দিয়ে কীভাবে তা দেখবেন, দরকারি মানটি কীভাবে নির্দিষ্ট করে ধরবেন, আর API-এর কোন অভ্যাসগুলো সবচেয়ে বেশি ঝামেলা বাধায়।</p>
+
+      <h2>১. ব্রাউজারের DevTools-এ দেখুন</h2>
+      <p>আপনার ওয়েবপেজ যা রিকোয়েস্ট করে, তার পুরো উত্তর ব্রাউজারের কাছেই আছে।</p>
+      <ol>
+        <li><kbd>F12</kbd> (বা <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>I</kbd>) চেপে <strong>Network</strong> ট্যাব খুলুন।</li>
+        <li><strong>Fetch/XHR</strong> ফিল্টারে ক্লিক করুন, যাতে শুধু API কলগুলো দেখা যায়; তারপর পেজ রিলোড করুন বা কাজটা আবার করুন।</li>
+        <li>একটি রিকোয়েস্টে ক্লিক করুন। <strong>Headers</strong>-এ থাকে URL, মেথড, স্ট্যাটাস কোড আর <code>Content-Type</code>; <strong>Preview</strong>-এ JSON দেখা যায় ভাঁজ-খোলা যায় এমন ট্রি আকারে; <strong>Response</strong>-এ ঠিক যেমন এসেছে তেমন কাঁচা লেখা।</li>
+      </ol>
+      <p>দুটি ফিচার অনেক সময় বাঁচায়। <strong>Preserve log</strong> চালু রাখলে পেজ রিডাইরেক্ট হলেও রিকোয়েস্টগুলো মুছে যায় না। আর রিকোয়েস্টে রাইট-ক্লিক করে <strong>Copy → Copy as cURL</strong> দিলে হুবহু একই রিকোয়েস্ট — হেডার, কুকি, বডিসহ — টার্মিনালে আবার চালানো যায়।</p>
+      <div class="callout warn"><p><strong>শেয়ার করার সময় সাবধান:</strong> কপি করা cURL কমান্ডে আপনার কুকি আর <code>Authorization</code> টোকেন থাকে। চ্যাটে বা বাগ রিপোর্টে পেস্ট করার আগে সেগুলো মুছে দিন।</p></div>
+
+      <h2>২. টার্মিনালে curl ব্যবহার করুন</h2>
+      <p>Linux, macOS আর বর্তমান Windows 10/11-এ curl আগে থেকেই থাকে। সবচেয়ে বেশি লাগে এই ফ্ল্যাগগুলো:</p>
+      <pre><code># -i: বডির ওপরে স্ট্যাটাস লাইন আর রেসপন্স হেডার দেখায়
+curl -i https://api.example.com/v1/products?page=1
+
+# -s: silent (প্রগ্রেস বার নেই), যাতে আউটপুট ফরম্যাটারে পাইপ করা যায়
+curl -s https://api.example.com/v1/products | python -m json.tool
+
+# jq থাকলে একটি নির্দিষ্ট মানও বের করা যায়
+curl -s https://api.example.com/v1/products | jq '.data.items[0].price'
+
+# JSON আর টোকেন পাঠানো
+curl -s -X POST https://api.example.com/v1/orders \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  --data @order.json</code></pre>
+      <p>Windows PowerShell 5.1-এ <code>curl</code> আসলে <code>Invoke-WebRequest</code>-এর alias, তাই আসল curl পেতে লিখুন <code>curl.exe</code>। রিকোয়েস্ট বডি একটি ফাইলে রেখে <code>--data @order.json</code> দিলে Windows শেলে কোট এসকেপ করার যন্ত্রণাও এড়ানো যায়।</p>
+
+      <h2>৩. Postman (বা এ ধরনের ক্লায়েন্ট) ব্যবহার করুন</h2>
+      <p>একই এন্ডপয়েন্ট বারবার কল করতে হলে Postman, Insomnia, Bruno বা VS Code-এর REST এক্সটেনশন কাজে আসে। এগুলো বডির পাশে স্ট্যাটাস, সময় আর আকার দেখায়; <strong>Pretty</strong> ভিউ JSON সাজিয়ে দেয়, আর হেডার থাকে আলাদা ট্যাবে। রিকোয়েস্টগুলো একটি collection-এ সেভ করুন, টোকেন URL-এ না রেখে environment variable-এ রাখুন, আর DevTools থেকে কপি করা cURL কমান্ড পেস্ট করে এক ধাপেই রিকোয়েস্ট ইমপোর্ট করুন।</p>
+
+      <h2>৪. আগে স্ট্যাটাস আর Content-Type দেখুন</h2>
+      <p>বডি দেখার আগে এই দুটি জিনিস যাচাই করুন। এগুলোই বলে দেয় বডিটা আদৌ আপনার প্রত্যাশামতো কি না।</p>
+      <table>
+        <thead><tr><th>স্ট্যাটাস</th><th>মানে</th><th>বডিতে সাধারণত কী থাকে</th></tr></thead>
+        <tbody>
+          <tr><td>200, 201</td><td>সফল / তৈরি হয়েছে</td><td>যে ডেটা চেয়েছিলেন</td></tr>
+          <tr><td>204</td><td>সফল, কোনো কনটেন্ট নেই</td><td>ফাঁকা — <code>JSON.parse("")</code> এরর দেয়</td></tr>
+          <tr><td>400, 422</td><td>আপনার ইনপুট বাতিল হয়েছে</td><td>একটি JSON এরর অবজেক্ট; পড়ুন, সাধারণত কোন ফিল্ডে সমস্যা তা বলা থাকে</td></tr>
+          <tr><td>401, 403</td><td>লগইন নেই / অনুমতি নেই</td><td>JSON এরর, অথবা HTML লগইন পেজ</td></tr>
+          <tr><td>404</td><td>ভুল URL বা রেকর্ড নেই</td><td>প্রায়ই ওয়েব সার্ভারের একটি HTML পেজ</td></tr>
+          <tr><td>429</td><td>অনেক বেশি রিকোয়েস্ট</td><td><code>Retry-After</code> হেডার দেখুন</td></tr>
+          <tr><td>500, 502, 503, 504</td><td>সার্ভার বা গেটওয়ের সমস্যা</td><td>প্রায়ই প্রক্সি বা লোড ব্যালান্সারের HTML</td></tr>
+        </tbody>
+      </table>
+      <p><code>Content-Type</code> হেডার হওয়া উচিত <code>application/json</code> (সাথে <code>; charset=utf-8</code> থাকতে পারে)। যদি <code>text/html</code> হয়, তাহলে যা-ই করুন পার্সিং ব্যর্থ হবে। একটি সতর্ক fetch হেল্পার পার্স করার আগে দুটোই যাচাই করে:</p>
+      <pre><code>async function getJson(url, options = {}) {
+  const res = await fetch(url, { ...options, headers: { Accept: 'application/json', ...options.headers } });
+  const type = res.headers.get('content-type') || '';
+  const text = await res.text();
+  if (!type.includes('application/json')) {
+    throw new Error(`Expected JSON but got ${res.status} ${type}: ${text.slice(0, 120)}`);
+  }
+  const body = text ? JSON.parse(text) : null;
+  if (!res.ok) {
+    throw new Error(`API error ${res.status}: ${JSON.stringify(body)}`);
+  }
+  return body;
+}</code></pre>
+      <p>বডি আগে টেক্সট হিসেবে পড়ার সুবিধা হলো, কিছু ভুল হলে আপনার এরর মেসেজেই থাকবে সার্ভার আসলে কী পাঠিয়েছিল তার শুরুটা — সমস্যা চিনতে সাধারণত সেটুকুই যথেষ্ট।</p>
+
+      <h2>৫. JSON পাথ দিয়ে ঠিক মানটি নির্দেশ করুন</h2>
+      <p>বড় রেসপন্স নিয়ে কথা বলা সহজ হয় পাথ দিয়ে। প্রচলিত নিয়মে রুটের জন্য <code>$</code>, কী-এর জন্য ডট আর অ্যারের অবস্থানের জন্য ব্র্যাকেট (গোনা শুরু 0 থেকে):</p>
+      <pre><code>{
+  "data": {
+    "items": [
+      { "id": 501, "name": "Rice 5kg", "price": 420 },
+      { "id": 502, "name": "Lentils 1kg", "price": 145 }
+    ]
+  }
+}
+
+$.data.items[0].price      → 420
+$.data.items[1].name       → "Lentils 1kg"</code></pre>
+      <p>একই পাথ কোডেও প্রায় হুবহু চলে: JavaScript-এ <code>body.data.items[0].price</code>, Python-এ <code>body["data"]["items"][0]["price"]</code>, jq-তে <code>.data.items[0].price</code>। কী-তে স্পেস বা হাইফেন থাকলে ব্র্যাকেট লাগবে: <code>$["order-id"]</code>। JavaScript-এ optional chaining (<code>body.data?.items?.[0]?.price</code>) দিলে পাথের কোনো অংশ না থাকলেও ক্র্যাশ হয় না।</p>
+      <div class="callout"><p><strong>টিপ:</strong> ফরম্যাটারের <em>ট্রি ভিউ</em>-তে যেকোনো কী-তে ক্লিক করলে পাথ বারে তার পুরো পাথ দেখায়, যা বাগ রিপোর্ট বা কোডে কপি করার জন্য তৈরি।</p></div>
+
+      <h2>৬. এনভেলপ আর পেজিনেশন চিনে নিন</h2>
+      <p>খুব কম API শুধু একটা খালি লিস্ট ফেরত দেয়। বেশিরভাগই ডেটাকে মেটাডেটাসহ একটি <strong>এনভেলপে</strong> মুড়ে দেয়, আর লম্বা লিস্ট ভাগ করে পেজে পেজে পাঠায়। দুটি প্রচলিত রূপ:</p>
+      <pre><code>// Page numbers
+{ "data": [ ... ], "meta": { "page": 2, "per_page": 20, "total": 134 } }
+
+// Cursor
+{ "data": [ ... ], "next_cursor": "eyJpZCI6NTIwfQ" }</code></pre>
+      <p>কার্সরের ক্ষেত্রে কার্সর ফাঁকা না হওয়া পর্যন্ত রিকোয়েস্ট করতে থাকুন:</p>
+      <pre><code>async function fetchAll(baseUrl) {
+  const all = [];
+  let cursor = null;
+  do {
+    const url = cursor ? `${baseUrl}?cursor=${encodeURIComponent(cursor)}` : baseUrl;
+    const page = await getJson(url);
+    all.push(...page.data);
+    cursor = page.next_cursor;
+  } while (cursor);
+  return all;
+}</code></pre>
+      <p>লিস্ট যদি “কোনো কারণ ছাড়াই” ছোট মনে হয়, <code>meta.total</code> বা একটি <code>next</code> লিংক আছে কি না দেখুন — সম্ভবত আপনি শুধু প্রথম পেজটা দেখছেন।</p>
+
+      <h2>৭. API-এর যেসব সাধারণ ভুলে নজর রাখবেন</h2>
+      <ul>
+        <li><strong>HTML এরর পেজ।</strong> “Unexpected token &lt;” মানে বডি শুরু হয়েছে <code>&lt;!DOCTYPE html&gt;</code> দিয়ে। স্ট্যাটাস আর URL দেখুন; API-এর বদলে কোনো প্রক্সি বা লগইন রিডাইরেক্ট উত্তর দিয়েছে।</li>
+        <li><strong>সংখ্যা যখন স্ট্রিং।</strong> <code>"total": "1250.50"</code> স্ট্রিং হলে JavaScript-এ <code>total + 50</code> দেয় <code>"1250.5050"</code>। স্পষ্টভাবে রূপান্তর করুন, আর টাকার হিসাবে পয়সায় পূর্ণসংখ্যা বা decimal লাইব্রেরি ব্যবহার করাই ভালো।</li>
+        <li><strong>null বনাম অনুপস্থিত।</strong> <code>"discount": null</code> আর <code>discount</code> কী-টাই না থাকা — দুটোর মানে আলাদা হতে পারে। JavaScript-এ <code>== null</code> দিয়ে দুটোই “কিছু নেই” পড়ে, কিন্তু <code>"discount" in body</code> দিয়ে আলাদা করা যায়।</li>
+        <li><strong>বড় পূর্ণসংখ্যার নির্ভুলতা হারানো।</strong> JavaScript-এর সংখ্যা শুধু <code>9007199254740991</code> পর্যন্ত নির্ভুল। <code>JSON.parse('{"id": 1234567890123456789}')</code> দেয় <code>1234567890123456800</code> — অর্থাৎ অন্য একটি আইডি! API-কে বলুন এমন আইডি স্ট্রিং হিসেবে পাঠাতে (অনেকেই পাঠায়, যেমন <code>id_str</code> ফিল্ডে)। Python-এর <code>json</code> মডিউল এগুলো নির্ভুল রাখে।</li>
+        <li><strong>তারিখের এলোমেলো ফরম্যাট।</strong> Epoch সেকেন্ড, epoch মিলিসেকেন্ড, <code>"2026-09-27T10:30:00Z"</code> আর <code>"27/09/2026"</code> — একই API-তে সব দেখা যেতে পারে। <code>new Date("27/09/2026")</code> হয় Invalid Date। টাইম জোনসহ ISO 8601 ব্যবহার করুন, আর টাইমস্ট্যাম্পে ১০ ডিজিট (সেকেন্ড) না ১৩ ডিজিট (মিলিসেকেন্ড), তা মিলিয়ে নিন।</li>
+      </ul>
+
+      <div class="try-tool">
+        <span><strong>এলোমেলো রেসপন্স পড়ার উপযোগী করুন।</strong> কাঁচা বডি ফরম্যাটারে পেস্ট করুন, ট্রি ভিউতে যান আর যেকোনো মানে ক্লিক করে তার পাথ কপি করুন।</span>
+        <a class="button" href="/json-formatter/" data-i18n="guides.tryTool">এখনই চেষ্টা করুন</a>
+      </div>
+
+      <h2>প্রশ্নোত্তর</h2>
+      <details><summary>একই URL curl-এ চলে, কিন্তু ব্রাউজারে CORS এরর দেয় কেন?</summary><p>CORS শুধু ব্রাউজারই প্রয়োগ করে। আপনার সাইটের জন্য সার্ভারকে <code>Access-Control-Allow-Origin</code>-এর মতো হেডার পাঠাতে হবে। curl আর Postman CORS মানে না, তাই সমাধান সার্ভারে (বা একটি ব্যাকএন্ড প্রক্সিতে), আপনার fetch কলে নয়।</p></details>
+      <details><summary>Preview-তে ডেটা দেখায়, কিন্তু কোডে পাই undefined। কেন?</summary><p>সাধারণত পাথ এক ধাপ এদিক-ওদিক — ডেটা আছে <code>body.data</code>-এর মতো কোনো এনভেলপের ভেতরে, অথবা <code>await res.json()</code> করতে ভুলে গেছেন। ট্রি ভিউ থেকে সঠিক পাথ কপি করে মিলিয়ে দেখুন।</p></details>
+      <details><summary>JavaScript-এ 2<sup>53</sup>-এর চেয়ে বড় আইডি কীভাবে সামলাব?</summary><p>সবচেয়ে ভালো: API যেন এগুলো স্ট্রিং হিসেবে পাঠায়। তা সম্ভব না হলে, নতুন রানটাইমগুলো (বর্তমান Node.js ও Chrome-সহ) <code>JSON.parse</code>-এর reviver-কে মূল লেখাটি <code>context.source</code> হিসেবে দেয়, যা থেকে <code>BigInt</code> বানানো যায়; তবে ভরসা করার আগে ব্রাউজার সাপোর্ট দেখে নিন।</p></details>
+    </article>
+
+    <section class="more-tools">
+      <h2 data-i18n="guides.related">Related guides</h2>
+      <ul class="guide-grid" data-related-guides></ul>
+    </section>
+  </main>
+
+  <div class="ad-slot ad-bottom" data-ad="bottom" data-i18n-attr="aria-label:ad.label" aria-label="Advertisement">
+    <span data-i18n="ad.placeholder">Ad space</span>
+  </div>
+
+  <section class="content more-tools">
+    <h2 data-i18n="tools.more">More free tools</h2>
+    <ul class="tool-grid" data-more-tools></ul>
+  </section>
+
+  <footer class="site-footer">
+    <span>© <span data-year></span> <span data-i18n="brand">JSON Bondhu</span></span>
+    <a href="/privacy.html" data-i18n="footer.privacy">Privacy policy</a>
+    <a href="https://github.com/MosabberUddin/jsonbondhu/issues" rel="noopener" data-i18n="footer.contact">Contact</a>
+  </footer>
+
+  <script src="/ads.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,310 @@
+<!doctype html>
+<html lang="en" data-guide="decode-jwt" data-title-key="guide.decode-jwt.title" data-desc-key="guide.decode-jwt.desc">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>How to decode a JWT (and why decoding is not verifying)</title>
+  <meta name="description" content="The three parts of a JSON Web Token, what every standard claim means, how to read expiry times, and how signature verification works.">
+  <link rel="canonical" href="https://jsonbondhu.pages.dev/guides/decode-jwt/">
+  <link rel="alternate" hreflang="en" href="https://jsonbondhu.pages.dev/guides/decode-jwt/?lang=en">
+  <link rel="alternate" hreflang="bn" href="https://jsonbondhu.pages.dev/guides/decode-jwt/?lang=bn">
+  <link rel="alternate" hreflang="x-default" href="https://jsonbondhu.pages.dev/guides/decode-jwt/">
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="How to decode a JWT (and why decoding is not verifying)">
+  <meta name="theme-color" content="#0f766e">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230f766e'/%3E%3Ctext x='16' y='22' font-size='15' font-family='monospace' font-weight='700' fill='white' text-anchor='middle'%3E%7B%7D%3C/text%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/i18n.js"></script>
+  <script src="/tools.js"></script>
+  <script src="/guides/guides.js"></script>
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"TechArticle","headline":"How to decode a JWT (and why decoding is not verifying)","alternativeHeadline":"JWT কীভাবে ডিকোড করবেন (এবং কেন ডিকোড করা মানে যাচাই করা নয়)","inLanguage":["en","bn"],"datePublished":"2026-09-27","dateModified":"2026-09-27","author":{"@type":"Organization","name":"JSON Bondhu"},"publisher":{"@type":"Organization","name":"JSON Bondhu","url":"https://jsonbondhu.pages.dev/"},"mainEntityOfPage":"https://jsonbondhu.pages.dev/guides/decode-jwt/"}
+  </script>
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="/">
+      <span class="logo" aria-hidden="true">{ }</span>
+      <span><strong data-i18n="brand">JSON Bondhu</strong></span>
+    </a>
+    <nav class="top-nav">
+      <a href="/" data-i18n="nav.tools">All tools</a>
+      <a href="/guides/" data-i18n="nav.guides">Guides</a>
+      <a href="/#premium" class="pill" data-i18n="nav.premium">Go ad-free</a>
+      <div class="lang-switch" role="group" data-i18n-attr="aria-label:lang.label" aria-label="Language">
+        <button type="button" data-set-lang="en" lang="en" aria-pressed="true">EN</button>
+        <button type="button" data-set-lang="bn" lang="bn" aria-pressed="false">বাংলা</button>
+      </div>
+    </nav>
+  </header>
+
+  <div class="ad-slot ad-top" data-ad="top" data-i18n-attr="aria-label:ad.label" aria-label="Advertisement">
+    <span data-i18n="ad.placeholder">Ad space</span>
+  </div>
+
+  <main class="guide">
+    <p class="breadcrumb"><a href="/guides/" data-i18n="guides.back">← All guides</a></p>
+
+    <article data-lang="en" lang="en">
+      <h1>How to decode a JWT (and why decoding is not verifying)</h1>
+      <p class="byline" data-guide-updated data-minutes="7"></p>
+
+      <p>A login request fails with <em>401 Unauthorized</em>, and the only clue is a long string starting with <code>eyJ</code> in the <code>Authorization</code> header. That string is a JSON Web Token (JWT), and you can read most of it without any key at all. This guide shows how a JWT is built, how to decode it by hand and in code, how to read its timestamps — and why being able to read a token tells you nothing about whether you should trust it.</p>
+
+      <h2>The structure: header.payload.signature</h2>
+      <p>A JWT is three pieces of text joined by dots. The first two are JSON objects encoded with <strong>Base64url</strong> — the URL-safe flavour of Base64 that uses <code>-</code> and <code>_</code> instead of <code>+</code> and <code>/</code> and drops the <code>=</code> padding. The third piece is the signature, also Base64url, but it is raw bytes, not JSON.</p>
+      <table>
+        <thead><tr><th>Part</th><th>Contains</th><th>Readable?</th></tr></thead>
+        <tbody>
+          <tr><td>Header</td><td>The algorithm (<code>alg</code>), the type (<code>typ</code>), sometimes a key ID (<code>kid</code>)</td><td>Yes — just decode it</td></tr>
+          <tr><td>Payload</td><td>The claims: who the user is, who issued the token, when it expires</td><td>Yes — just decode it</td></tr>
+          <tr><td>Signature</td><td>A MAC or digital signature over <code>header.payload</code></td><td>No — only checkable with the right key</td></tr>
+        </tbody>
+      </table>
+      <p>Why does every JWT start with <code>eyJ</code>? Because the header always begins with <code>{"</code>, and <code>{"</code> in Base64 is <code>eyJ</code>.</p>
+
+      <h2>A worked example</h2>
+      <p>Here is a demo token we generated for this guide. It is signed with the throw-away secret <code>demo-secret-not-for-production</code> and describes a fictional user, so it is safe to paste anywhere.</p>
+      <pre><code>eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwczovL2F1dGguZXhhbXBsZS5jb20iLCJzdWIiOiJ1c2VyXzEwMjQiLCJhdWQiOiJhcGkuZXhhbXBsZS5jb20iLCJuYW1lIjoiRGVtbyBVc2VyIiwicm9sZSI6ImVkaXRvciIsImlhdCI6MTc5MDQ2NzIwMCwiZXhwIjoxNzkwNDcwODAwfQ.wn-vHA442i0OIgh1K406fNWRgxPgNev3VDMf2NZyzxg</code></pre>
+      <p>Split it at the dots and decode the first two parts:</p>
+      <pre><code>// header
+{ "alg": "HS256", "typ": "JWT" }
+
+// payload
+{
+  "iss": "https://auth.example.com",
+  "sub": "user_1024",
+  "aud": "api.example.com",
+  "name": "Demo User",
+  "role": "editor",
+  "iat": 1790467200,
+  "exp": 1790470800
+}</code></pre>
+      <p>The third part, <code>wn-vHA44…</code>, decodes to 32 bytes: the output of HMAC-SHA256. It looks like noise because it is.</p>
+
+      <h2>Registered claims and how to read them</h2>
+      <p>RFC 7519 defines seven short claim names. None is mandatory, but most APIs use several of them:</p>
+      <table>
+        <thead><tr><th>Claim</th><th>Meaning</th><th>In our token</th></tr></thead>
+        <tbody>
+          <tr><td><code>iss</code></td><td>Issuer — who created the token</td><td><code>https://auth.example.com</code></td></tr>
+          <tr><td><code>sub</code></td><td>Subject — usually the user ID</td><td><code>user_1024</code></td></tr>
+          <tr><td><code>aud</code></td><td>Audience — which API should accept it (string or array)</td><td><code>api.example.com</code></td></tr>
+          <tr><td><code>exp</code></td><td>Expiration time</td><td><code>1790470800</code></td></tr>
+          <tr><td><code>nbf</code></td><td>Not before — invalid until this time</td><td>not present</td></tr>
+          <tr><td><code>iat</code></td><td>Issued at</td><td><code>1790467200</code></td></tr>
+          <tr><td><code>jti</code></td><td>JWT ID — a unique ID, useful for blocklists and replay detection</td><td>not present</td></tr>
+        </tbody>
+      </table>
+      <p>Everything else (<code>name</code>, <code>role</code>) is a private claim that the issuer made up.</p>
+      <p>The time claims are <strong>Unix timestamps in seconds</strong> since 1 January 1970 UTC — not milliseconds. JavaScript’s <code>Date</code> works in milliseconds, so multiply by 1000:</p>
+      <pre><code>new Date(1790470800 * 1000).toISOString()
+// '2026-09-27T01:00:00.000Z'  → 7:00 AM in Dhaka (UTC+6)</code></pre>
+      <p>So this token was issued at 00:00 UTC and was valid for exactly one hour (<code>exp − iat = 3600</code>). Validators normally allow a small clock skew of a minute or so.</p>
+      <div class="callout warn"><p><strong>Common bug:</strong> comparing <code>exp</code> with <code>Date.now()</code> directly. <code>Date.now()</code> is in milliseconds, so every token looks expired since 1970. Compare with <code>Date.now() / 1000</code>.</p></div>
+
+      <h2>Decoding in code</h2>
+      <h3>JavaScript (browser or Node)</h3>
+      <pre><code>function decodePart(part) {
+  const b64 = part.replace(/-/g, '+').replace(/_/g, '/');
+  const bytes = Uint8Array.from(atob(b64), (c) =&gt; c.charCodeAt(0));
+  return JSON.parse(new TextDecoder().decode(bytes)); // UTF-8 safe
+}
+const [header, payload] = token.split('.').map(decodePart);
+console.log(payload.exp &lt; Date.now() / 1000); // true = expired</code></pre>
+      <p>The <code>TextDecoder</code> step matters: <code>atob</code> returns one character per byte, so names in Bangla or with accents would come out garbled without it. In Node you can simply write <code>Buffer.from(part, 'base64url')</code>.</p>
+      <h3>Python</h3>
+      <pre><code>import base64, json
+
+def b64url_decode(part):
+    part += "=" * (-len(part) % 4)   # restore the padding
+    return base64.urlsafe_b64decode(part)
+
+header_b64, payload_b64, signature_b64 = token.split(".")
+print(json.loads(b64url_decode(payload_b64)))</code></pre>
+      <h3>Command line</h3>
+      <pre><code>node -e "console.log(JSON.parse(Buffer.from(process.argv[1].split('.')[1], 'base64url')))" "$TOKEN"</code></pre>
+      <p>Plain <code>base64 -d</code> often fails on JWTs because of the missing padding and the <code>-</code>/<code>_</code> characters; convert them first or use a one-liner like the one above.</p>
+
+      <h2>Decoding is not verifying</h2>
+      <p>Everything above needed no secret. That is the point: <strong>anyone can decode a JWT, and anyone can create one</strong>. An attacker can change <code>"role": "editor"</code> to <code>"admin"</code>, re-encode the payload and send it. The only thing that exposes the forgery is the signature, because it no longer matches. A server must verify the signature — and then check <code>exp</code>, <code>nbf</code>, <code>iss</code> and <code>aud</code> — before trusting a single claim.</p>
+      <div class="callout bad"><p><strong>Never</strong> make authorization decisions from a decoded-but-unverified payload on the server. Decoding in the front end to show a name or an expiry countdown is fine; the back end must still verify.</p></div>
+
+      <h2>How verification works: HS256 vs RS256/ES256</h2>
+      <p><strong>HS256</strong> (HMAC with SHA-256) uses one <em>shared secret</em>. The issuer computes <code>HMAC(secret, header + "." + payload)</code>; the verifier recomputes it with the same secret and compares. Simple and fast, but every service that can verify can also mint tokens, so the secret must stay on trusted servers.</p>
+      <pre><code>import { createHmac, timingSafeEqual } from 'node:crypto';
+
+function verifyHS256(token, secret) {
+  const [h, p, s] = token.split('.');
+  const header = JSON.parse(Buffer.from(h, 'base64url'));
+  if (header.alg !== 'HS256') throw new Error('unexpected alg');
+  const expected = createHmac('sha256', secret).update(`${h}.${p}`).digest();
+  const given = Buffer.from(s, 'base64url');
+  if (given.length !== expected.length || !timingSafeEqual(given, expected)) {
+    throw new Error('bad signature');
+  }
+  return JSON.parse(Buffer.from(p, 'base64url'));
+}</code></pre>
+      <p>That sketch shows the mechanism only — it still skips the <code>exp</code>/<code>aud</code>/<code>iss</code> checks. In production use a maintained library such as <code>jose</code> (JavaScript) or <code>PyJWT</code> (Python) and pass the allowed algorithms explicitly.</p>
+      <p><strong>RS256</strong> (RSA) and <strong>ES256</strong> (ECDSA on the P-256 curve) are asymmetric. The issuer signs with a <em>private key</em> it never shares; anyone verifies with the matching <em>public key</em>. Identity providers publish their public keys as a <strong>JWKS</strong> (JSON Web Key Set), usually at a URL such as <code>/.well-known/jwks.json</code>. The token’s <code>kid</code> header says which key in the set to use, which lets the provider rotate keys without breaking clients. Use asymmetric algorithms whenever the verifier is a different party from the issuer.</p>
+      <p>What about <strong>JWE</strong>? A signed JWT (JWS) is readable by anyone; a JSON Web Encryption token actually encrypts the payload. You can recognise one because it has <em>five</em> dot-separated parts instead of three, and the payload cannot be decoded without the key.</p>
+
+      <div class="try-tool">
+        <span><strong>Decode and verify in one place.</strong> The JWT Decoder shows the header and claims, turns <code>exp</code> into a readable date and checks HS, RS, PS and ES signatures right in your browser — the token never leaves your device.</span>
+        <a class="button" href="/jwt-decoder/" data-i18n="guides.tryTool">Try it now</a>
+      </div>
+
+      <p>Next, read <a href="/guides/jwt-security-mistakes/">8 JWT security mistakes developers still make</a> to see what goes wrong when verification is done carelessly.</p>
+
+      <h2>FAQ</h2>
+      <details><summary>Can I decode a JWT without the secret key?</summary><p>Yes. The header and payload are only Base64url-encoded, not encrypted. The key is needed to <em>verify</em> the signature (or to create a new valid token), not to read the claims.</p></details>
+      <details><summary>Why does my decoder say the token is expired when it just arrived?</summary><p>Check the units first: <code>exp</code> is in seconds. Then check the server and client clocks — a machine that is a few minutes off will reject fresh tokens. Most libraries accept a small leeway setting for this.</p></details>
+      <details><summary>Is it safe to paste a real token into an online decoder?</summary><p>Only if decoding happens locally. A valid access token is a password for as long as it lives. JSON Bondhu decodes and verifies in your browser, but for production tokens the safest habit is to use a demo token or wait until it expires.</p></details>
+      <details><summary>What is the difference between <code>sub</code> and <code>jti</code>?</summary><p><code>sub</code> identifies the user (the same for every token that user gets); <code>jti</code> identifies this one token, so a server can revoke it or detect it being replayed.</p></details>
+    </article>
+
+    <article data-lang="bn" lang="bn">
+      <h1>JWT কীভাবে ডিকোড করবেন (এবং কেন ডিকোড করা মানে যাচাই করা নয়)</h1>
+      <p class="byline" data-guide-updated data-minutes="7"></p>
+
+      <p>লগইন রিকোয়েস্ট <em>401 Unauthorized</em> দিয়ে ফেল করছে, আর হাতে একমাত্র সূত্র হলো <code>Authorization</code> হেডারে <code>eyJ</code> দিয়ে শুরু হওয়া একটা লম্বা স্ট্রিং। এটাই JSON Web Token (JWT), আর এর বেশিরভাগ অংশ কোনো কী ছাড়াই পড়া যায়। এই গাইডে দেখবেন JWT কীভাবে গঠিত, হাতে ও কোডে কীভাবে ডিকোড করবেন, টাইমস্ট্যাম্প কীভাবে পড়বেন — আর কেন টোকেন পড়তে পারা মানেই তাকে বিশ্বাস করা যায় না।</p>
+
+      <h2>গঠন: header.payload.signature</h2>
+      <p>JWT হলো ডট দিয়ে জোড়া তিন টুকরো লেখা। প্রথম দুটি JSON অবজেক্ট, যা <strong>Base64url</strong> দিয়ে এনকোড করা — Base64-এর URL-safe সংস্করণ, যেখানে <code>+</code> ও <code>/</code>-এর বদলে <code>-</code> ও <code>_</code> থাকে, আর শেষের <code>=</code> প্যাডিং বাদ দেওয়া হয়। তৃতীয় টুকরোটি সিগনেচার; এটাও Base64url, তবে ভেতরে JSON নয়, কাঁচা বাইট।</p>
+      <table>
+        <thead><tr><th>অংশ</th><th>কী থাকে</th><th>পড়া যায়?</th></tr></thead>
+        <tbody>
+          <tr><td>Header</td><td>অ্যালগরিদম (<code>alg</code>), টাইপ (<code>typ</code>), কখনো কী-এর আইডি (<code>kid</code>)</td><td>হ্যাঁ — শুধু ডিকোড করলেই হয়</td></tr>
+          <tr><td>Payload</td><td>ক্লেইমগুলো: ইউজার কে, টোকেন কে দিয়েছে, মেয়াদ কখন শেষ</td><td>হ্যাঁ — শুধু ডিকোড করলেই হয়</td></tr>
+          <tr><td>Signature</td><td><code>header.payload</code>-এর ওপর MAC বা ডিজিটাল সিগনেচার</td><td>না — সঠিক কী দিয়েই কেবল যাচাই করা যায়</td></tr>
+        </tbody>
+      </table>
+      <p>সব JWT কেন <code>eyJ</code> দিয়ে শুরু হয়? কারণ হেডার সবসময় <code>{"</code> দিয়ে শুরু, আর Base64-এ <code>{"</code> হয় <code>eyJ</code>।</p>
+
+      <h2>একটি হাতে-কলমে উদাহরণ</h2>
+      <p>এই গাইডের জন্য আমরা একটি ডেমো টোকেন বানিয়েছি। এটি ফেলে দেওয়ার মতো সিক্রেট <code>demo-secret-not-for-production</code> দিয়ে সাইন করা এবং একজন কাল্পনিক ইউজারের তথ্য বহন করে, তাই যেকোনো জায়গায় পেস্ট করা নিরাপদ।</p>
+      <pre><code>eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwczovL2F1dGguZXhhbXBsZS5jb20iLCJzdWIiOiJ1c2VyXzEwMjQiLCJhdWQiOiJhcGkuZXhhbXBsZS5jb20iLCJuYW1lIjoiRGVtbyBVc2VyIiwicm9sZSI6ImVkaXRvciIsImlhdCI6MTc5MDQ2NzIwMCwiZXhwIjoxNzkwNDcwODAwfQ.wn-vHA442i0OIgh1K406fNWRgxPgNev3VDMf2NZyzxg</code></pre>
+      <p>ডট ধরে ভাগ করুন, তারপর প্রথম দুটি অংশ ডিকোড করুন:</p>
+      <pre><code>// header
+{ "alg": "HS256", "typ": "JWT" }
+
+// payload
+{
+  "iss": "https://auth.example.com",
+  "sub": "user_1024",
+  "aud": "api.example.com",
+  "name": "Demo User",
+  "role": "editor",
+  "iat": 1790467200,
+  "exp": 1790470800
+}</code></pre>
+      <p>তৃতীয় অংশ <code>wn-vHA44…</code> ডিকোড করলে পাওয়া যায় ৩২ বাইট: HMAC-SHA256-এর আউটপুট। দেখতে এলোমেলো লাগে, কারণ এটা আসলেই এলোমেলো দেখানোর জন্যই তৈরি।</p>
+
+      <h2>রেজিস্টার্ড ক্লেইম ও সেগুলো পড়ার নিয়ম</h2>
+      <p>RFC 7519 সাতটি ছোট নামের ক্লেইম ঠিক করে দিয়েছে। কোনোটিই বাধ্যতামূলক নয়, তবে বেশিরভাগ API এর কয়েকটি ব্যবহার করে:</p>
+      <table>
+        <thead><tr><th>ক্লেইম</th><th>মানে</th><th>আমাদের টোকেনে</th></tr></thead>
+        <tbody>
+          <tr><td><code>iss</code></td><td>Issuer — টোকেনটি কে বানিয়েছে</td><td><code>https://auth.example.com</code></td></tr>
+          <tr><td><code>sub</code></td><td>Subject — সাধারণত ইউজারের আইডি</td><td><code>user_1024</code></td></tr>
+          <tr><td><code>aud</code></td><td>Audience — কোন API এটি গ্রহণ করবে (স্ট্রিং বা অ্যারে)</td><td><code>api.example.com</code></td></tr>
+          <tr><td><code>exp</code></td><td>মেয়াদ শেষের সময়</td><td><code>1790470800</code></td></tr>
+          <tr><td><code>nbf</code></td><td>Not before — এই সময়ের আগে অবৈধ</td><td>নেই</td></tr>
+          <tr><td><code>iat</code></td><td>Issued at — কখন ইস্যু হয়েছে</td><td><code>1790467200</code></td></tr>
+          <tr><td><code>jti</code></td><td>JWT ID — টোকেনের অনন্য আইডি, ব্লকলিস্ট ও রিপ্লে ধরার কাজে লাগে</td><td>নেই</td></tr>
+        </tbody>
+      </table>
+      <p>বাকিগুলো (<code>name</code>, <code>role</code>) প্রাইভেট ক্লেইম — ইস্যুকারী নিজের মতো করে বানিয়েছে।</p>
+      <p>সময়ের ক্লেইমগুলো হলো ১ জানুয়ারি ১৯৭০ UTC থেকে গোনা <strong>সেকেন্ডে ইউনিক্স টাইমস্ট্যাম্প</strong> — মিলিসেকেন্ড নয়। JavaScript-এর <code>Date</code> মিলিসেকেন্ডে কাজ করে, তাই ১০০০ দিয়ে গুণ করুন:</p>
+      <pre><code>new Date(1790470800 * 1000).toISOString()
+// '2026-09-27T01:00:00.000Z'  → ঢাকায় সকাল ৭টা (UTC+6)</code></pre>
+      <p>অর্থাৎ টোকেনটি UTC রাত ১২টায় ইস্যু হয়েছে এবং ঠিক এক ঘণ্টা বৈধ ছিল (<code>exp − iat = 3600</code>)। ভ্যালিডেটররা সাধারণত ঘড়ির অমিলের জন্য এক মিনিটের মতো ছাড় দেয়।</p>
+      <div class="callout warn"><p><strong>পরিচিত বাগ:</strong> <code>exp</code>-কে সরাসরি <code>Date.now()</code>-এর সাথে তুলনা করা। <code>Date.now()</code> মিলিসেকেন্ডে, ফলে সব টোকেনই মনে হবে মেয়াদোত্তীর্ণ। তুলনা করুন <code>Date.now() / 1000</code>-এর সাথে।</p></div>
+
+      <h2>কোডে ডিকোড করা</h2>
+      <h3>JavaScript (ব্রাউজার বা Node)</h3>
+      <pre><code>function decodePart(part) {
+  const b64 = part.replace(/-/g, '+').replace(/_/g, '/');
+  const bytes = Uint8Array.from(atob(b64), (c) =&gt; c.charCodeAt(0));
+  return JSON.parse(new TextDecoder().decode(bytes)); // UTF-8 ঠিক থাকে
+}
+const [header, payload] = token.split('.').map(decodePart);
+console.log(payload.exp &lt; Date.now() / 1000); // true = মেয়াদ শেষ</code></pre>
+      <p><code>TextDecoder</code>-এর ধাপটা জরুরি: <code>atob</code> প্রতিটি বাইটকে একটা করে অক্ষর হিসেবে ফেরত দেয়, তাই এটা ছাড়া বাংলা নাম বা অ্যাকসেন্টওয়ালা অক্ষর ভেঙে যাবে। Node-এ সহজভাবে <code>Buffer.from(part, 'base64url')</code> লিখলেই চলে।</p>
+      <h3>Python</h3>
+      <pre><code>import base64, json
+
+def b64url_decode(part):
+    part += "=" * (-len(part) % 4)   # প্যাডিং ফিরিয়ে আনা
+    return base64.urlsafe_b64decode(part)
+
+header_b64, payload_b64, signature_b64 = token.split(".")
+print(json.loads(b64url_decode(payload_b64)))</code></pre>
+      <h3>কমান্ড লাইন</h3>
+      <pre><code>node -e "console.log(JSON.parse(Buffer.from(process.argv[1].split('.')[1], 'base64url')))" "$TOKEN"</code></pre>
+      <p>সাধারণ <code>base64 -d</code> দিয়ে JWT ডিকোড করতে গেলে প্রায়ই এরর আসে — প্যাডিং নেই, আর <code>-</code>/<code>_</code> অক্ষর আছে। আগে এগুলো বদলে নিন, অথবা ওপরের মতো এক লাইনের কমান্ড ব্যবহার করুন।</p>
+
+      <h2>ডিকোড করা মানে যাচাই করা নয়</h2>
+      <p>ওপরের কোনো কাজেই সিক্রেট লাগেনি। আসল কথা এটাই: <strong>যে কেউ JWT ডিকোড করতে পারে, আবার যে কেউ JWT বানাতেও পারে</strong>। একজন অ্যাটাকার <code>"role": "editor"</code> বদলে <code>"admin"</code> করে পেলোড আবার এনকোড করে পাঠিয়ে দিতে পারে। এই জালিয়াতি ধরার একমাত্র উপায় সিগনেচার, কারণ তখন সেটা আর মিলবে না। কোনো ক্লেইম বিশ্বাস করার আগে সার্ভারকে অবশ্যই সিগনেচার যাচাই করতে হবে — তারপর <code>exp</code>, <code>nbf</code>, <code>iss</code> ও <code>aud</code> চেক করতে হবে।</p>
+      <div class="callout bad"><p>সার্ভারে ডিকোড করা কিন্তু যাচাই না করা পেলোড দেখে <strong>কখনোই</strong> অনুমতির সিদ্ধান্ত নেবেন না। ফ্রন্টএন্ডে নাম দেখানো বা মেয়াদের কাউন্টডাউনের জন্য ডিকোড করা ঠিক আছে; কিন্তু ব্যাকএন্ডকে যাচাই করতেই হবে।</p></div>
+
+      <h2>যাচাই কীভাবে কাজ করে: HS256 বনাম RS256/ES256</h2>
+      <p><strong>HS256</strong> (SHA-256 সহ HMAC) একটি <em>শেয়ার্ড সিক্রেট</em> ব্যবহার করে। ইস্যুকারী হিসাব করে <code>HMAC(secret, header + "." + payload)</code>; যাচাইকারী একই সিক্রেট দিয়ে আবার হিসাব করে মিলিয়ে দেখে। সহজ ও দ্রুত, কিন্তু যে সার্ভিস যাচাই করতে পারে সে নতুন টোকেনও বানাতে পারে — তাই সিক্রেট শুধু বিশ্বস্ত সার্ভারেই থাকা উচিত।</p>
+      <pre><code>import { createHmac, timingSafeEqual } from 'node:crypto';
+
+function verifyHS256(token, secret) {
+  const [h, p, s] = token.split('.');
+  const header = JSON.parse(Buffer.from(h, 'base64url'));
+  if (header.alg !== 'HS256') throw new Error('unexpected alg');
+  const expected = createHmac('sha256', secret).update(`${h}.${p}`).digest();
+  const given = Buffer.from(s, 'base64url');
+  if (given.length !== expected.length || !timingSafeEqual(given, expected)) {
+    throw new Error('bad signature');
+  }
+  return JSON.parse(Buffer.from(p, 'base64url'));
+}</code></pre>
+      <p>এই স্কেচটা শুধু পদ্ধতিটা বোঝানোর জন্য — এতে এখনো <code>exp</code>/<code>aud</code>/<code>iss</code> চেক নেই। প্রোডাকশনে <code>jose</code> (JavaScript) বা <code>PyJWT</code> (Python)-এর মতো নিয়মিত রক্ষণাবেক্ষণ হওয়া লাইব্রেরি ব্যবহার করুন, আর অনুমোদিত অ্যালগরিদম স্পষ্ট করে বলে দিন।</p>
+      <p><strong>RS256</strong> (RSA) ও <strong>ES256</strong> (P-256 কার্ভে ECDSA) অ্যাসিমেট্রিক। ইস্যুকারী একটি <em>প্রাইভেট কী</em> দিয়ে সাইন করে, যা সে কাউকে দেয় না; আর যে কেউ মিলে যাওয়া <em>পাবলিক কী</em> দিয়ে যাচাই করতে পারে। আইডেন্টিটি প্রোভাইডাররা তাদের পাবলিক কী <strong>JWKS</strong> (JSON Web Key Set) হিসেবে প্রকাশ করে, সাধারণত <code>/.well-known/jwks.json</code>-এর মতো কোনো URL-এ। টোকেনের <code>kid</code> হেডার বলে দেয় সেটের কোন কী দিয়ে যাচাই করতে হবে — এতে প্রোভাইডার ক্লায়েন্ট না ভেঙেই কী বদলাতে (rotate) পারে। যাচাইকারী আর ইস্যুকারী আলাদা পক্ষ হলে অ্যাসিমেট্রিক অ্যালগরিদমই ব্যবহার করুন।</p>
+      <p>আর <strong>JWE</strong>? সাইন করা JWT (JWS) যে কেউ পড়তে পারে; JSON Web Encryption টোকেন আসলেই পেলোড এনক্রিপ্ট করে। চেনার উপায়: এতে ডট দিয়ে ভাগ করা তিনটির বদলে <em>পাঁচটি</em> অংশ থাকে, আর কী ছাড়া পেলোড ডিকোড করা যায় না।</p>
+
+      <div class="try-tool">
+        <span><strong>এক জায়গায় ডিকোড ও যাচাই।</strong> JWT ডিকোডার হেডার ও ক্লেইম দেখায়, <code>exp</code>-কে পড়ার মতো তারিখে বদলে দেয় এবং HS, RS, PS ও ES সিগনেচার আপনার ব্রাউজারেই যাচাই করে — টোকেন আপনার ডিভাইসের বাইরে যায় না।</span>
+        <a class="button" href="/jwt-decoder/" data-i18n="guides.tryTool">এখনই চেষ্টা করুন</a>
+      </div>
+
+      <p>এরপর পড়ুন <a href="/guides/jwt-security-mistakes/">JWT নিয়ে ৮টি নিরাপত্তা-ভুল</a> — অসাবধানে যাচাই করলে কী কী ভুল হয় তা জানতে।</p>
+
+      <h2>প্রশ্নোত্তর</h2>
+      <details><summary>সিক্রেট কী ছাড়া কি JWT ডিকোড করা যায়?</summary><p>হ্যাঁ। হেডার ও পেলোড শুধু Base64url-এ এনকোড করা, এনক্রিপ্ট করা নয়। কী লাগে সিগনেচার <em>যাচাই</em> করতে (বা নতুন বৈধ টোকেন বানাতে), ক্লেইম পড়তে নয়।</p></details>
+      <details><summary>টোকেন এইমাত্র এলো, তবু ডিকোডার বলছে মেয়াদ শেষ — কেন?</summary><p>আগে এককটা দেখুন: <code>exp</code> সেকেন্ডে। তারপর সার্ভার আর ক্লায়েন্টের ঘড়ি মিলিয়ে দেখুন — কয়েক মিনিট আগে-পিছে চলা মেশিন নতুন টোকেনও বাতিল করে দেয়। বেশিরভাগ লাইব্রেরিতে এর জন্য ছোট একটা leeway সেটিং থাকে।</p></details>
+      <details><summary>আসল টোকেন কি অনলাইন ডিকোডারে পেস্ট করা নিরাপদ?</summary><p>কেবল তখনই, যদি ডিকোডিং আপনার ডিভাইসেই হয়। বৈধ access token যতক্ষণ বেঁচে থাকে, ততক্ষণ সেটা পাসওয়ার্ডের মতোই। JSON বন্ধু ব্রাউজারেই ডিকোড ও যাচাই করে, তবু প্রোডাকশন টোকেনের জন্য সবচেয়ে নিরাপদ অভ্যাস হলো ডেমো টোকেন ব্যবহার করা বা মেয়াদ শেষ হওয়া পর্যন্ত অপেক্ষা করা।</p></details>
+      <details><summary><code>sub</code> আর <code>jti</code>-এর পার্থক্য কী?</summary><p><code>sub</code> ইউজারকে চিহ্নিত করে (ওই ইউজারের সব টোকেনে একই থাকে); <code>jti</code> চিহ্নিত করে নির্দিষ্ট এই টোকেনটিকে, যাতে সার্ভার সেটা বাতিল করতে বা আবার ব্যবহার হচ্ছে কি না ধরতে পারে।</p></details>
+    </article>
+
+    <section class="more-tools">
+      <h2 data-i18n="guides.related">Related guides</h2>
+      <ul class="guide-grid" data-related-guides></ul>
+    </section>
+  </main>
+
+  <div class="ad-slot ad-bottom" data-ad="bottom" data-i18n-attr="aria-label:ad.label" aria-label="Advertisement">
+    <span data-i18n="ad.placeholder">Ad space</span>
+  </div>
+
+  <section class="content more-tools">
+    <h2 data-i18n="tools.more">More free tools</h2>
+    <ul class="tool-grid" data-more-tools></ul>
+  </section>
+
+  <footer class="site-footer">
+    <span>© <span data-year></span> <span data-i18n="brand">JSON Bondhu</span></span>
+    <a href="/privacy.html" data-i18n="footer.privacy">Privacy policy</a>
+    <a href="https://github.com/MosabberUddin/jsonbondhu/issues" rel="noopener" data-i18n="footer.contact">Contact</a>
+  </footer>
+
+  <script src="/ads.js" defer></script>
+</body>
+</html>

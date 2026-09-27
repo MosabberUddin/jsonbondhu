@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en" data-guide="fix-json-errors" data-title-key="guide.fix-json-errors.title" data-desc-key="guide.fix-json-errors.desc">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>How to fix common JSON errors (Unexpected token, trailing commas and more)</title>
+  <meta name="description" content="What each JSON error message really means, how to find the exact line, and how to fix the ten mistakes that cause almost all of them.">
+  <link rel="canonical" href="https://jsonbondhu.pages.dev/guides/fix-json-errors/">
+  <link rel="alternate" hreflang="en" href="https://jsonbondhu.pages.dev/guides/fix-json-errors/?lang=en">
+  <link rel="alternate" hreflang="bn" href="https://jsonbondhu.pages.dev/guides/fix-json-errors/?lang=bn">
+  <link rel="alternate" hreflang="x-default" href="https://jsonbondhu.pages.dev/guides/fix-json-errors/">
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="How to fix common JSON errors">
+  <meta name="theme-color" content="#0f766e">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230f766e'/%3E%3Ctext x='16' y='22' font-size='15' font-family='monospace' font-weight='700' fill='white' text-anchor='middle'%3E%7B%7D%3C/text%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/i18n.js"></script>
+  <script src="/tools.js"></script>
+  <script src="/guides/guides.js"></script>
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"TechArticle","headline":"How to fix common JSON errors (Unexpected token, trailing commas and more)","alternativeHeadline":"JSON-এর সাধারণ ভুল কীভাবে ঠিক করবেন","inLanguage":["en","bn"],"datePublished":"2026-09-27","dateModified":"2026-09-27","author":{"@type":"Organization","name":"JSON Bondhu"},"publisher":{"@type":"Organization","name":"JSON Bondhu","url":"https://jsonbondhu.pages.dev/"},"mainEntityOfPage":"https://jsonbondhu.pages.dev/guides/fix-json-errors/"}
+  </script>
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="/">
+      <span class="logo" aria-hidden="true">{ }</span>
+      <span><strong data-i18n="brand">JSON Bondhu</strong></span>
+    </a>
+    <nav class="top-nav">
+      <a href="/" data-i18n="nav.tools">All tools</a>
+      <a href="/guides/" data-i18n="nav.guides">Guides</a>
+      <a href="/#premium" class="pill" data-i18n="nav.premium">Go ad-free</a>
+      <div class="lang-switch" role="group" data-i18n-attr="aria-label:lang.label" aria-label="Language">
+        <button type="button" data-set-lang="en" lang="en" aria-pressed="true">EN</button>
+        <button type="button" data-set-lang="bn" lang="bn" aria-pressed="false">বাংলা</button>
+      </div>
+    </nav>
+  </header>
+
+  <div class="ad-slot ad-top" data-ad="top" data-i18n-attr="aria-label:ad.label" aria-label="Advertisement">
+    <span data-i18n="ad.placeholder">Ad space</span>
+  </div>
+
+  <main class="guide">
+    <p class="breadcrumb"><a href="/guides/" data-i18n="guides.back">← All guides</a></p>
+
+    <article data-lang="en" lang="en">
+      <h1>How to fix common JSON errors</h1>
+      <p class="byline" data-guide-updated data-minutes="7"></p>
+
+      <p>You paste a response into your code, call <code>JSON.parse()</code>, and get <em>“Unexpected token”</em>. JSON is strict: one stray comma or the wrong kind of quote makes the whole document invalid. The good news is that almost every JSON error comes from the same ten mistakes, and the error message tells you exactly where to look — once you know how to read it.</p>
+
+      <h2>Step 1: read the error message properly</h2>
+      <p>Every parser reports <strong>where</strong> it gave up. The wording differs by language, but the information is the same:</p>
+      <table>
+        <thead><tr><th>Where</th><th>Typical message</th></tr></thead>
+        <tbody>
+          <tr><td>Chrome / Node.js</td><td><code>Expected double-quoted property name in JSON at position 7 (line 1 column 8)</code></td></tr>
+          <tr><td>Firefox</td><td><code>JSON.parse: expected property name or '}' at line 1 column 8</code></td></tr>
+          <tr><td>Python</td><td><code>JSONDecodeError: Expecting property name enclosed in double quotes: line 1 column 8 (char 7)</code></td></tr>
+        </tbody>
+      </table>
+      <p>The <strong>position</strong> counts characters from the start of the text (starting at 0); the <strong>line and column</strong> are easier for humans. The real mistake is usually <em>at or just before</em> that spot — the parser only notices a problem when the next character doesn’t fit.</p>
+      <div class="callout"><p><strong>Tip:</strong> paste your JSON into the <a href="/json-formatter/">JSON Formatter</a> and press <em>Validate</em>. It shows the line and column and moves your cursor straight to the problem.</p></div>
+
+      <h2>Step 2: check the ten usual suspects</h2>
+      <h3>1. Trailing commas</h3>
+      <p>JavaScript allows a comma after the last item; JSON does not.</p>
+      <pre><code>{ "name": "Rahim", "age": 28, }   ✗
+{ "name": "Rahim", "age": 28 }    ✓</code></pre>
+      <h3>2. Single quotes</h3>
+      <p>Strings and keys must use double quotes <code>"</code>. <code>'Dhaka'</code> is invalid.</p>
+      <h3>3. Keys without quotes</h3>
+      <p><code>{ name: "Rahim" }</code> is a valid JavaScript object but invalid JSON. Every key needs double quotes: <code>{ "name": "Rahim" }</code>.</p>
+      <h3>4. Comments</h3>
+      <p>JSON has no comments — neither <code>// …</code> nor <code>/* … */</code>. If you need notes in a config file, use a field such as <code>"_comment"</code>, or a format that supports comments (JSONC, YAML).</p>
+      <h3>5. A missing comma between items</h3>
+      <pre><code>{ "city": "Dhaka" "zip": "1216" }   ✗  (comma missing after "Dhaka")</code></pre>
+      <h3>6. Mismatched brackets</h3>
+      <p>Every <code>{</code> needs a <code>}</code> and every <code>[</code> needs a <code>]</code>, in the right order. “Unexpected end of JSON input” almost always means something was never closed — often because the text was cut off (a truncated log line or a half-copied response).</p>
+      <h3>7. Unescaped characters inside strings</h3>
+      <p>A double quote inside a string must be written <code>\"</code>, a backslash as <code>\\</code>, and a real line break as <code>\n</code>. Windows paths are a classic trap: <code>"C:\Users\rahim"</code> is invalid; write <code>"C:\\Users\\rahim"</code>.</p>
+      <h3>8. JavaScript values that JSON doesn’t have</h3>
+      <p><code>undefined</code>, <code>NaN</code>, <code>Infinity</code>, functions and dates are not JSON. Use <code>null</code> for missing values and ISO strings such as <code>"2026-09-27T10:00:00Z"</code> for dates.</p>
+      <h3>9. Python’s True, False and None</h3>
+      <p>If you copied a Python <code>print()</code> of a dict, you’ll see <code>True</code>, <code>False</code>, <code>None</code> and single quotes. JSON needs <code>true</code>, <code>false</code>, <code>null</code> and double quotes. In Python, use <code>json.dumps(data)</code> instead of <code>print(data)</code>.</p>
+      <h3>10. Invisible characters</h3>
+      <p>“Smart” quotes (<code>“ ”</code>) from Word or chat apps, a byte-order mark at the start of a file, or a non-breaking space can all break parsing while looking perfectly normal. If the error points at a character you can’t see, retype the quotes around that spot.</p>
+
+      <div class="try-tool">
+        <span><strong>Fix most of these in one click.</strong> The JSON Formatter’s “Fix errors” button repairs comments, trailing commas, single quotes, unquoted keys and Python’s True/False/None.</span>
+        <a class="button" href="/json-formatter/" data-i18n="guides.tryTool">Try it now</a>
+      </div>
+
+      <h2>Step 3: prevent it next time</h2>
+      <ul>
+        <li><strong>Never build JSON by gluing strings together.</strong> Use <code>JSON.stringify()</code> in JavaScript, <code>json.dumps()</code> in Python or your language’s JSON library — they handle quotes and escaping for you.</li>
+        <li><strong>Check the response before parsing it.</strong> Many “Unexpected token &lt;” errors are an HTML error page (starting with <code>&lt;!doctype html&gt;</code>) returned instead of JSON. Log the raw text and the HTTP status first.</li>
+        <li><strong>Validate in your editor.</strong> VS Code and most IDEs highlight JSON errors as you type in <code>.json</code> files.</li>
+      </ul>
+
+      <h2>FAQ</h2>
+      <details><summary>What does “Unexpected token &lt; in JSON at position 0” mean?</summary><p>The text you parsed starts with <code>&lt;</code> — it is HTML, not JSON. Usually the server returned an error page (404, 500) or a login page. Check the URL and the HTTP status code.</p></details>
+      <details><summary>Are duplicate keys an error?</summary><p>Most parsers accept them and silently keep the <em>last</em> value, which hides bugs. The JSON standard says keys <em>should</em> be unique, so treat duplicates as a mistake.</p></details>
+      <details><summary>Is my data safe in the online formatter?</summary><p>Yes. JSON Bondhu processes everything in your browser; nothing you paste is uploaded.</p></details>
+    </article>
+
+    <article data-lang="bn" lang="bn">
+      <h1>JSON-এর সাধারণ ভুল কীভাবে ঠিক করবেন</h1>
+      <p class="byline" data-guide-updated data-minutes="7"></p>
+
+      <p>কোনো রেসপন্স কোডে বসালেন, <code>JSON.parse()</code> চালালেন, আর পেলেন <em>“Unexpected token”</em>। JSON খুব কড়া নিয়মের: একটা বাড়তি কমা বা ভুল ধরনের কোট থাকলেই পুরো ডকুমেন্ট অবৈধ হয়ে যায়। ভালো খবর হলো, প্রায় সব JSON এরর আসে একই দশটি ভুল থেকে, আর এরর মেসেজ ঠিক কোথায় দেখতে হবে তা বলে দেয় — শুধু পড়তে জানতে হয়।</p>
+
+      <h2>ধাপ ১: এরর মেসেজ ঠিকমতো পড়ুন</h2>
+      <p>প্রতিটি পার্সার জানায় সে <strong>কোথায়</strong> থেমে গেছে। ভাষাভেদে লেখা আলাদা, কিন্তু তথ্য একই:</p>
+      <table>
+        <thead><tr><th>কোথায়</th><th>সাধারণ মেসেজ</th></tr></thead>
+        <tbody>
+          <tr><td>Chrome / Node.js</td><td><code>Expected double-quoted property name in JSON at position 7 (line 1 column 8)</code></td></tr>
+          <tr><td>Firefox</td><td><code>JSON.parse: expected property name or '}' at line 1 column 8</code></td></tr>
+          <tr><td>Python</td><td><code>JSONDecodeError: Expecting property name enclosed in double quotes: line 1 column 8 (char 7)</code></td></tr>
+        </tbody>
+      </table>
+      <p><strong>position</strong> হলো লেখার শুরু থেকে কততম অক্ষর (০ থেকে গোনা); <strong>line ও column</strong> মানুষের পক্ষে বোঝা সহজ। আসল ভুলটা সাধারণত <em>ঠিক ওই জায়গায় বা তার একটু আগে</em> থাকে — কারণ পরের অক্ষরটা না মেলা পর্যন্ত পার্সার সমস্যা টের পায় না।</p>
+      <div class="callout"><p><strong>টিপ:</strong> আপনার JSON <a href="/json-formatter/">JSON ফরম্যাটারে</a> পেস্ট করে <em>যাচাই</em> চাপুন। এটি লাইন ও কলাম দেখায় এবং কার্সর সরাসরি সমস্যার জায়গায় নিয়ে যায়।</p></div>
+
+      <h2>ধাপ ২: দশটি পরিচিত সন্দেহভাজন দেখুন</h2>
+      <h3>১. শেষের বাড়তি কমা</h3>
+      <p>JavaScript শেষ আইটেমের পরে কমা মেনে নেয়; JSON নেয় না।</p>
+      <pre><code>{ "name": "Rahim", "age": 28, }   ✗
+{ "name": "Rahim", "age": 28 }    ✓</code></pre>
+      <h3>২. সিঙ্গেল কোট</h3>
+      <p>স্ট্রিং ও কী-তে অবশ্যই ডাবল কোট <code>"</code> লাগবে। <code>'Dhaka'</code> অবৈধ।</p>
+      <h3>৩. কোট ছাড়া কী</h3>
+      <p><code>{ name: "Rahim" }</code> বৈধ JavaScript অবজেক্ট, কিন্তু অবৈধ JSON। প্রতিটি কী-তে ডাবল কোট দরকার: <code>{ "name": "Rahim" }</code>।</p>
+      <h3>৪. কমেন্ট</h3>
+      <p>JSON-এ কোনো কমেন্ট নেই — <code>// …</code> বা <code>/* … */</code> কোনোটিই না। কনফিগ ফাইলে নোট রাখতে চাইলে <code>"_comment"</code>-এর মতো একটি ফিল্ড ব্যবহার করুন, অথবা কমেন্ট সমর্থন করে এমন ফরম্যাট (JSONC, YAML)।</p>
+      <h3>৫. দুই আইটেমের মাঝে কমা নেই</h3>
+      <pre><code>{ "city": "Dhaka" "zip": "1216" }   ✗  ("Dhaka"-এর পরে কমা নেই)</code></pre>
+      <h3>৬. ব্র্যাকেট না মেলা</h3>
+      <p>প্রতিটি <code>{</code>-এর জন্য একটি <code>}</code> আর প্রতিটি <code>[</code>-এর জন্য একটি <code>]</code> লাগবে, সঠিক ক্রমে। “Unexpected end of JSON input” প্রায় সবসময় মানে কিছু একটা বন্ধ হয়নি — প্রায়ই কারণ লেখাটা মাঝপথে কেটে গেছে (লগের কাটা লাইন বা অর্ধেক কপি করা রেসপন্স)।</p>
+      <h3>৭. স্ট্রিংয়ের ভেতরে এসকেপ না করা অক্ষর</h3>
+      <p>স্ট্রিংয়ের ভেতরে ডাবল কোট লিখতে হয় <code>\"</code>, ব্যাকস্ল্যাশ <code>\\</code>, আর আসল লাইন-ব্রেক <code>\n</code> দিয়ে। Windows-এর পাথ একটি পরিচিত ফাঁদ: <code>"C:\Users\rahim"</code> অবৈধ; লিখুন <code>"C:\\Users\\rahim"</code>।</p>
+      <h3>৮. JavaScript-এর এমন মান যা JSON-এ নেই</h3>
+      <p><code>undefined</code>, <code>NaN</code>, <code>Infinity</code>, ফাংশন ও তারিখ JSON নয়। অনুপস্থিত মানের জন্য <code>null</code> আর তারিখের জন্য <code>"2026-09-27T10:00:00Z"</code>-এর মতো ISO স্ট্রিং ব্যবহার করুন।</p>
+      <h3>৯. Python-এর True, False ও None</h3>
+      <p>Python-এ dict <code>print()</code> করে কপি করলে দেখবেন <code>True</code>, <code>False</code>, <code>None</code> আর সিঙ্গেল কোট। JSON-এ লাগে <code>true</code>, <code>false</code>, <code>null</code> ও ডাবল কোট। Python-এ <code>print(data)</code>-এর বদলে <code>json.dumps(data)</code> ব্যবহার করুন।</p>
+      <h3>১০. অদৃশ্য অক্ষর</h3>
+      <p>Word বা চ্যাট অ্যাপ থেকে আসা “স্মার্ট” কোট (<code>“ ”</code>), ফাইলের শুরুতে byte-order mark, বা non-breaking space — দেখতে একদম স্বাভাবিক হলেও পার্সিং ভেঙে দিতে পারে। এরর যদি এমন অক্ষর দেখায় যা চোখে পড়ে না, ওই জায়গার কোটগুলো নতুন করে টাইপ করুন।</p>
+
+      <div class="try-tool">
+        <span><strong>বেশিরভাগ ভুল এক ক্লিকে ঠিক করুন।</strong> JSON ফরম্যাটারের “ভুল ঠিক করুন” বোতাম কমেন্ট, শেষের কমা, সিঙ্গেল কোট, কোট ছাড়া কী আর Python-এর True/False/None ঠিক করে দেয়।</span>
+        <a class="button" href="/json-formatter/" data-i18n="guides.tryTool">এখনই চেষ্টা করুন</a>
+      </div>
+
+      <h2>ধাপ ৩: পরের বার যেন না হয়</h2>
+      <ul>
+        <li><strong>স্ট্রিং জোড়া দিয়ে কখনো JSON বানাবেন না।</strong> JavaScript-এ <code>JSON.stringify()</code>, Python-এ <code>json.dumps()</code> বা আপনার ভাষার JSON লাইব্রেরি ব্যবহার করুন — কোট ও এসকেপিং ওরাই সামলায়।</li>
+        <li><strong>পার্স করার আগে রেসপন্স দেখুন।</strong> অনেক “Unexpected token &lt;” এরর আসলে JSON-এর বদলে ফেরত আসা HTML এরর পেজ (যা <code>&lt;!doctype html&gt;</code> দিয়ে শুরু হয়)। আগে মূল লেখা আর HTTP স্ট্যাটাস লগ করুন।</li>
+        <li><strong>এডিটরেই যাচাই করুন।</strong> VS Code ও বেশিরভাগ IDE <code>.json</code> ফাইলে টাইপ করার সময়ই JSON-এর ভুল দেখিয়ে দেয়।</li>
+      </ul>
+
+      <h2>প্রশ্নোত্তর</h2>
+      <details><summary>“Unexpected token &lt; in JSON at position 0” মানে কী?</summary><p>আপনি যে লেখা পার্স করেছেন তা <code>&lt;</code> দিয়ে শুরু — অর্থাৎ এটি HTML, JSON নয়। সাধারণত সার্ভার একটি এরর পেজ (404, 500) বা লগইন পেজ ফেরত দিয়েছে। URL আর HTTP স্ট্যাটাস কোড দেখুন।</p></details>
+      <details><summary>একই কী দুবার থাকলে কি ভুল?</summary><p>বেশিরভাগ পার্সার মেনে নেয় এবং চুপচাপ <em>শেষের</em> মানটি রাখে, ফলে বাগ লুকিয়ে যায়। JSON স্ট্যান্ডার্ড বলে কী-গুলো <em>অনন্য হওয়া উচিত</em>, তাই দুবার থাকাকে ভুল হিসেবেই ধরুন।</p></details>
+      <details><summary>অনলাইন ফরম্যাটারে আমার ডেটা কি নিরাপদ?</summary><p>হ্যাঁ। JSON বন্ধু সব কিছু আপনার ব্রাউজারেই প্রসেস করে; যা পেস্ট করেন তা কোথাও আপলোড হয় না।</p></details>
+    </article>
+
+    <section class="more-tools">
+      <h2 data-i18n="guides.related">Related guides</h2>
+      <ul class="guide-grid" data-related-guides></ul>
+    </section>
+  </main>
+
+  <div class="ad-slot ad-bottom" data-ad="bottom" data-i18n-attr="aria-label:ad.label" aria-label="Advertisement">
+    <span data-i18n="ad.placeholder">Ad space</span>
+  </div>
+
+  <section class="content more-tools">
+    <h2 data-i18n="tools.more">More free tools</h2>
+    <ul class="tool-grid" data-more-tools></ul>
+  </section>
+
+  <footer class="site-footer">
+    <span>© <span data-year></span> <span data-i18n="brand">JSON Bondhu</span></span>
+    <a href="/privacy.html" data-i18n="footer.privacy">Privacy policy</a>
+    <a href="https://github.com/MosabberUddin/jsonbondhu/issues" rel="noopener" data-i18n="footer.contact">Contact</a>
+  </footer>
+
+  <script src="/ads.js" defer></script>
+</body>
+</html>

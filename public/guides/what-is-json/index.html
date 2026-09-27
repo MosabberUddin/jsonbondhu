@@ -1,0 +1,342 @@
+<!doctype html>
+<html lang="en" data-guide="what-is-json" data-title-key="guide.what-is-json.title" data-desc-key="guide.what-is-json.desc">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>What is JSON? A beginner’s guide with examples</title>
+  <meta name="description" content="Objects, arrays, strings, numbers, true/false and null — the whole JSON format explained in plain language, with real API examples.">
+  <link rel="canonical" href="https://jsonbondhu.pages.dev/guides/what-is-json/">
+  <link rel="alternate" hreflang="en" href="https://jsonbondhu.pages.dev/guides/what-is-json/?lang=en">
+  <link rel="alternate" hreflang="bn" href="https://jsonbondhu.pages.dev/guides/what-is-json/?lang=bn">
+  <link rel="alternate" hreflang="x-default" href="https://jsonbondhu.pages.dev/guides/what-is-json/">
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="What is JSON? A beginner’s guide with examples">
+  <meta name="theme-color" content="#0f766e">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230f766e'/%3E%3Ctext x='16' y='22' font-size='15' font-family='monospace' font-weight='700' fill='white' text-anchor='middle'%3E%7B%7D%3C/text%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/i18n.js"></script>
+  <script src="/tools.js"></script>
+  <script src="/guides/guides.js"></script>
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"TechArticle","headline":"What is JSON? A beginner’s guide with examples","alternativeHeadline":"JSON কী? উদাহরণসহ নতুনদের জন্য গাইড","inLanguage":["en","bn"],"datePublished":"2026-09-27","dateModified":"2026-09-27","author":{"@type":"Organization","name":"JSON Bondhu"},"publisher":{"@type":"Organization","name":"JSON Bondhu","url":"https://jsonbondhu.pages.dev/"},"mainEntityOfPage":"https://jsonbondhu.pages.dev/guides/what-is-json/"}
+  </script>
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="/">
+      <span class="logo" aria-hidden="true">{ }</span>
+      <span><strong data-i18n="brand">JSON Bondhu</strong></span>
+    </a>
+    <nav class="top-nav">
+      <a href="/" data-i18n="nav.tools">All tools</a>
+      <a href="/guides/" data-i18n="nav.guides">Guides</a>
+      <a href="/#premium" class="pill" data-i18n="nav.premium">Go ad-free</a>
+      <div class="lang-switch" role="group" data-i18n-attr="aria-label:lang.label" aria-label="Language">
+        <button type="button" data-set-lang="en" lang="en" aria-pressed="true">EN</button>
+        <button type="button" data-set-lang="bn" lang="bn" aria-pressed="false">বাংলা</button>
+      </div>
+    </nav>
+  </header>
+
+  <div class="ad-slot ad-top" data-ad="top" data-i18n-attr="aria-label:ad.label" aria-label="Advertisement">
+    <span data-i18n="ad.placeholder">Ad space</span>
+  </div>
+
+  <main class="guide">
+    <p class="breadcrumb"><a href="/guides/" data-i18n="guides.back">← All guides</a></p>
+
+    <article data-lang="en" lang="en">
+      <h1>What is JSON? A beginner’s guide</h1>
+      <p class="byline" data-guide-updated data-minutes="6"></p>
+
+      <p>Open the Network tab on almost any website, call any payment gateway or courier API, or look inside a <code>package.json</code> file, and you will see the same thing: text full of curly braces, square brackets and double quotes. That is JSON. If you are starting out as a developer, you will read and write it every single day, so it pays to understand it properly — including the few strict rules that trip up almost every beginner.</p>
+
+      <h2>JSON in one sentence</h2>
+      <p><strong>JSON (JavaScript Object Notation) is a plain-text format for structured data.</strong> It was derived from JavaScript’s object syntax, but today every major language — Python, PHP, Java, Go, C#, Dart — can read and write it. It is defined by two short standards, RFC 8259 and ECMA-404, and the whole grammar fits on one page. Files usually end in <code>.json</code>, and APIs send it with the header <code>Content-Type: application/json</code>.</p>
+      <p>Why did it win? It is easy for humans to read, easy for programs to parse, and it maps directly onto the data structures every language already has: lists and key–value maps.</p>
+
+      <h2>The basic syntax</h2>
+      <p>Here is a small but complete JSON document:</p>
+      <pre><code>{
+  "name": "Rahima Akter",
+  "city": "Chattogram",
+  "age": 27,
+  "verified": true,
+  "skills": ["JavaScript", "SQL"],
+  "manager": null
+}</code></pre>
+      <p>The rules, all of which you can see above:</p>
+      <ul>
+        <li>An <strong>object</strong> is wrapped in <code>{ }</code> and holds <strong>key–value pairs</strong> separated by commas.</li>
+        <li>Each key is a string in <strong>double quotes</strong>, followed by a colon, then the value.</li>
+        <li>There is <strong>no comma after the last item</strong>.</li>
+        <li>Spaces, tabs and line breaks between items don’t matter. The same data on one line is equally valid.</li>
+      </ul>
+
+      <h2>The six value types</h2>
+      <p>Every value in JSON is exactly one of these six types. There is nothing else — no dates, no comments, no functions.</p>
+      <table>
+        <thead><tr><th>Type</th><th>Example</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td>string</td><td><code>"ঢাকা"</code>, <code>"Rahim"</code></td><td>Double quotes only. Any Unicode text, including Bangla.</td></tr>
+          <tr><td>number</td><td><code>42</code>, <code>-3.5</code>, <code>1.2e6</code></td><td>No quotes, no leading zeros, no <code>NaN</code> or <code>Infinity</code>.</td></tr>
+          <tr><td>boolean</td><td><code>true</code>, <code>false</code></td><td>Lowercase, no quotes.</td></tr>
+          <tr><td>null</td><td><code>null</code></td><td>“No value”. Lowercase.</td></tr>
+          <tr><td>object</td><td><code>{"a": 1}</code></td><td>Unordered key–value pairs.</td></tr>
+          <tr><td>array</td><td><code>[1, "two", false]</code></td><td>Ordered list; items can be of mixed types.</td></tr>
+        </tbody>
+      </table>
+      <p>Inside strings, some characters must be escaped with a backslash: <code>\"</code> for a double quote, <code>\\</code> for a backslash, <code>\n</code> for a new line and <code>\t</code> for a tab. Any character can also be written as <code>\u</code> plus four hex digits — for example <code>"র"</code> is the Bangla letter র.</p>
+
+      <h2>Nesting: objects inside arrays inside objects</h2>
+      <p>Objects and arrays can contain each other to any depth. That is how JSON describes real-world data. Here is the kind of response an online shop in Bangladesh might return for a single order:</p>
+      <pre><code>{
+  "order_id": "BD-2026-004517",
+  "placed_at": "2026-09-27T10:30:00+06:00",
+  "status": "shipped",
+  "customer": {
+    "name": "Tanvir Hasan",
+    "phone": "01712345678",
+    "address": {
+      "area": "Mirpur 10",
+      "city": "Dhaka",
+      "postcode": "1216"
+    }
+  },
+  "items": [
+    { "sku": "TSHIRT-M-BLUE", "title": "Cotton T-shirt", "qty": 2, "unit_price": 450 },
+    { "sku": "MUG-01", "title": "Ceramic mug", "qty": 1, "unit_price": 350 }
+  ],
+  "delivery_charge": 60,
+  "total": 1310,
+  "payment": { "method": "cod", "paid": false },
+  "coupon": null
+}</code></pre>
+      <p>Read it from the outside in: the whole order is an object; <code>customer</code> is an object containing another object (<code>address</code>); <code>items</code> is an array of objects, one per product. To get the price of the first item in JavaScript you would write <code>order.items[0].unit_price</code> — array positions start at 0.</p>
+      <div class="callout"><p><strong>Notice the choices:</strong> the phone number and postcode are strings, not numbers, because they are identifiers — as a number, <code>01712345678</code> would lose its leading zero (and is not even valid JSON). The date is an ISO 8601 string with the Dhaka offset <code>+06:00</code>, because JSON has no date type.</p></div>
+
+      <h2>JSON is not a JavaScript object</h2>
+      <p>This is the number one beginner confusion. JSON <em>looks</em> like JavaScript, but it is a stricter, text-only format. A JavaScript object lives in memory; JSON is a string you send or save.</p>
+      <table>
+        <thead><tr><th>Allowed in a JavaScript object</th><th>In JSON</th></tr></thead>
+        <tbody>
+          <tr><td>Unquoted keys: <code>{ name: "Rahim" }</code></td><td>Keys must be in double quotes</td></tr>
+          <tr><td>Single quotes: <code>'Dhaka'</code></td><td>Double quotes only</td></tr>
+          <tr><td>Trailing comma after the last item</td><td>Not allowed</td></tr>
+          <tr><td>Comments <code>//</code> and <code>/* */</code></td><td>Not allowed</td></tr>
+          <tr><td><code>undefined</code>, functions, <code>Date</code>, <code>NaN</code></td><td>Not representable</td></tr>
+        </tbody>
+      </table>
+      <p>You move between the two with two built-in functions:</p>
+      <pre><code>// Text → JavaScript value
+const order = JSON.parse('{"total": 1310, "paid": false}');
+console.log(order.total);          // 1310
+
+// JavaScript value → text (2-space indentation)
+const text = JSON.stringify({ city: "Dhaka", when: new Date(0), note: undefined }, null, 2);
+console.log(text);
+// {
+//   "city": "Dhaka",
+//   "when": "1970-01-01T00:00:00.000Z"
+// }</code></pre>
+      <p>Look at what <code>JSON.stringify</code> did: the <code>Date</code> became an ISO string, and the key whose value was <code>undefined</code> disappeared completely. In an array, <code>undefined</code> and <code>NaN</code> become <code>null</code> instead. Silent conversions like these are a common source of “where did my field go?” bugs.</p>
+      <p>Python works the same way with the <code>json</code> module:</p>
+      <pre><code>import json
+
+order = json.loads('{"total": 1310, "paid": false}')
+print(order["paid"])     # False  (JSON false → Python False)
+
+print(json.dumps({"name": "রহিম"}, ensure_ascii=False, indent=2))
+# without ensure_ascii=False you get "রহিম"</code></pre>
+
+      <h2>Other things beginners get wrong</h2>
+      <ul>
+        <li><strong><code>"true"</code> is not <code>true</code>.</strong> In quotes it is a string, and in JavaScript the string <code>"false"</code> is truthy. The same goes for <code>"42"</code> versus <code>42</code>.</li>
+        <li><strong>Key order is not guaranteed.</strong> The standard treats objects as unordered. If order matters, use an array.</li>
+        <li><strong>Duplicate keys</strong> are legal-looking but unsafe: most parsers silently keep the last one.</li>
+        <li><strong>The top level can be any value.</strong> An array like <code>[1, 2, 3]</code> or even a bare <code>"hello"</code> is a valid JSON document, though APIs usually return an object.</li>
+        <li><strong>Encoding:</strong> JSON exchanged between systems must be UTF-8, so Bangla text works without any special handling.</li>
+      </ul>
+
+      <h2>How to view and format JSON</h2>
+      <p>APIs usually send JSON “minified” — one long line with no spaces — to save bandwidth. That is unreadable for humans. You have a few options:</p>
+      <ul>
+        <li><strong>In code:</strong> <code>JSON.stringify(value, null, 2)</code> in JavaScript or <code>json.dumps(value, indent=2)</code> in Python.</li>
+        <li><strong>On the command line:</strong> <code>python -m json.tool data.json</code> pretty-prints a file.</li>
+        <li><strong>In your editor:</strong> VS Code’s “Format Document” command works on <code>.json</code> files.</li>
+        <li><strong>In the browser:</strong> paste it into an online formatter, which also tells you exactly where any syntax error is.</li>
+      </ul>
+
+      <div class="try-tool">
+        <span><strong>See your JSON as a tree.</strong> Paste any JSON into the formatter to indent it, validate it and click through nested objects without uploading anything.</span>
+        <a class="button" href="/json-formatter/" data-i18n="guides.tryTool">Try it now</a>
+      </div>
+
+      <h2>FAQ</h2>
+      <details><summary>Can I put comments in a JSON file?</summary><p>No. Standard JSON has no comment syntax, and a strict parser will reject <code>//</code> or <code>/* */</code>. Some tools accept “JSONC” (JSON with comments), such as VS Code settings files, but don’t send it to an API. If a config needs comments, consider YAML.</p></details>
+      <details><summary>Should numbers like prices be strings or numbers?</summary><p>Quantities you calculate with (price, qty, total) are usually numbers. Identifiers that only look numeric — phone numbers, postcodes, account numbers, very long IDs — should be strings so leading zeros and exact digits are preserved.</p></details>
+      <details><summary>What is the difference between null and a missing key?</summary><p><code>"coupon": null</code> says “this field exists and has no value”; leaving the key out says nothing at all. Many APIs treat them differently, especially when updating records, so check the API’s documentation.</p></details>
+      <details><summary>Is JSON only for JavaScript?</summary><p>No. Despite the name, JSON is language-independent. Every mainstream language has a built-in or standard library for it.</p></details>
+    </article>
+
+    <article data-lang="bn" lang="bn">
+      <h1>JSON কী? নতুনদের জন্য সহজ গাইড</h1>
+      <p class="byline" data-guide-updated data-minutes="6"></p>
+
+      <p>প্রায় যেকোনো ওয়েবসাইটের Network ট্যাব খুলুন, কোনো পেমেন্ট গেটওয়ে বা কুরিয়ারের API কল করুন, কিংবা একটা <code>package.json</code> ফাইল খুলে দেখুন — সবখানে একই জিনিস চোখে পড়বে: কার্লি ব্রেস, স্কয়ার ব্র্যাকেট আর ডাবল কোটে ভরা লেখা। এটাই JSON। ডেভেলপার হিসেবে যাত্রা শুরু করলে প্রতিদিনই আপনাকে JSON পড়তে ও লিখতে হবে। তাই শুরুতেই এটা ঠিকমতো বুঝে নেওয়া ভালো — বিশেষ করে সেই কয়েকটা কড়া নিয়ম, যেগুলোতে প্রায় সব নতুন ডেভেলপারই একবার না একবার আটকে যান।</p>
+
+      <h2>এক কথায় JSON</h2>
+      <p><strong>JSON (JavaScript Object Notation) হলো গোছানো ডেটা রাখার একটি প্লেইন-টেক্সট ফরম্যাট।</strong> এর জন্ম JavaScript-এর অবজেক্ট লেখার ধরন থেকে, কিন্তু এখন Python, PHP, Java, Go, C#, Dart — সব বড় ভাষাই JSON পড়তে ও লিখতে পারে। দুটি ছোট স্ট্যান্ডার্ড, RFC 8259 ও ECMA-404, এটিকে সংজ্ঞায়িত করে, আর পুরো ব্যাকরণ এক পাতায় এঁটে যায়। ফাইলের নাম সাধারণত <code>.json</code> দিয়ে শেষ হয়, আর API পাঠায় <code>Content-Type: application/json</code> হেডারসহ।</p>
+      <p>JSON কেন এত জনপ্রিয় হলো? মানুষের পক্ষে পড়া সহজ, প্রোগ্রামের পক্ষে পার্স করা সহজ, আর প্রতিটি ভাষায় আগে থেকেই যে দুটি ডেটা স্ট্রাকচার আছে — লিস্ট আর কী–ভ্যালু ম্যাপ — JSON সরাসরি সেগুলোর সাথে মিলে যায়।</p>
+
+      <h2>মূল সিনট্যাক্স</h2>
+      <p>নিচে একটি ছোট কিন্তু সম্পূর্ণ JSON ডকুমেন্ট:</p>
+      <pre><code>{
+  "name": "Rahima Akter",
+  "city": "Chattogram",
+  "age": 27,
+  "verified": true,
+  "skills": ["JavaScript", "SQL"],
+  "manager": null
+}</code></pre>
+      <p>নিয়মগুলো, যা ওপরের উদাহরণেই দেখা যাচ্ছে:</p>
+      <ul>
+        <li>একটি <strong>অবজেক্ট</strong> থাকে <code>{ }</code>-এর ভেতরে, আর এতে থাকে কমা দিয়ে আলাদা করা <strong>কী–ভ্যালু জোড়া</strong>।</li>
+        <li>প্রতিটি কী হলো <strong>ডাবল কোটের</strong> ভেতরে একটি স্ট্রিং, তারপর কোলন, তারপর ভ্যালু।</li>
+        <li><strong>শেষ আইটেমের পরে কোনো কমা থাকবে না</strong>।</li>
+        <li>আইটেমগুলোর মাঝের স্পেস, ট্যাব বা লাইন-ব্রেকের কোনো গুরুত্ব নেই। একই ডেটা এক লাইনে লিখলেও সমান বৈধ।</li>
+      </ul>
+
+      <h2>ছয় ধরনের ভ্যালু</h2>
+      <p>JSON-এর প্রতিটি ভ্যালু ঠিক এই ছয় ধরনের যেকোনো একটি। এর বাইরে আর কিছু নেই — তারিখ নেই, কমেন্ট নেই, ফাংশন নেই।</p>
+      <table>
+        <thead><tr><th>টাইপ</th><th>উদাহরণ</th><th>খেয়াল রাখুন</th></tr></thead>
+        <tbody>
+          <tr><td>string</td><td><code>"ঢাকা"</code>, <code>"Rahim"</code></td><td>শুধু ডাবল কোট। বাংলাসহ যেকোনো ইউনিকোড লেখা চলবে।</td></tr>
+          <tr><td>number</td><td><code>42</code>, <code>-3.5</code>, <code>1.2e6</code></td><td>কোট নয়, শুরুতে বাড়তি শূন্য নয়, <code>NaN</code> বা <code>Infinity</code> নয়।</td></tr>
+          <tr><td>boolean</td><td><code>true</code>, <code>false</code></td><td>ছোট হাতের অক্ষরে, কোট ছাড়া।</td></tr>
+          <tr><td>null</td><td><code>null</code></td><td>“কোনো মান নেই”। ছোট হাতের অক্ষরে।</td></tr>
+          <tr><td>object</td><td><code>{"a": 1}</code></td><td>ক্রমহীন কী–ভ্যালু জোড়া।</td></tr>
+          <tr><td>array</td><td><code>[1, "two", false]</code></td><td>ক্রমানুসারে সাজানো তালিকা; ভিন্ন ভিন্ন টাইপ মেশানো যায়।</td></tr>
+        </tbody>
+      </table>
+      <p>স্ট্রিংয়ের ভেতরে কিছু অক্ষর ব্যাকস্ল্যাশ দিয়ে এসকেপ করতে হয়: ডাবল কোটের জন্য <code>\"</code>, ব্যাকস্ল্যাশের জন্য <code>\\</code>, নতুন লাইনের জন্য <code>\n</code> আর ট্যাবের জন্য <code>\t</code>। যেকোনো অক্ষর <code>\u</code> আর চারটি হেক্স ডিজিট দিয়েও লেখা যায় — যেমন <code>"র"</code> হলো বাংলা অক্ষর র।</p>
+
+      <h2>নেস্টিং: অবজেক্টের ভেতরে অ্যারে, অ্যারের ভেতরে অবজেক্ট</h2>
+      <p>অবজেক্ট আর অ্যারে একে অপরের ভেতরে যত গভীরে ইচ্ছা থাকতে পারে। বাস্তব জগতের ডেটা JSON এভাবেই বর্ণনা করে। বাংলাদেশের একটি অনলাইন শপ একটি অর্ডারের জন্য যেমন রেসপন্স দিতে পারে:</p>
+      <pre><code>{
+  "order_id": "BD-2026-004517",
+  "placed_at": "2026-09-27T10:30:00+06:00",
+  "status": "shipped",
+  "customer": {
+    "name": "Tanvir Hasan",
+    "phone": "01712345678",
+    "address": {
+      "area": "Mirpur 10",
+      "city": "Dhaka",
+      "postcode": "1216"
+    }
+  },
+  "items": [
+    { "sku": "TSHIRT-M-BLUE", "title": "Cotton T-shirt", "qty": 2, "unit_price": 450 },
+    { "sku": "MUG-01", "title": "Ceramic mug", "qty": 1, "unit_price": 350 }
+  ],
+  "delivery_charge": 60,
+  "total": 1310,
+  "payment": { "method": "cod", "paid": false },
+  "coupon": null
+}</code></pre>
+      <p>বাইরে থেকে ভেতরের দিকে পড়ুন: পুরো অর্ডারটি একটি অবজেক্ট; <code>customer</code> একটি অবজেক্ট, যার ভেতরে আরেকটি অবজেক্ট (<code>address</code>); <code>items</code> হলো অবজেক্টের একটি অ্যারে, প্রতিটি পণ্যের জন্য একটি করে। JavaScript-এ প্রথম আইটেমের দাম পেতে লিখবেন <code>order.items[0].unit_price</code> — অ্যারের গোনা শুরু হয় 0 থেকে।</p>
+      <div class="callout"><p><strong>সিদ্ধান্তগুলো খেয়াল করুন:</strong> ফোন নম্বর আর পোস্টকোড সংখ্যা নয়, স্ট্রিং — কারণ এগুলো পরিচয়সূচক। সংখ্যা হিসেবে লিখলে <code>01712345678</code>-এর শুরুর শূন্য হারিয়ে যেত (আর সেটা বৈধ JSON-ও নয়)। তারিখটি ঢাকার অফসেট <code>+06:00</code>-সহ একটি ISO 8601 স্ট্রিং, কারণ JSON-এ তারিখের আলাদা কোনো টাইপ নেই।</p></div>
+
+      <h2>JSON আর JavaScript অবজেক্ট এক জিনিস নয়</h2>
+      <p>নতুনদের সবচেয়ে বড় বিভ্রান্তি এটাই। JSON দেখতে JavaScript-এর মতো, কিন্তু এটি আরও কড়া নিয়মের, শুধুই লেখা-ভিত্তিক একটি ফরম্যাট। JavaScript অবজেক্ট থাকে মেমরিতে; JSON হলো একটি স্ট্রিং, যা আপনি পাঠান বা সেভ করেন।</p>
+      <table>
+        <thead><tr><th>JavaScript অবজেক্টে চলে</th><th>JSON-এ</th></tr></thead>
+        <tbody>
+          <tr><td>কোট ছাড়া কী: <code>{ name: "Rahim" }</code></td><td>কী অবশ্যই ডাবল কোটে</td></tr>
+          <tr><td>সিঙ্গেল কোট: <code>'Dhaka'</code></td><td>শুধু ডাবল কোট</td></tr>
+          <tr><td>শেষ আইটেমের পরে কমা</td><td>চলবে না</td></tr>
+          <tr><td>কমেন্ট <code>//</code> ও <code>/* */</code></td><td>চলবে না</td></tr>
+          <tr><td><code>undefined</code>, ফাংশন, <code>Date</code>, <code>NaN</code></td><td>প্রকাশ করা যায় না</td></tr>
+        </tbody>
+      </table>
+      <p>দুটির মধ্যে আসা-যাওয়া করা হয় দুটি বিল্ট-ইন ফাংশন দিয়ে:</p>
+      <pre><code>// লেখা → JavaScript ভ্যালু
+const order = JSON.parse('{"total": 1310, "paid": false}');
+console.log(order.total);          // 1310
+
+// JavaScript ভ্যালু → লেখা (২ স্পেস ইনডেন্ট)
+const text = JSON.stringify({ city: "Dhaka", when: new Date(0), note: undefined }, null, 2);
+console.log(text);
+// {
+//   "city": "Dhaka",
+//   "when": "1970-01-01T00:00:00.000Z"
+// }</code></pre>
+      <p><code>JSON.stringify</code> কী করল দেখুন: <code>Date</code> হয়ে গেল ISO স্ট্রিং, আর যে কী-এর মান ছিল <code>undefined</code>, সেটা পুরোপুরি উধাও। অ্যারের ভেতরে থাকলে অবশ্য <code>undefined</code> আর <code>NaN</code> হয়ে যায় <code>null</code>। এরকম নিঃশব্দ রূপান্তর থেকেই “আমার ফিল্ডটা গেল কোথায়?” ধরনের অনেক বাগ তৈরি হয়।</p>
+      <p>Python-এ <code>json</code> মডিউল দিয়ে কাজটা একইভাবে হয়:</p>
+      <pre><code>import json
+
+order = json.loads('{"total": 1310, "paid": false}')
+print(order["paid"])     # False  (JSON false → Python False)
+
+print(json.dumps({"name": "রহিম"}, ensure_ascii=False, indent=2))
+# ensure_ascii=False না দিলে পাবেন "রহিম"</code></pre>
+
+      <h2>নতুনরা আর যেসব ভুল করেন</h2>
+      <ul>
+        <li><strong><code>"true"</code> আর <code>true</code> এক নয়।</strong> কোটের ভেতরে থাকলে এটা স্ট্রিং, আর JavaScript-এ <code>"false"</code> স্ট্রিংটি truthy। <code>"42"</code> বনাম <code>42</code>-এর ক্ষেত্রেও একই কথা।</li>
+        <li><strong>কী-এর ক্রমের কোনো নিশ্চয়তা নেই।</strong> স্ট্যান্ডার্ড অনুযায়ী অবজেক্ট ক্রমহীন। ক্রম জরুরি হলে অ্যারে ব্যবহার করুন।</li>
+        <li><strong>একই কী দুবার</strong> দেখতে বৈধ মনে হলেও নিরাপদ নয়: বেশিরভাগ পার্সার চুপচাপ শেষেরটা রেখে দেয়।</li>
+        <li><strong>সবচেয়ে বাইরের স্তরে যেকোনো ভ্যালু থাকতে পারে।</strong> <code>[1, 2, 3]</code>-এর মতো অ্যারে, এমনকি শুধু <code>"hello"</code>-ও বৈধ JSON ডকুমেন্ট, যদিও API সাধারণত একটি অবজেক্টই ফেরত দেয়।</li>
+        <li><strong>এনকোডিং:</strong> এক সিস্টেম থেকে আরেক সিস্টেমে যাওয়া JSON অবশ্যই UTF-8 হতে হয়, তাই বাংলা লেখার জন্য আলাদা কিছু করতে হয় না।</li>
+      </ul>
+
+      <h2>JSON কীভাবে দেখবেন ও ফরম্যাট করবেন</h2>
+      <p>ব্যান্ডউইথ বাঁচাতে API সাধারণত JSON পাঠায় “minified” করে — স্পেস ছাড়া একটা লম্বা লাইন। মানুষের পক্ষে সেটা পড়া প্রায় অসম্ভব। কয়েকটা উপায় আছে:</p>
+      <ul>
+        <li><strong>কোডে:</strong> JavaScript-এ <code>JSON.stringify(value, null, 2)</code>, Python-এ <code>json.dumps(value, indent=2)</code>।</li>
+        <li><strong>কমান্ড লাইনে:</strong> <code>python -m json.tool data.json</code> একটি ফাইল সুন্দর করে সাজিয়ে দেখায়।</li>
+        <li><strong>এডিটরে:</strong> VS Code-এর “Format Document” কমান্ড <code>.json</code> ফাইলে কাজ করে।</li>
+        <li><strong>ব্রাউজারে:</strong> একটি অনলাইন ফরম্যাটারে পেস্ট করুন, যা কোনো সিনট্যাক্স ভুল থাকলে ঠিক কোথায় তা-ও বলে দেয়।</li>
+      </ul>
+
+      <div class="try-tool">
+        <span><strong>আপনার JSON ট্রি আকারে দেখুন।</strong> যেকোনো JSON ফরম্যাটারে পেস্ট করে ইনডেন্ট, যাচাই আর নেস্টেড অবজেক্টগুলো ক্লিক করে ঘুরে দেখুন — কিছুই আপলোড হয় না।</span>
+        <a class="button" href="/json-formatter/" data-i18n="guides.tryTool">এখনই চেষ্টা করুন</a>
+      </div>
+
+      <h2>প্রশ্নোত্তর</h2>
+      <details><summary>JSON ফাইলে কি কমেন্ট লেখা যায়?</summary><p>না। স্ট্যান্ডার্ড JSON-এ কমেন্টের কোনো সিনট্যাক্স নেই, আর কড়া পার্সার <code>//</code> বা <code>/* */</code> দেখলে বাতিল করে দেবে। কিছু টুল “JSONC” (কমেন্টসহ JSON) মেনে নেয়, যেমন VS Code-এর সেটিংস ফাইল, কিন্তু সেটা কোনো API-তে পাঠাবেন না। কনফিগে কমেন্ট দরকার হলে YAML ভেবে দেখুন।</p></details>
+      <details><summary>দামের মতো জিনিস স্ট্রিং হবে না সংখ্যা?</summary><p>যেগুলো দিয়ে হিসাব করবেন (দাম, পরিমাণ, মোট), সেগুলো সাধারণত সংখ্যা। যেগুলো শুধু দেখতে সংখ্যার মতো — ফোন নম্বর, পোস্টকোড, অ্যাকাউন্ট নম্বর, খুব লম্বা আইডি — সেগুলো স্ট্রিং রাখুন, যাতে শুরুর শূন্য আর প্রতিটি ডিজিট ঠিক থাকে।</p></details>
+      <details><summary>null আর কী না থাকার মধ্যে পার্থক্য কী?</summary><p><code>"coupon": null</code> বলে “ফিল্ডটা আছে, কিন্তু এর কোনো মান নেই”; আর কী-টা বাদ দিলে কিছুই বলা হয় না। অনেক API দুটোকে আলাদাভাবে দেখে, বিশেষ করে রেকর্ড আপডেট করার সময়, তাই API-এর ডকুমেন্টেশন দেখে নিন।</p></details>
+      <details><summary>JSON কি শুধু JavaScript-এর জন্য?</summary><p>না। নামে JavaScript থাকলেও JSON কোনো নির্দিষ্ট ভাষার ওপর নির্ভরশীল নয়। প্রতিটি প্রচলিত ভাষায় এর জন্য বিল্ট-ইন বা স্ট্যান্ডার্ড লাইব্রেরি আছে।</p></details>
+    </article>
+
+    <section class="more-tools">
+      <h2 data-i18n="guides.related">Related guides</h2>
+      <ul class="guide-grid" data-related-guides></ul>
+    </section>
+  </main>
+
+  <div class="ad-slot ad-bottom" data-ad="bottom" data-i18n-attr="aria-label:ad.label" aria-label="Advertisement">
+    <span data-i18n="ad.placeholder">Ad space</span>
+  </div>
+
+  <section class="content more-tools">
+    <h2 data-i18n="tools.more">More free tools</h2>
+    <ul class="tool-grid" data-more-tools></ul>
+  </section>
+
+  <footer class="site-footer">
+    <span>© <span data-year></span> <span data-i18n="brand">JSON Bondhu</span></span>
+    <a href="/privacy.html" data-i18n="footer.privacy">Privacy policy</a>
+    <a href="https://github.com/MosabberUddin/jsonbondhu/issues" rel="noopener" data-i18n="footer.contact">Contact</a>
+  </footer>
+
+  <script src="/ads.js" defer></script>
+</body>
+</html>

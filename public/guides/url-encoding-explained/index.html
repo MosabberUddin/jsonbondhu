@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="en" data-guide="url-encoding-explained" data-title-key="guide.url-encoding-explained.title" data-desc-key="guide.url-encoding-explained.desc">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>URL encoding explained: %20, + and when to encode</title>
+  <meta name="description" content="Why URLs need percent-encoding, encodeURIComponent vs encodeURI, spaces as %20 or +, and how Bangla text travels in a URL.">
+  <link rel="canonical" href="https://jsonbondhu.pages.dev/guides/url-encoding-explained/">
+  <link rel="alternate" hreflang="en" href="https://jsonbondhu.pages.dev/guides/url-encoding-explained/?lang=en">
+  <link rel="alternate" hreflang="bn" href="https://jsonbondhu.pages.dev/guides/url-encoding-explained/?lang=bn">
+  <link rel="alternate" hreflang="x-default" href="https://jsonbondhu.pages.dev/guides/url-encoding-explained/">
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="URL encoding explained: %20, + and when to encode">
+  <meta name="theme-color" content="#0f766e">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230f766e'/%3E%3Ctext x='16' y='22' font-size='15' font-family='monospace' font-weight='700' fill='white' text-anchor='middle'%3E%7B%7D%3C/text%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/i18n.js"></script>
+  <script src="/tools.js"></script>
+  <script src="/guides/guides.js"></script>
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"TechArticle","headline":"URL encoding explained: %20, + and when to encode","alternativeHeadline":"URL এনকোডিং সহজ ভাষায়: %20, + আর কখন এনকোড করবেন","inLanguage":["en","bn"],"datePublished":"2026-09-27","dateModified":"2026-09-27","author":{"@type":"Organization","name":"JSON Bondhu"},"publisher":{"@type":"Organization","name":"JSON Bondhu","url":"https://jsonbondhu.pages.dev/"},"mainEntityOfPage":"https://jsonbondhu.pages.dev/guides/url-encoding-explained/"}
+  </script>
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="/">
+      <span class="logo" aria-hidden="true">{ }</span>
+      <span><strong data-i18n="brand">JSON Bondhu</strong></span>
+    </a>
+    <nav class="top-nav">
+      <a href="/" data-i18n="nav.tools">All tools</a>
+      <a href="/guides/" data-i18n="nav.guides">Guides</a>
+      <a href="/#premium" class="pill" data-i18n="nav.premium">Go ad-free</a>
+      <div class="lang-switch" role="group" data-i18n-attr="aria-label:lang.label" aria-label="Language">
+        <button type="button" data-set-lang="en" lang="en" aria-pressed="true">EN</button>
+        <button type="button" data-set-lang="bn" lang="bn" aria-pressed="false">বাংলা</button>
+      </div>
+    </nav>
+  </header>
+
+  <div class="ad-slot ad-top" data-ad="top" data-i18n-attr="aria-label:ad.label" aria-label="Advertisement">
+    <span data-i18n="ad.placeholder">Ad space</span>
+  </div>
+
+  <main class="guide">
+    <p class="breadcrumb"><a href="/guides/" data-i18n="guides.back">← All guides</a></p>
+
+    <article data-lang="en" lang="en">
+      <h1>URL encoding explained: %20, + and when to encode</h1>
+      <p class="byline" data-guide-updated data-minutes="6"></p>
+
+      <p>A user searches your site for <code>rice &amp; dal</code>, and your backend receives only <code>rice </code>. Someone shares a link with a Bangla word in it and it arrives as <code>%E0%A6%A2%E0%A6%BE…</code>. A redirect URL gets mangled into <code>%2520</code>. All three bugs have the same root: a URL can only carry a small set of characters safely, and everything else has to be <strong>percent-encoded</strong> — correctly, exactly once, with the right function.</p>
+
+      <h2>Why percent-encoding exists</h2>
+      <p>The URL standard (RFC 3986) splits characters into two groups:</p>
+      <ul>
+        <li><strong>Unreserved</strong> — <code>A–Z a–z 0–9 - . _ ~</code>. These never need encoding and mean the same thing everywhere.</li>
+        <li><strong>Reserved</strong> — characters with a job in URL syntax: <code>: / ? # [ ] @</code> (they separate scheme, host, path, query and fragment) and <code>! $ &amp; ' ( ) * + , ; =</code> (used inside components, for example <code>&amp;</code> and <code>=</code> in a query string).</li>
+      </ul>
+      <p>If your <em>data</em> contains a reserved character, the parser can’t tell data from syntax. In <code>?q=rice &amp; dal</code> the <code>&amp;</code> starts a new parameter, so <code>q</code> becomes <code>"rice "</code>. Encoding the data turns <code>&amp;</code> into <code>%26</code>, which is just a character, not a separator. Anything outside ASCII — Bangla, emoji, accented letters — also has to be encoded, because URLs are defined over ASCII.</p>
+
+      <h2>How a character becomes %XX</h2>
+      <p>The rule is simple: take the character’s <strong>UTF-8 bytes</strong> and write each byte as <code>%</code> plus two hex digits. ASCII characters are one byte, so a space (byte 0x20) becomes <code>%20</code> and <code>&amp;</code> (0x26) becomes <code>%26</code>. Bangla letters take three bytes each in UTF-8. Here is <code>ঢাকা</code>, which is four code points:</p>
+      <table>
+        <thead><tr><th>Character</th><th>Code point</th><th>UTF-8 bytes</th><th>Encoded</th></tr></thead>
+        <tbody>
+          <tr><td>ঢ</td><td>U+09A2</td><td>E0 A6 A2</td><td><code>%E0%A6%A2</code></td></tr>
+          <tr><td>া</td><td>U+09BE</td><td>E0 A6 BE</td><td><code>%E0%A6%BE</code></td></tr>
+          <tr><td>ক</td><td>U+0995</td><td>E0 A6 95</td><td><code>%E0%A6%95</code></td></tr>
+          <tr><td>া</td><td>U+09BE</td><td>E0 A6 BE</td><td><code>%E0%A6%BE</code></td></tr>
+        </tbody>
+      </table>
+      <pre><code>encodeURIComponent("ঢাকা")
+// "%E0%A6%A2%E0%A6%BE%E0%A6%95%E0%A6%BE"  (12 bytes → 36 characters)</code></pre>
+      <p>So a four-letter Bangla word becomes 36 characters in the raw URL. Browsers usually <em>display</em> the decoded Bangla in the address bar, but what goes over the network is the encoded form. Keep that in mind if you have URL length limits.</p>
+
+      <h2>encodeURIComponent vs encodeURI</h2>
+      <p>JavaScript has two encoders, and picking the wrong one is the most common URL bug.</p>
+      <ul>
+        <li><strong><code>encodeURIComponent</code></strong> is for a <em>piece</em> of a URL: one query value, one path segment. It encodes every reserved character, so the value can’t break out of its slot.</li>
+        <li><strong><code>encodeURI</code></strong> is for a <em>whole</em> URL that is already correctly structured. It leaves the syntax characters alone and only encodes spaces, non-ASCII and a few unsafe characters.</li>
+      </ul>
+      <table>
+        <thead><tr><th>Function</th><th>Leaves these ASCII characters unencoded</th></tr></thead>
+        <tbody>
+          <tr><td><code>encodeURIComponent</code></td><td><code>A–Z a–z 0–9 - _ . ~ ! ' ( ) *</code></td></tr>
+          <tr><td><code>encodeURI</code></td><td>all of the above, plus <code>; , / ? : @ &amp; = + $ #</code></td></tr>
+        </tbody>
+      </table>
+      <pre><code>encodeURIComponent("a b&amp;c=d/e?f#g")   // "a%20b%26c%3Dd%2Fe%3Ff%23g"
+encodeURI("https://x.com/a b?q=ঢাকা&amp;x=1#top")
+// "https://x.com/a%20b?q=%E0%A6%A2%E0%A6%BE%E0%A6%95%E0%A6%BE&amp;x=1#top"</code></pre>
+      <div class="callout warn"><p><strong>Never use <code>encodeURI</code> on a single value.</strong> <code>encodeURI("rice &amp; dal")</code> keeps the <code>&amp;</code>, so the bug from the introduction survives. For values, always use <code>encodeURIComponent</code> — or better, let <code>URLSearchParams</code> do it.</p></div>
+
+      <h2>Space: %20 or +?</h2>
+      <p>Both are correct, in different places. In a path and in general percent-encoding, a space is <code>%20</code>. HTML forms use a separate format, <code>application/x-www-form-urlencoded</code>, where a space in the query string or form body becomes <code>+</code> and a literal plus becomes <code>%2B</code>. <code>URLSearchParams</code> follows the form rules:</p>
+      <pre><code>new URLSearchParams({ q: "a b+c" }).toString()   // "q=a+b%2Bc"
+new URLSearchParams("q=a+b%20c").get("q")       // "a b c"
+decodeURIComponent("a+b")                        // "a+b"  — plus is NOT turned into a space</code></pre>
+      <p>The trap: if a server decodes a query string with a plain percent-decoder, <code>+</code> stays a plus. If a client encodes a phone number like <code>+8801711…</code> without encoding the plus, a form decoder turns it into a space. Encode and decode with matching tools on both sides.</p>
+
+      <h2>Double encoding</h2>
+      <p>If you encode a string that is already encoded, every <code>%</code> becomes <code>%25</code>:</p>
+      <pre><code>encodeURIComponent(encodeURIComponent("a b"))   // "a%2520b"</code></pre>
+      <p>The server decodes once and gets <code>a%20b</code> instead of <code>a b</code>. Seeing <code>%25</code> in logs is the classic sign. It usually happens when a value is encoded manually and then passed to a library (axios, <code>URLSearchParams</code>, <code>requests</code>) that encodes it again. The fix is to encode in exactly one place — ideally the library, and never by hand.</p>
+
+      <h2>Building query strings safely</h2>
+      <p>Don’t concatenate strings. Let the platform encode for you.</p>
+      <pre><code>// JavaScript (browser and Node.js)
+const url = new URL("https://example.com/search");
+url.searchParams.set("q", "rice &amp; dal");
+url.searchParams.set("page", "2");
+url.href   // "https://example.com/search?q=rice+%26+dal&amp;page=2"
+
+// Reading parameters
+new URL(location.href).searchParams.get("q");   // already decoded</code></pre>
+      <pre><code># Python
+from urllib.parse import urlencode, quote, parse_qs
+
+urlencode({"q": "rice &amp; dal", "city": "ঢাকা"})
+# 'q=rice+%26+dal&amp;city=%E0%A6%A2%E0%A6%BE%E0%A6%95%E0%A6%BE'
+
+quote("a b/c")           # 'a%20b/c'   — "/" is kept by default
+quote("a b/c", safe="")  # 'a%20b%2Fc' — use this for one path segment
+parse_qs("q=a+b")        # {'q': ['a b']}</code></pre>
+      <p>Note Python’s <code>quote()</code> keeps <code>/</code> by default, which is right for a full path but wrong for a single segment such as a file name. Pass <code>safe=""</code> when encoding one segment.</p>
+
+      <h2>Decoding errors: “URIError: URI malformed”</h2>
+      <p><code>decodeURIComponent</code> throws when the input isn’t valid percent-encoding:</p>
+      <pre><code>decodeURIComponent("100%")      // URIError: URI malformed  ("%" not followed by two hex digits)
+decodeURIComponent("%E0%A6")    // URIError: URI malformed  (incomplete UTF-8 sequence)</code></pre>
+      <p>The first happens when raw text with a <code>%</code> (like “50% off”) was never encoded — correctly encoded it would be <code>50%25%20off</code>. The second happens when a long encoded string is cut in the middle of a character, for example by a length limit. When decoding untrusted input, wrap the call in <code>try…catch</code> and treat failure as bad input rather than crashing.</p>
+
+      <div class="try-tool">
+        <span><strong>See the encoding before you ship it.</strong> The URL Encode / Decode tool switches between component, full-URL and form (+) modes and splits any URL into its decoded query parameters.</span>
+        <a class="button" href="/url-encode/" data-i18n="guides.tryTool">Try it now</a>
+      </div>
+
+      <h2>FAQ</h2>
+      <details><summary>Should I put Bangla words directly in URLs and slugs?</summary><p>It works: browsers show the Bangla and send the encoded bytes. The downside is length and readability when the link is copied into places that show the raw form, such as some chat apps and logs. Many sites use a transliterated slug (<code>/dhaka-weather</code>) for that reason.</p></details>
+      <details><summary>Is <code>%e0</code> the same as <code>%E0</code>?</summary><p>Yes. Hex digits in percent-encoding are case-insensitive, though RFC 3986 recommends uppercase for consistency.</p></details>
+      <details><summary>Doesn’t the browser or <code>fetch()</code> encode the URL for me?</summary><p>Only partly. The URL parser encodes spaces and non-ASCII characters, but it can’t know which <code>&amp;</code> or <code>=</code> belong to your data: <code>new URL("https://x.com/a b?q=rice &amp; dal").href</code> gives <code>https://x.com/a%20b?q=rice%20&amp;%20dal</code>, so the query is still split in two. Encode each value yourself, or use <code>searchParams</code>.</p></details>
+      <details><summary>Does URL encoding hide or protect data?</summary><p>No. It is reversible by anyone and offers no secrecy. Never put passwords or tokens in a URL — URLs end up in browser history, server logs and <code>Referer</code> headers.</p></details>
+    </article>
+
+    <article data-lang="bn" lang="bn">
+      <h1>URL এনকোডিং সহজ ভাষায়: %20, + আর কখন এনকোড করবেন</h1>
+      <p class="byline" data-guide-updated data-minutes="6"></p>
+
+      <p>একজন ইউজার আপনার সাইটে সার্চ করলেন <code>rice &amp; dal</code>, অথচ ব্যাকএন্ডে পৌঁছাল শুধু <code>rice </code>। কেউ বাংলা শব্দসহ একটা লিংক শেয়ার করলেন, আর সেটা এসে দাঁড়াল <code>%E0%A6%A2%E0%A6%BE…</code>-তে। কোনো redirect URL নষ্ট হয়ে গেল <code>%2520</code>। তিনটি বাগের গোড়া একই: URL নিরাপদে খুব অল্প কিছু অক্ষর বহন করতে পারে, বাকি সব <strong>পার্সেন্ট-এনকোড</strong> করতে হয় — ঠিকভাবে, ঠিক একবার, আর সঠিক ফাংশন দিয়ে।</p>
+
+      <h2>পার্সেন্ট-এনকোডিং কেন দরকার</h2>
+      <p>URL-এর স্ট্যান্ডার্ড (RFC 3986) অক্ষরগুলোকে দুই ভাগে ভাগ করে:</p>
+      <ul>
+        <li><strong>Unreserved</strong> — <code>A–Z a–z 0–9 - . _ ~</code>। এগুলো কখনো এনকোড করতে হয় না, সব জায়গায় একই অর্থ।</li>
+        <li><strong>Reserved</strong> — URL-এর গঠনে যাদের নির্দিষ্ট কাজ আছে: <code>: / ? # [ ] @</code> (scheme, host, path, query আর fragment আলাদা করে) এবং <code>! $ &amp; ' ( ) * + , ; =</code> (অংশের ভেতরে ব্যবহৃত হয়, যেমন query string-এ <code>&amp;</code> আর <code>=</code>)।</li>
+      </ul>
+      <p>আপনার <em>ডেটার</em> ভেতরে reserved অক্ষর থাকলে পার্সার বুঝতে পারে না কোনটা ডেটা আর কোনটা গঠন। <code>?q=rice &amp; dal</code>-এ <code>&amp;</code> নতুন প্যারামিটার শুরু করে দেয়, ফলে <code>q</code> হয়ে যায় <code>"rice "</code>। ডেটা এনকোড করলে <code>&amp;</code> হয়ে যায় <code>%26</code> — তখন এটা শুধু একটা অক্ষর, বিভাজক নয়। ASCII-এর বাইরের সবকিছু — বাংলা, ইমোজি, অ্যাকসেন্টওয়ালা অক্ষর — এনকোড করতে হয়, কারণ URL সংজ্ঞায়িতই ASCII দিয়ে।</p>
+
+      <h2>একটি অক্ষর কীভাবে %XX হয়</h2>
+      <p>নিয়মটা সোজা: অক্ষরটির <strong>UTF-8 বাইটগুলো</strong> নিন, আর প্রতিটি বাইট লিখুন <code>%</code> আর দুই ঘরের hex দিয়ে। ASCII অক্ষর এক বাইটের, তাই স্পেস (বাইট 0x20) হয় <code>%20</code>, আর <code>&amp;</code> (0x26) হয় <code>%26</code>। UTF-8-এ প্রতিটি বাংলা অক্ষর তিন বাইট নেয়। নিচে <code>ঢাকা</code> — এতে চারটি code point:</p>
+      <table>
+        <thead><tr><th>অক্ষর</th><th>Code point</th><th>UTF-8 বাইট</th><th>এনকোড করা রূপ</th></tr></thead>
+        <tbody>
+          <tr><td>ঢ</td><td>U+09A2</td><td>E0 A6 A2</td><td><code>%E0%A6%A2</code></td></tr>
+          <tr><td>া</td><td>U+09BE</td><td>E0 A6 BE</td><td><code>%E0%A6%BE</code></td></tr>
+          <tr><td>ক</td><td>U+0995</td><td>E0 A6 95</td><td><code>%E0%A6%95</code></td></tr>
+          <tr><td>া</td><td>U+09BE</td><td>E0 A6 BE</td><td><code>%E0%A6%BE</code></td></tr>
+        </tbody>
+      </table>
+      <pre><code>encodeURIComponent("ঢাকা")
+// "%E0%A6%A2%E0%A6%BE%E0%A6%95%E0%A6%BE"  (১২ বাইট → ৩৬টি অক্ষর)</code></pre>
+      <p>অর্থাৎ চার অক্ষরের একটা বাংলা শব্দ আসল URL-এ হয়ে যায় ৩৬ অক্ষরের। ব্রাউজার সাধারণত অ্যাড্রেস বারে ডিকোড করা বাংলাই <em>দেখায়</em>, কিন্তু নেটওয়ার্কে যায় এনকোড করা রূপটা। URL-এর দৈর্ঘ্যের সীমা থাকলে এটা মাথায় রাখুন।</p>
+
+      <h2>encodeURIComponent বনাম encodeURI</h2>
+      <p>JavaScript-এ দুটি এনকোডার আছে, আর ভুলটা বেছে নেওয়াই URL-এর সবচেয়ে পরিচিত বাগ।</p>
+      <ul>
+        <li><strong><code>encodeURIComponent</code></strong> URL-এর একটি <em>অংশের</em> জন্য: একটি query value বা একটি path segment। এটি সব reserved অক্ষর এনকোড করে, তাই মানটা নিজের জায়গা ছেড়ে বেরিয়ে যেতে পারে না।</li>
+        <li><strong><code>encodeURI</code></strong> একটি <em>পুরো</em> URL-এর জন্য, যার গঠন আগে থেকেই ঠিক আছে। এটি গঠনের অক্ষরগুলো ছুঁয়ে দেখে না; শুধু স্পেস, non-ASCII আর কিছু অনিরাপদ অক্ষর এনকোড করে।</li>
+      </ul>
+      <table>
+        <thead><tr><th>ফাংশন</th><th>যে ASCII অক্ষরগুলো এনকোড করে না</th></tr></thead>
+        <tbody>
+          <tr><td><code>encodeURIComponent</code></td><td><code>A–Z a–z 0–9 - _ . ~ ! ' ( ) *</code></td></tr>
+          <tr><td><code>encodeURI</code></td><td>ওপরের সবগুলো, সাথে <code>; , / ? : @ &amp; = + $ #</code></td></tr>
+        </tbody>
+      </table>
+      <pre><code>encodeURIComponent("a b&amp;c=d/e?f#g")   // "a%20b%26c%3Dd%2Fe%3Ff%23g"
+encodeURI("https://x.com/a b?q=ঢাকা&amp;x=1#top")
+// "https://x.com/a%20b?q=%E0%A6%A2%E0%A6%BE%E0%A6%95%E0%A6%BE&amp;x=1#top"</code></pre>
+      <div class="callout warn"><p><strong>একটি মানের ওপর কখনো <code>encodeURI</code> চালাবেন না।</strong> <code>encodeURI("rice &amp; dal")</code> <code>&amp;</code>-কে রেখে দেয়, ফলে শুরুর বাগটা থেকেই যায়। মানের জন্য সবসময় <code>encodeURIComponent</code> — বা আরও ভালো, কাজটা <code>URLSearchParams</code>-কে দিন।</p></div>
+
+      <h2>স্পেস: %20 নাকি +?</h2>
+      <p>দুটোই ঠিক, তবে আলাদা জায়গায়। path-এ আর সাধারণ পার্সেন্ট-এনকোডিংয়ে স্পেস হয় <code>%20</code>। HTML ফর্ম আলাদা একটা ফরম্যাট ব্যবহার করে — <code>application/x-www-form-urlencoded</code> — যেখানে query string বা ফর্ম বডিতে স্পেস হয় <code>+</code>, আর আসল প্লাস চিহ্ন হয় <code>%2B</code>। <code>URLSearchParams</code> এই ফর্মের নিয়ম মানে:</p>
+      <pre><code>new URLSearchParams({ q: "a b+c" }).toString()   // "q=a+b%2Bc"
+new URLSearchParams("q=a+b%20c").get("q")       // "a b c"
+decodeURIComponent("a+b")                        // "a+b"  — প্লাস স্পেসে বদলায় না</code></pre>
+      <p>ফাঁদটা হলো: সার্ভার যদি সাধারণ percent-decoder দিয়ে query string ডিকোড করে, <code>+</code> প্লাসই থেকে যায়। আবার ক্লায়েন্ট যদি <code>+8801711…</code>-এর মতো ফোন নম্বর প্লাস এনকোড না করেই পাঠায়, form decoder সেটাকে স্পেস বানিয়ে ফেলে। দুই দিকেই মিলিয়ে একই ধরনের টুল দিয়ে এনকোড ও ডিকোড করুন।</p>
+
+      <h2>ডাবল এনকোডিং</h2>
+      <p>আগে থেকে এনকোড করা স্ট্রিং আবার এনকোড করলে প্রতিটি <code>%</code> হয়ে যায় <code>%25</code>:</p>
+      <pre><code>encodeURIComponent(encodeURIComponent("a b"))   // "a%2520b"</code></pre>
+      <p>সার্ভার একবার ডিকোড করে পায় <code>a%20b</code>, <code>a b</code> নয়। লগে <code>%25</code> দেখা মানেই সাধারণত এই সমস্যা। এটা ঘটে যখন কোনো মান হাতে এনকোড করে এমন লাইব্রেরিতে (axios, <code>URLSearchParams</code>, <code>requests</code>) দেওয়া হয় যা নিজেই আবার এনকোড করে। সমাধান: এনকোড করুন ঠিক এক জায়গায় — আদর্শভাবে লাইব্রেরিতে, হাতে কখনো নয়।</p>
+
+      <h2>নিরাপদে query string তৈরি করা</h2>
+      <p>স্ট্রিং জোড়া লাগাবেন না। এনকোডিংয়ের কাজটা প্ল্যাটফর্মকেই করতে দিন।</p>
+      <pre><code>// JavaScript (browser and Node.js)
+const url = new URL("https://example.com/search");
+url.searchParams.set("q", "rice &amp; dal");
+url.searchParams.set("page", "2");
+url.href   // "https://example.com/search?q=rice+%26+dal&amp;page=2"
+
+// প্যারামিটার পড়া
+new URL(location.href).searchParams.get("q");   // আগেই ডিকোড করা</code></pre>
+      <pre><code># Python
+from urllib.parse import urlencode, quote, parse_qs
+
+urlencode({"q": "rice &amp; dal", "city": "ঢাকা"})
+# 'q=rice+%26+dal&amp;city=%E0%A6%A2%E0%A6%BE%E0%A6%95%E0%A6%BE'
+
+quote("a b/c")           # 'a%20b/c'   — "/" ডিফল্টভাবে রেখে দেয়
+quote("a b/c", safe="")  # 'a%20b%2Fc' — একটি path segment-এর জন্য এটা
+parse_qs("q=a+b")        # {'q': ['a b']}</code></pre>
+      <p>খেয়াল করুন, Python-এর <code>quote()</code> ডিফল্টভাবে <code>/</code> রেখে দেয় — পুরো path-এর জন্য ঠিক, কিন্তু ফাইলের নামের মতো একক segment-এর জন্য ভুল। একটি segment এনকোড করতে <code>safe=""</code> দিন।</p>
+
+      <h2>ডিকোডিং এরর: “URIError: URI malformed”</h2>
+      <p>ইনপুট বৈধ পার্সেন্ট-এনকোডিং না হলে <code>decodeURIComponent</code> এরর ছোড়ে:</p>
+      <pre><code>decodeURIComponent("100%")      // URIError: URI malformed  ("%"-এর পরে দুই ঘরের hex নেই)
+decodeURIComponent("%E0%A6")    // URIError: URI malformed  (অসম্পূর্ণ UTF-8 sequence)</code></pre>
+      <p>প্রথমটা হয় যখন <code>%</code>-সহ কাঁচা লেখা (যেমন “50% off”) কখনো এনকোডই করা হয়নি — ঠিকভাবে এনকোড করলে হতো <code>50%25%20off</code>। দ্বিতীয়টা হয় যখন লম্বা এনকোড করা স্ট্রিং কোনো অক্ষরের মাঝখানে কেটে যায়, যেমন দৈর্ঘ্যের সীমার কারণে। অবিশ্বস্ত ইনপুট ডিকোড করার সময় কলটি <code>try…catch</code>-এ রাখুন, আর ব্যর্থ হলে অ্যাপ ক্র্যাশ না করিয়ে সেটাকে ভুল ইনপুট হিসেবে ধরুন।</p>
+
+      <div class="try-tool">
+        <span><strong>পাঠানোর আগে এনকোডিংটা নিজের চোখে দেখুন।</strong> URL এনকোড / ডিকোড টুলে component, পুরো URL আর ফর্ম (+) মোড বদলানো যায়, আর যেকোনো URL-কে ডিকোড করা query প্যারামিটারে ভেঙে দেখায়।</span>
+        <a class="button" href="/url-encode/" data-i18n="guides.tryTool">এখনই চেষ্টা করুন</a>
+      </div>
+
+      <h2>প্রশ্নোত্তর</h2>
+      <details><summary>URL আর slug-এ সরাসরি বাংলা শব্দ রাখা কি ঠিক?</summary><p>কাজ করে: ব্রাউজার বাংলাই দেখায় আর এনকোড করা বাইট পাঠায়। অসুবিধা হলো দৈর্ঘ্য, আর যেসব জায়গায় কাঁচা রূপটা দেখা যায় — যেমন কিছু চ্যাট অ্যাপ ও লগ — সেখানে পড়তে কষ্ট। এজন্য অনেক সাইট প্রতিবর্ণীকৃত slug (<code>/dhaka-weather</code>) ব্যবহার করে।</p></details>
+      <details><summary><code>%e0</code> আর <code>%E0</code> কি একই?</summary><p>হ্যাঁ। পার্সেন্ট-এনকোডিংয়ে hex অঙ্ক বড় হাতের বা ছোট হাতের — দুটোই চলে, তবে সামঞ্জস্যের জন্য RFC 3986 বড় হাতের অক্ষর সুপারিশ করে।</p></details>
+      <details><summary>ব্রাউজার বা <code>fetch()</code> কি নিজেই URL এনকোড করে না?</summary><p>আংশিক করে। URL পার্সার স্পেস আর non-ASCII অক্ষর এনকোড করে, কিন্তু কোন <code>&amp;</code> বা <code>=</code> আপনার ডেটার অংশ তা সে জানে না: <code>new URL("https://x.com/a b?q=rice &amp; dal").href</code> দেয় <code>https://x.com/a%20b?q=rice%20&amp;%20dal</code>, অর্থাৎ query তখনো দুই ভাগ হয়ে যায়। প্রতিটি মান নিজে এনকোড করুন, অথবা <code>searchParams</code> ব্যবহার করুন।</p></details>
+      <details><summary>URL এনকোডিং কি ডেটা লুকায় বা সুরক্ষিত রাখে?</summary><p>না। যে কেউ এটা উল্টে আগের রূপে ফেরাতে পারে, কোনো গোপনীয়তা নেই। পাসওয়ার্ড বা টোকেন কখনো URL-এ রাখবেন না — URL জমা থাকে ব্রাউজার হিস্টরি, সার্ভার লগ আর <code>Referer</code> হেডারে।</p></details>
+    </article>
+
+    <section class="more-tools">
+      <h2 data-i18n="guides.related">Related guides</h2>
+      <ul class="guide-grid" data-related-guides></ul>
+    </section>
+  </main>
+
+  <div class="ad-slot ad-bottom" data-ad="bottom" data-i18n-attr="aria-label:ad.label" aria-label="Advertisement">
+    <span data-i18n="ad.placeholder">Ad space</span>
+  </div>
+
+  <section class="content more-tools">
+    <h2 data-i18n="tools.more">More free tools</h2>
+    <ul class="tool-grid" data-more-tools></ul>
+  </section>
+
+  <footer class="site-footer">
+    <span>© <span data-year></span> <span data-i18n="brand">JSON Bondhu</span></span>
+    <a href="/privacy.html" data-i18n="footer.privacy">Privacy policy</a>
+    <a href="https://github.com/MosabberUddin/jsonbondhu/issues" rel="noopener" data-i18n="footer.contact">Contact</a>
+  </footer>
+
+  <script src="/ads.js" defer></script>
+</body>
+</html>
