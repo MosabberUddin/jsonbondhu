@@ -46,7 +46,7 @@ and would not change the enforced rules. `protect-main` contains:
 
 ### 4. Cloudflare Pages
 - Production branch: `main`. Preview deployments: **all non-production branches**.
-  Every PR gets its own URL (`<branch>.jsonbondhu.pages.dev`) for testing before merge.
+  Every PR gets its own URL (`<branch>.jsonbondhu.irmaoshop.com`) for testing before merge.
 - Protect preview URLs and `/admin` with Cloudflare Access (see `docs/ADS.md`).
 
 ## Everyday flow (Claude or any developer)

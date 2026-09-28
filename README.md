@@ -45,9 +45,9 @@ Then open http://localhost:8765. For the ad API and admin portal, use `npm run d
 
 1. Push this folder to a GitHub repo.
 2. In the Cloudflare dashboard, go to Workers & Pages → Create → Pages → connect the repo. There is no build command, and the output dir is `public` (`wrangler.toml` sets `pages_build_output_dir = "public"`; never publish the repository root).
-3. Add a custom domain (for example `jsonbondhu.com`), then replace every `jsonbondhu.pages.dev` with it:
+3. Add a custom domain (for example `jsonbondhu.com`), then replace every `jsonbondhu.irmaoshop.com` with it:
    canonical/hreflang/JSON-LD URLs in `public/**/index.html`, `public/robots.txt`, `public/sitemap.xml`, and the
-   house-ad links in `functions/_lib/ads-core.js`. `git grep -l jsonbondhu.pages.dev` lists every file to change.
+   house-ad links in `functions/_lib/ads-core.js`. `git grep -l jsonbondhu.irmaoshop.com` lists every file to change.
 4. Follow `docs/ADS.md` to set up KV, admin email, and Cloudflare Access.
 5. Submit `sitemap.xml` in Google Search Console.
 
