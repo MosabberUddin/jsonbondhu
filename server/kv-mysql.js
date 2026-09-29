@@ -73,9 +73,8 @@ export class MysqlKV {
    * the new value is also stored as the key's metadata, as track.js expects.
    */
   async atomicUpdate(key, mutate, opts = {}) {
-    // Concurrent first writes to a new key can deadlock in InnoDB (the duplicate
-    // INSERT IGNORE checks take shared locks before FOR UPDATE wants exclusive
-    // ones). InnoDB rolls back one side; retry it. `mutate` must be pure.
+    // Deadlocks should be rare now (see the exclusive-lock insert below), but InnoDB may
+    // still roll one side back under heavy contention; retry it. `mutate` must be pure.
     for (let attempt = 1; ; attempt++) {
       try {
         return await this.#atomicOnce(key, mutate, opts);
@@ -91,7 +90,10 @@ export class MysqlKV {
     try {
       await conn.beginTransaction();
       // Make sure a row exists to lock (an already-expired placeholder reads as missing).
-      await conn.query('INSERT IGNORE INTO kv (k, v, metadata, expires_at) VALUES (?, ?, NULL, 0)', [key, 'null']);
+      // ON DUPLICATE KEY UPDATE (a no-op assignment) takes the EXCLUSIVE row lock straight away.
+      // INSERT IGNORE only takes a shared lock on a duplicate, and upgrading it to the exclusive
+      // lock that FOR UPDATE wants is what deadlocks under contention.
+      await conn.query('INSERT INTO kv (k, v, metadata, expires_at) VALUES (?, ?, NULL, 0) ON DUPLICATE KEY UPDATE k = k', [key, 'null']);
       const [rows] = await conn.query('SELECT v, expires_at FROM kv WHERE k = ? FOR UPDATE', [key]);
       const row = rows[0];
       const live = row && (row.expires_at === null || Number(row.expires_at) > nowSec());
