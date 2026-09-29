@@ -79,10 +79,19 @@ async function isDuplicate(request, evt) {
   }
 }
 
-async function increment(env, evt, weight) {
+export async function increment(env, evt, weight) {
   const key = statsKey(todayLocal(), evt.campaignId);
+  const bump = (value) => {
+    const cur = { i: Number(value?.i) || 0, c: Number(value?.c) || 0 };
+    if (evt.event === 'impression') cur.i += weight; else cur.c += weight;
+    return cur;
+  };
+  // The self-hosted MySQL store can update atomically; Workers KV cannot.
+  if (typeof env.ADS_KV.atomicUpdate === 'function') {
+    await env.ADS_KV.atomicUpdate(key, bump, { expirationTtl: STATS_TTL_SECONDS, withMetadata: true });
+    return;
+  }
   const { value } = await env.ADS_KV.getWithMetadata(key, { type: 'json' });
-  const cur = { i: Number(value?.i) || 0, c: Number(value?.c) || 0 };
-  if (evt.event === 'impression') cur.i += weight; else cur.c += weight;
+  const cur = bump(value);
   await env.ADS_KV.put(key, JSON.stringify(cur), { metadata: cur, expirationTtl: STATS_TTL_SECONDS });
 }

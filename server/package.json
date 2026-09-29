@@ -1,0 +1,16 @@
+{
+  "name": "jsonbondhu-server",
+  "private": true,
+  "type": "module",
+  "description": "Self-hosted runtime for functions/ (Node + MySQL). See docs/SELF_HOST.md.",
+  "scripts": {
+    "start": "node --env-file=.env server.js",
+    "import-kv": "node --env-file=.env import-kv.mjs"
+  },
+  "dependencies": {
+    "mysql2": "3.24.4"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}
