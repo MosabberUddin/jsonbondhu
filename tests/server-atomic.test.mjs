@@ -7,8 +7,9 @@ import { resolveAdminFile } from '../server/admin-path.js';
 import { PendingTasks } from '../server/pending.js';
 import { increment } from '../functions/api/track.js';
 
-// A tiny in-memory stand-in for a mysql2 pool that honours SELECT ... FOR UPDATE:
-// the row lock is held until commit/rollback, like InnoDB.
+// A tiny in-memory stand-in for a mysql2 pool that models InnoDB's row lock: the
+// upsert (INSERT ... ON DUPLICATE KEY UPDATE) takes the exclusive lock, the same
+// transaction's SELECT ... FOR UPDATE reuses it, and commit/rollback releases it.
 function fakePool() {
   const rows = new Map();
   const locks = new Map(); // key -> promise that resolves when the lock is released
@@ -18,22 +19,29 @@ function fakePool() {
     calls,
     async getConnection() {
       let release = null;
+      let held = null; // key this transaction holds the lock on
+      const acquire = async (k) => {
+        if (held === k) return;
+        while (locks.has(k)) await locks.get(k);
+        let resolve;
+        locks.set(k, new Promise((r) => { resolve = r; }));
+        held = k;
+        release = () => { locks.delete(k); held = null; resolve(); };
+      };
       const conn = {
         async beginTransaction() { calls.push('begin'); },
         async query(sql, params) {
           const s = sql.replace(/\s+/g, ' ').trim();
-          if (s.startsWith('INSERT IGNORE')) {
+          if (s.startsWith('INSERT INTO kv') && s.includes('ON DUPLICATE KEY UPDATE k = k')) {
             const [k, v] = params;
+            await acquire(k);
             if (!rows.has(k)) rows.set(k, { v, metadata: null, expires_at: 0 });
+            await new Promise((r) => setImmediate(r)); // give other callers a chance to race
             return [{}];
           }
           if (s.startsWith('SELECT v, expires_at FROM kv WHERE k = ? FOR UPDATE')) {
             const [k] = params;
-            while (locks.has(k)) await locks.get(k);
-            let resolve;
-            locks.set(k, new Promise((r) => { resolve = r; }));
-            release = () => { locks.delete(k); resolve(); };
-            await new Promise((r) => setImmediate(r)); // give other callers a chance to race
+            await acquire(k); // already held from the upsert
             return [[{ ...rows.get(k) }]];
           }
           if (s.startsWith('UPDATE kv SET')) {
@@ -77,6 +85,23 @@ describe('MysqlKV.atomicUpdate', () => {
     const kv = new MysqlKV(pool);
     await assert.rejects(kv.atomicUpdate('k', () => { throw new Error('boom'); }), /boom/);
     assert.deepEqual(pool.calls.slice(-2), ['rollback', 'release']);
+  });
+});
+
+describe('MysqlKV.atomicUpdate locking statement', () => {
+  test('creates the row with an exclusive-lock upsert, never INSERT IGNORE', async () => {
+    const sqls = [];
+    const conn = {
+      async beginTransaction() {}, async commit() {}, async rollback() {}, release() {},
+      async query(sql) {
+        sqls.push(sql.replace(/s+/g, ' ').trim());
+        return [sql.includes('SELECT') ? [{ v: 'null', expires_at: 0 }] : {}];
+      },
+    };
+    await new MysqlKV({ getConnection: async () => conn }).atomicUpdate('k', () => ({ n: 1 }));
+    assert.ok(sqls[0].startsWith('INSERT INTO kv') && sqls[0].endsWith('ON DUPLICATE KEY UPDATE k = k'), sqls[0]);
+    assert.ok(!sqls.some((q) => q.includes('INSERT IGNORE')));
+    assert.ok(sqls[1].includes('FOR UPDATE'));
   });
 });
 
