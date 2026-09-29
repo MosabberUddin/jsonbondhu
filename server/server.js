@@ -28,6 +28,7 @@ import { onRequest as statsHandler } from '../functions/api/admin/stats.js';
 import { onRequest as portalMiddleware } from '../functions/admin/_middleware.js';
 import { MysqlKV } from './kv-mysql.js';
 import { MemoryCache } from './memory-cache.js';
+import { PendingTasks } from './pending.js';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const PUBLIC_DIR = path.resolve(process.env.PUBLIC_DIR || path.join(HERE, '..', 'public'));
@@ -42,6 +43,7 @@ if (!process.env.DATABASE_URL) {
 
 const pool = mysql.createPool({ uri: process.env.DATABASE_URL, connectionLimit: 10, enableKeepAlive: true, charset: 'utf8mb4' });
 const kv = new MysqlKV(pool);
+const pending = new PendingTasks();
 globalThis.caches = { default: new MemoryCache() };
 
 // Same shape as the Pages env: bindings plus string vars.
@@ -137,7 +139,7 @@ const server = http.createServer(async (req, res) => {
       env,
       params: {},
       data: {},
-      waitUntil: (p) => Promise.resolve(p).catch((e) => console.error('waitUntil task failed', e)),
+      waitUntil: (p) => pending.track(p),
     };
     const response = await run(route(new URL(request.url).pathname), context);
     await send(res, response, req.method);
@@ -158,11 +160,19 @@ server.listen(PORT, HOST, () => {
   console.log(`jsonbondhu API listening on http://${HOST}:${PORT} (public dir ${PUBLIC_DIR})`);
 });
 
-function shutdown() {
+// systemd allows 5 s (TimeoutStopSec): stop accepting requests, let in-flight
+// track writes finish (up to 3.5 s), then close the pool.
+let stopping = false;
+async function shutdown() {
+  if (stopping) return;
+  stopping = true;
+  setTimeout(() => process.exit(0), 4500).unref();
   server.close();
   server.closeIdleConnections?.();
-  pool.end().finally(() => process.exit(0));
-  setTimeout(() => process.exit(0), 3000).unref();
+  const drained = await pending.drain(3500);
+  if (!drained) console.error(`shutdown: ${pending.size} pending write(s) did not finish in time`);
+  await pool.end().catch((e) => console.error('pool.end failed', e));
+  process.exit(0);
 }
 process.on('SIGTERM', shutdown);
 process.on('SIGINT', shutdown);

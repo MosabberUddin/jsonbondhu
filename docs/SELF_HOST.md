@@ -63,7 +63,12 @@ were imported with their original expiry.
 
 ## Known differences
 
-- Stats increments are still read-modify-write (as on KV), so two hits on the
-  same campaign in the same instant can lose one count. MySQL has no
-  eventual-consistency delay, so this is rarer than on KV.
+- Stats increments are atomic here: `MysqlKV.atomicUpdate` locks the row
+  (`SELECT … FOR UPDATE`) for the read-modify-write, so simultaneous hits on the
+  same campaign are never lost. (On Workers KV they still can be.)
+- On shutdown the server stops taking requests and waits up to 3.5 s for
+  in-flight track writes (`server/pending.js`) before closing the MySQL pool.
+- Keys use `utf8mb4_0900_bin` (byte-wise, NO PAD) and values `LONGTEXT`, matching
+  KV key and value-size semantics. Existing tables: run the `ALTER TABLE` at the
+  end of `server/schema.sql` once.
 - The track dedupe cache lives in one process and resets on restart.

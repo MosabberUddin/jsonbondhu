@@ -48,6 +48,37 @@ export class MysqlKV {
     );
   }
 
+  /**
+   * Atomic read-modify-write of one JSON value (not part of the Workers KV API).
+   * The row is locked for the whole update, so concurrent callers on the same key
+   * are serialised and no increment is lost. `mutate` gets the current value
+   * (null when missing or expired) and returns the new one; with `withMetadata`
+   * the new value is also stored as the key's metadata, as track.js expects.
+   */
+  async atomicUpdate(key, mutate, { expirationTtl, withMetadata = false } = {}) {
+    const conn = await this.pool.getConnection();
+    try {
+      await conn.beginTransaction();
+      // Make sure a row exists to lock (an already-expired placeholder reads as missing).
+      await conn.query('INSERT IGNORE INTO kv (k, v, metadata, expires_at) VALUES (?, ?, NULL, 0)', [key, 'null']);
+      const [rows] = await conn.query('SELECT v, expires_at FROM kv WHERE k = ? FOR UPDATE', [key]);
+      const row = rows[0];
+      const live = row && (row.expires_at === null || Number(row.expires_at) > nowSec());
+      const next = mutate(live ? parseJson(row.v) : null);
+      const text = JSON.stringify(next);
+      const expiresAt = expirationTtl ? nowSec() + Number(expirationTtl) : null;
+      await conn.query('UPDATE kv SET v = ?, metadata = ?, expires_at = ? WHERE k = ?',
+        [text, withMetadata ? text : null, expiresAt, key]);
+      await conn.commit();
+      return next;
+    } catch (e) {
+      await conn.rollback().catch(() => {});
+      throw e;
+    } finally {
+      conn.release();
+    }
+  }
+
   // Keys sorted by name; the cursor is the last key of the previous page.
   async list({ prefix = '', cursor, limit = LIST_LIMIT } = {}) {
     const n = Math.min(Math.max(Number(limit) || LIST_LIMIT, 1), LIST_LIMIT);
