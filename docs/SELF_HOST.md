@@ -72,3 +72,8 @@ were imported with their original expiry.
   KV key and value-size semantics. Existing tables: run the `ALTER TABLE` at the
   end of `server/schema.sql` once.
 - The track dedupe cache lives in one process and resets on restart.
+- KV values can be up to 25 MiB, but MySQL only accepts a value smaller than
+  `max_allowed_packet` (production: 64 MB; MySQL 8 default is 64 MB, older or
+  distro configs may be 4-16 MB). Ad config and stats are a few KB. If you ever import
+  or store something larger, raise `max_allowed_packet` under `[mysqld]` in the MySQL
+  config; `server/import-kv.mjs` checks this up front and lists any key that would not fit.

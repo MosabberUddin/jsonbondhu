@@ -19,6 +19,15 @@ const entries = JSON.parse(readFileSync(file, 'utf8'));
 const pool = mysql.createPool({ uri: process.env.DATABASE_URL, connectionLimit: 1 });
 const kv = new MysqlKV(pool);
 try {
+  // A value larger than MySQL's max_allowed_packet cannot be stored: check before
+  // importing anything, so a big export fails up front rather than partway through.
+  const [[{ limit }]] = await pool.query('SELECT @@global.max_allowed_packet AS `limit`');
+  const tooBig = entries.filter((e) => Buffer.byteLength(typeof e.value === 'string' ? e.value : JSON.stringify(e.value)) + 4096 > Number(limit));
+  if (tooBig.length) {
+    console.error(`These keys exceed max_allowed_packet (${limit} bytes); raise it in the MySQL config and retry:`);
+    for (const e of tooBig) console.error('  ' + e.name);
+    process.exit(1);
+  }
   for (const e of entries) {
     await kv.put(e.name, typeof e.value === 'string' ? e.value : JSON.stringify(e.value), {
       metadata: e.metadata ?? undefined,
