@@ -5,6 +5,17 @@
 // Unlike Cloudflare KV this is strongly consistent and has no write quota.
 
 const LIST_LIMIT = 1000;
+const MAX_LOCK_RETRIES = 5;
+
+// ER_LOCK_DEADLOCK (1213) and ER_LOCK_WAIT_TIMEOUT (1205): the transaction was
+// rolled back and can safely be run again.
+function isRetryableLockError(e) {
+  return e?.errno === 1213 || e?.errno === 1205 || e?.code === 'ER_LOCK_DEADLOCK' || e?.code === 'ER_LOCK_WAIT_TIMEOUT';
+}
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
 export class MysqlKV {
   /** @param {import('mysql2/promise').Pool} pool */
@@ -55,7 +66,21 @@ export class MysqlKV {
    * (null when missing or expired) and returns the new one; with `withMetadata`
    * the new value is also stored as the key's metadata, as track.js expects.
    */
-  async atomicUpdate(key, mutate, { expirationTtl, withMetadata = false } = {}) {
+  async atomicUpdate(key, mutate, opts = {}) {
+    // Concurrent first writes to a new key can deadlock in InnoDB (the duplicate
+    // INSERT IGNORE checks take shared locks before FOR UPDATE wants exclusive
+    // ones). InnoDB rolls back one side; retry it. `mutate` must be pure.
+    for (let attempt = 1; ; attempt++) {
+      try {
+        return await this.#atomicOnce(key, mutate, opts);
+      } catch (e) {
+        if (!isRetryableLockError(e) || attempt >= MAX_LOCK_RETRIES) throw e;
+        await sleep(10 * 2 ** attempt + Math.floor(Math.random() * 10));
+      }
+    }
+  }
+
+  async #atomicOnce(key, mutate, { expirationTtl, withMetadata = false } = {}) {
     const conn = await this.pool.getConnection();
     try {
       await conn.beginTransaction();

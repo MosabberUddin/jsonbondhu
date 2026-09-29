@@ -29,6 +29,7 @@ import { onRequest as portalMiddleware } from '../functions/admin/_middleware.js
 import { MysqlKV } from './kv-mysql.js';
 import { MemoryCache } from './memory-cache.js';
 import { PendingTasks } from './pending.js';
+import { resolveAdminFile } from './admin-path.js';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const PUBLIC_DIR = path.resolve(process.env.PUBLIC_DIR || path.join(HERE, '..', 'public'));
@@ -90,9 +91,8 @@ async function notFound() {
 async function serveAdminFile({ request }) {
   const { pathname } = new URL(request.url);
   if (pathname === '/admin') return Response.redirect(new URL('/admin/', request.url), 301);
-  const rel = decodeURIComponent(pathname.slice('/admin/'.length)) || 'index.html';
-  const file = path.resolve(ADMIN_DIR, rel);
-  if (!file.startsWith(ADMIN_DIR + path.sep)) return notFound();
+  const file = resolveAdminFile(pathname, ADMIN_DIR);
+  if (!file) return notFound();
   try {
     const info = await stat(file);
     if (!info.isFile()) return notFound();

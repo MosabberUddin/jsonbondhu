@@ -1,7 +1,9 @@
 // Atomic stats increments (MysqlKV.atomicUpdate + track.js) and shutdown draining.
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
+import path from 'node:path';
 import { MysqlKV } from '../server/kv-mysql.js';
+import { resolveAdminFile } from '../server/admin-path.js';
 import { PendingTasks } from '../server/pending.js';
 import { increment } from '../functions/api/track.js';
 
@@ -75,6 +77,73 @@ describe('MysqlKV.atomicUpdate', () => {
     const kv = new MysqlKV(pool);
     await assert.rejects(kv.atomicUpdate('k', () => { throw new Error('boom'); }), /boom/);
     assert.deepEqual(pool.calls.slice(-2), ['rollback', 'release']);
+  });
+});
+
+describe('MysqlKV.atomicUpdate deadlock handling', () => {
+  // A pool whose first N transactions die with an InnoDB deadlock (errno 1213).
+  function flakyPool(failures, errno = 1213) {
+    const inner = fakePool();
+    let left = failures;
+    const getConnection = inner.getConnection;
+    inner.getConnection = async () => {
+      const conn = await getConnection();
+      const query = conn.query.bind(conn);
+      conn.query = async (sql, params) => {
+        if (left > 0 && sql.includes('FOR UPDATE')) {
+          left--;
+          const err = new Error('Deadlock found when trying to get lock; try restarting transaction');
+          err.errno = errno;
+          throw err;
+        }
+        return query(sql, params);
+      };
+      return conn;
+    };
+    return inner;
+  }
+
+  test('retries after a deadlock and still records the count once', async () => {
+    const pool = flakyPool(2);
+    const kv = new MysqlKV(pool);
+    const out = await kv.atomicUpdate('k', (v) => ({ n: (v?.n || 0) + 1 }));
+    assert.deepEqual(out, { n: 1 });
+    assert.equal(JSON.parse(pool.rows.get('k').v).n, 1);
+    assert.equal(pool.calls.filter((c) => c === 'rollback').length, 2);
+    assert.equal(pool.calls.filter((c) => c === 'release').length, 3);
+  });
+
+  test('gives up (and surfaces the error) after repeated deadlocks', async () => {
+    const pool = flakyPool(99);
+    const kv = new MysqlKV(pool);
+    await assert.rejects(kv.atomicUpdate('k', () => ({ n: 1 })), (e) => e.errno === 1213);
+    assert.equal(pool.calls.filter((c) => c === 'release').length, 5);
+  });
+
+  test('does not retry unrelated errors', async () => {
+    const pool = flakyPool(1, 1064);
+    const kv = new MysqlKV(pool);
+    await assert.rejects(kv.atomicUpdate('k', () => ({ n: 1 })), (e) => e.errno === 1064);
+    assert.equal(pool.calls.filter((c) => c === 'release').length, 1);
+  });
+});
+
+describe('resolveAdminFile', () => {
+  const dir = path.resolve('/srv/public/admin');
+  test('maps normal paths inside the admin folder', () => {
+    assert.equal(resolveAdminFile('/admin/', dir), path.join(dir, 'index.html'));
+    assert.equal(resolveAdminFile('/admin/admin.js', dir), path.join(dir, 'admin.js'));
+    assert.equal(resolveAdminFile('/admin/sub%20dir/a.css', dir), path.join(dir, 'sub dir', 'a.css'));
+  });
+  test('returns null for malformed percent-encoding instead of throwing', () => {
+    assert.equal(resolveAdminFile('/admin/%E0', dir), null);
+    assert.equal(resolveAdminFile('/admin/%', dir), null);
+    assert.equal(resolveAdminFile('/admin/%E0%A6', dir), null);
+  });
+  test('returns null for traversal and NUL bytes', () => {
+    assert.equal(resolveAdminFile('/admin/../secret', dir), null);
+    assert.equal(resolveAdminFile('/admin/%2e%2e/secret', dir), null);
+    assert.equal(resolveAdminFile('/admin/a%00.js', dir), null);
   });
 });
 
