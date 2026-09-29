@@ -420,7 +420,7 @@ describe('toPublicConfig', () => {
   test('default config: an English and a Bangla house ad in each slot', () => {
     const cfg = defaultConfig();
     assert.equal(cfg.campaigns.length, 4);
-    assert.ok(cfg.campaigns.every((c) => c.advertiser === 'house' && c.ctaUrl === 'https://jsonbondhu.pages.dev/#premium'));
+    assert.ok(cfg.campaigns.every((c) => c.advertiser === 'house' && c.ctaUrl === 'https://jsonbondhu.irmaoshop.com/#premium'));
     const pub = toPublicConfig(cfg, TODAY);
     for (const s of ['top', 'bottom']) {
       assert.equal(pub.slots[s].mode, 'house');

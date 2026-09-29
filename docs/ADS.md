@@ -238,8 +238,8 @@ namespace so that testing on a PR URL can never change production ads.
 3. Add **every hostname** that serves the site, each with **two paths**, `admin` and
    `api/admin`:
    * `jsonbondhu.com/admin`, `jsonbondhu.com/api/admin`
-   * `jsonbondhu.pages.dev/admin`, `jsonbondhu.pages.dev/api/admin`
-   * `*.jsonbondhu.pages.dev/admin`, `*.jsonbondhu.pages.dev/api/admin` (previews)
+   * `jsonbondhu.irmaoshop.com/admin`, `jsonbondhu.irmaoshop.com/api/admin`
+   * `*.jsonbondhu.irmaoshop.com/admin`, `*.jsonbondhu.irmaoshop.com/api/admin` (previews)
    Keep them in **one** application so there is a single AUD tag.
 4. Policy: **Allow**, Include → Emails → the admin addresses. Session duration: 24h.
 5. Copy the application's **AUD tag** from its Overview tab.
@@ -269,7 +269,7 @@ so make sure no `.dev.vars` or other local secrets are in it (see Open issues).
 
 * `https://jsonbondhu.com/api/ads` returns JSON with `"version": 0` and the house ads.
 * `https://jsonbondhu.com/admin/` redirects to the Access login. After login, the portal shows your email.
-* `curl -H "Cf-Access-Authenticated-User-Email: you@x.com" https://jsonbondhu.pages.dev/api/admin/config`
+* `curl -H "Cf-Access-Authenticated-User-Email: you@x.com" https://jsonbondhu.irmaoshop.com/api/admin/config`
   must return **401** (JWT mode rejects forged headers).
 
 ## Local development

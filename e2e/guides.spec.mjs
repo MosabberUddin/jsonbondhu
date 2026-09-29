@@ -53,7 +53,7 @@ for (const slug of SLUGS) {
     test('has valid metadata and only working internal links', async ({ page, request }) => {
       await page.goto(`/guides/${slug}/`);
       await expect(page.locator('html')).toHaveAttribute('data-guide', slug);
-      await expect(page.locator('link[rel=canonical]')).toHaveAttribute('href', `https://jsonbondhu.pages.dev/guides/${slug}/`);
+      await expect(page.locator('link[rel=canonical]')).toHaveAttribute('href', `https://jsonbondhu.irmaoshop.com/guides/${slug}/`);
       const ld = JSON.parse(await page.locator('script[type="application/ld+json"]').textContent());
       expect(ld['@type']).toBe('TechArticle');
       const links = await page.locator('main a[href^="/"]').evaluateAll((els) => [...new Set(els.map((e) => e.getAttribute('href').split('#')[0]))]);

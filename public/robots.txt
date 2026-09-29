@@ -3,4 +3,4 @@ Allow: /
 Disallow: /admin/
 Disallow: /api/
 
-Sitemap: https://jsonbondhu.pages.dev/sitemap.xml
+Sitemap: https://jsonbondhu.irmaoshop.com/sitemap.xml
