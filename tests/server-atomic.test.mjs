@@ -136,7 +136,7 @@ describe('MysqlKV.putQuery / put', () => {
     const expected = MysqlKV.putQuery('k', { a: 1 }, { metadata: { m: 1 }, expiration: 1900000000 });
     assert.deepEqual(seen, [expected]);
     assert.deepEqual(expected.params, ['k', '[object Object]', '{"m":1}', 1900000000]);
-    assert.match(expected.sql, /^INSERT INTO kv (k, v, metadata, expires_at)/);
+    assert.ok(expected.sql.startsWith("INSERT INTO kv (k, v, metadata, expires_at)"));
   });
   test('works with any object that has query(), e.g. a transaction connection', async () => {
     const seen = [];
