@@ -41,15 +41,23 @@ python -m http.server 8765 --directory public
 
 Then open http://localhost:8765. For the ad API and admin portal, use `npm run dev` (runs `wrangler pages dev`, which serves `public/` + `functions/`) (see `docs/ADS.md`).
 
-## Deploy (Cloudflare Pages, free)
+## Deploy (self-hosted)
 
-1. Push this folder to a GitHub repo.
-2. In the Cloudflare dashboard, go to Workers & Pages → Create → Pages → connect the repo. There is no build command, and the output dir is `public` (`wrangler.toml` sets `pages_build_output_dir = "public"`; never publish the repository root).
-3. Add a custom domain (for example `jsonbondhu.com`), then replace every `jsonbondhu.pages.dev` with it:
-   canonical/hreflang/JSON-LD URLs in `public/**/index.html`, `public/robots.txt`, `public/sitemap.xml`, and the
-   house-ad links in `functions/_lib/ads-core.js`. `git grep -l jsonbondhu.pages.dev` lists every file to change.
-4. Follow `docs/ADS.md` to set up KV, admin email, and Cloudflare Access.
-5. Submit `sitemap.xml` in Google Search Console.
+Production runs on the owner's server at https://jsonbondhu.irmaoshop.com; the admin portal is on
+https://cms-jsonbondhu.irmaoshop.com behind a login.
+
+1. nginx serves `public/` as static files (never the repository root).
+2. The ad API (`/api/ads`, `/api/track`) and the admin portal run as a Node service behind nginx;
+   see `docs/SELF_HOST.md` (added with the self-hosting change) for the service, database and nginx setup.
+3. Deploy only what is merged to `main` (see `docs/RELEASE.md`).
+4. If the site address ever changes, replace every `jsonbondhu.irmaoshop.com`: canonical/hreflang/JSON-LD URLs in
+   `public/**/index.html`, `public/robots.txt`, `public/sitemap.xml`, and the house-ad links in
+   `functions/_lib/ads-core.js`. `git grep -l jsonbondhu.irmaoshop.com` lists every file to change.
+5. The site is verified in Google Search Console with the meta tag in `public/index.html`; keep it, and resubmit
+   `sitemap.xml` after adding pages.
+
+The Cloudflare Pages setup (`wrangler.toml`, Cloudflare Access) is kept for local development with
+`npm run dev` and as an alternative host, but it is not used in production.
 
 ## Review workflow
 

@@ -445,7 +445,7 @@ export function ctr(clicks, impressions) {
 // Defaults
 // ---------------------------------------------------------------------------
 
-const PREMIUM_URL = 'https://jsonbondhu.pages.dev/#premium';
+const PREMIUM_URL = 'https://jsonbondhu.irmaoshop.com/#premium';
 
 /** A default house campaign promoting the ad-free version. */
 function houseAd({ id, name, slot, lang, headline, body, ctaText }) {

@@ -3,10 +3,9 @@
 ```
 feature branch ──► Pull Request ──► ① CI: unit + backend + e2e tests (desktop & mobile)
                                     ② CodeRabbit AI review (must approve)
-                                    (optional) Cloudflare Pages preview URL for manual QA
                                          │ ① and ② green
                                          ▼
-                                   merge to main ──► Cloudflare Pages deploys production
+                                   merge to main ──► deploy to https://jsonbondhu.irmaoshop.com
 ```
 
 Production is built **only** from `main`, and `main` accepts changes **only** through a PR
@@ -44,20 +43,21 @@ and would not change the enforced rules. `protect-main` contains:
 - [x] Do not allow bypassing the above settings (this applies to admins too)
 - [ ] Allow force pushes: **off**. Allow deletions: **off**
 
-### 4. Cloudflare Pages
-- Production branch: `main`. Preview deployments: **all non-production branches**.
-  Every PR gets its own URL (`<branch>.jsonbondhu.pages.dev`) for testing before merge.
-- Protect preview URLs and `/admin` with Cloudflare Access (see `docs/ADS.md`).
+### 4. Hosting
+- Production runs on the owner's server at https://jsonbondhu.irmaoshop.com (nginx serves `public/`;
+  the ad API and admin portal run as a Node service; the admin portal is on
+  https://cms-jsonbondhu.irmaoshop.com). Cloudflare Pages is no longer used, so there are no per-PR
+  preview URLs: test locally (`npm test`, `npm run test:e2e`) and rely on CI.
+- Only code merged to `main` may be deployed to the server.
 
 ## Everyday flow (Claude or any developer)
 1. `git switch -c feat/<name>`, make changes, and add or update tests.
 2. `npm test && npm run test:e2e` locally.
 3. Push and open a PR. CI and CodeRabbit start automatically.
 4. Fix every CodeRabbit and reviewer comment, then push again. Checks re-run.
-5. When CodeRabbit approves and all checks are green, merge. It's live within about 1 minute.
-   Anyone (e.g. the DevOps reviewer) can still review the preview URL and comment; it's optional.
+5. When CodeRabbit approves and all checks are green, merge, then deploy `main` to the server.
+   Anyone (e.g. the DevOps reviewer) can still review the PR and comment; it's optional.
 
 ## Rollback
-Cloudflare dashboard → Pages → jsonbondhu → Deployments → pick the last good one → **Rollback**.
-This is instant. Then fix forward with a normal PR.
+Revert the bad change with a normal PR (`git revert`), merge it, and deploy `main` again.
 For ad content mistakes, use the admin portal's version history (Rollback), and no deploy is needed.
