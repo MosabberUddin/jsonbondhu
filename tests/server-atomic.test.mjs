@@ -128,6 +128,24 @@ describe('MysqlKV.atomicUpdate deadlock handling', () => {
   });
 });
 
+describe('MysqlKV.putQuery / put', () => {
+  test('put sends exactly the statement putQuery describes', async () => {
+    const seen = [];
+    const kv = new MysqlKV({ query: async (sql, params) => { seen.push({ sql, params }); return [{}]; } });
+    await kv.put('k', { a: 1 }, { metadata: { m: 1 }, expiration: 1900000000 });
+    const expected = MysqlKV.putQuery('k', { a: 1 }, { metadata: { m: 1 }, expiration: 1900000000 });
+    assert.deepEqual(seen, [expected]);
+    assert.deepEqual(expected.params, ['k', '[object Object]', '{"m":1}', 1900000000]);
+    assert.match(expected.sql, /^INSERT INTO kv (k, v, metadata, expires_at)/);
+  });
+  test('works with any object that has query(), e.g. a transaction connection', async () => {
+    const seen = [];
+    const conn = { query: async (sql, params) => { seen.push(params[0]); return [{}]; } };
+    await new MysqlKV(conn).put('via-conn', 'v');
+    assert.deepEqual(seen, ['via-conn']);
+  });
+});
+
 describe('resolveAdminFile', () => {
   const dir = path.resolve('/srv/public/admin');
   test('maps normal paths inside the admin folder', () => {

@@ -45,18 +45,24 @@ export class MysqlKV {
     };
   }
 
-  async put(key, value, opts = {}) {
+  /** The exact statement and parameters put() sends (the importer measures them). */
+  static putQuery(key, value, opts = {}) {
     const expiresAt = opts.expiration
       ? Number(opts.expiration)
       : opts.expirationTtl
         ? nowSec() + Number(opts.expirationTtl)
         : null;
     const metadata = opts.metadata === undefined ? null : JSON.stringify(opts.metadata);
-    await this.pool.query(
-      `INSERT INTO kv (k, v, metadata, expires_at) VALUES (?, ?, ?, ?) AS new
+    return {
+      sql: `INSERT INTO kv (k, v, metadata, expires_at) VALUES (?, ?, ?, ?) AS new
        ON DUPLICATE KEY UPDATE v = new.v, metadata = new.metadata, expires_at = new.expires_at`,
-      [key, String(value), metadata, expiresAt],
-    );
+      params: [key, String(value), metadata, expiresAt],
+    };
+  }
+
+  async put(key, value, opts = {}) {
+    const { sql, params } = MysqlKV.putQuery(key, value, opts);
+    await this.pool.query(sql, params);
   }
 
   /**
