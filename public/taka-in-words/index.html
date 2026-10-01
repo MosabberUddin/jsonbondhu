@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en" data-tool="taka" data-title-key="taka.title" data-desc-key="taka.metaDesc">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Taka in Words, Bangla &amp; English | JSON Bondhu</title>
+  <meta name="description" content="Convert any taka amount to words in Bangla and English. Handles lakh, crore, paisa and Bangla digits, with an optional Only (মাত্র) suffix for cheques.">
+  <link rel="canonical" href="https://jsonbondhu.irmaoshop.com/taka-in-words/">
+  <link rel="alternate" hreflang="en" href="https://jsonbondhu.irmaoshop.com/taka-in-words/?lang=en">
+  <link rel="alternate" hreflang="bn" href="https://jsonbondhu.irmaoshop.com/taka-in-words/?lang=bn">
+  <link rel="alternate" hreflang="x-default" href="https://jsonbondhu.irmaoshop.com/taka-in-words/">
+  <meta name="theme-color" content="#0f766e">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230f766e'/%3E%3Ctext x='16' y='22' font-size='15' font-family='monospace' font-weight='700' fill='white' text-anchor='middle'%3E%7B%7D%3C/text%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/i18n.js"></script>
+  <script src="/tools.js"></script>
+  <script src="/lib/taka-core.js" defer></script>
+  <script src="/taka-in-words/taka.js" defer></script>
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"WebApplication","name":"Taka in Words | JSON Bondhu","url":"https://jsonbondhu.irmaoshop.com/taka-in-words/","applicationCategory":"UtilitiesApplication","operatingSystem":"Any","inLanguage":["en","bn"],"offers":{"@type":"Offer","price":"0","priceCurrency":"BDT"}}
+  </script>
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="/">
+      <span class="logo" aria-hidden="true">{ }</span>
+      <span><strong data-i18n="brand">JSON Bondhu</strong></span>
+    </a>
+    <nav class="top-nav">
+      <a href="/" data-i18n="nav.tools">All tools</a>
+      <a href="/guides/" data-i18n="nav.guides">Guides</a>
+      <a href="/#premium" class="pill" data-i18n="nav.premium">Go ad-free</a>
+      <div class="lang-switch" role="group" data-i18n-attr="aria-label:lang.label" aria-label="Language">
+        <button type="button" data-set-lang="en" lang="en" aria-pressed="true">EN</button>
+        <button type="button" data-set-lang="bn" lang="bn" aria-pressed="false">বাংলা</button>
+      </div>
+    </nav>
+  </header>
+
+  <div class="tool-head">
+    <h1 data-i18n="tool.taka.name">Taka in Words</h1>
+    <p data-i18n="tool.taka.desc">Write any amount in words, in Bangla and English, for cheques and invoices.</p>
+  </div>
+
+  <div class="ad-slot ad-top" data-ad="top" data-i18n-attr="aria-label:ad.label" aria-label="Advertisement">
+    <span data-i18n="ad.placeholder">Ad space</span>
+  </div>
+
+  <main class="app">
+    <form id="taka-form" class="options">
+      <label for="taka-in" data-i18n="taka.amount">Amount</label>
+      <input id="taka-in" type="text" inputmode="decimal" class="mono" style="flex:1;min-width:10em" autocomplete="off" spellcheck="false"
+        data-i18n-attr="placeholder:taka.placeholder" placeholder="e.g. 12,34,567.50 or ১২৩৪৫৬৭.৫০">
+      <label><input id="taka-only" type="checkbox" checked> <span data-i18n="taka.only">Add “Only / মাত্র”</span></label>
+    </form>
+    <div id="status" class="status" role="status"></div>
+    <table id="taka-result" class="kv-table" aria-live="polite">
+      <tr><th data-i18n="taka.bn">In Bangla words</th><td id="taka-bn" lang="bn"></td><td><button type="button" data-copy="taka-bn" data-i18n="btn.copy">Copy</button></td></tr>
+      <tr><th data-i18n="taka.en">In English words</th><td id="taka-en" lang="en"></td><td><button type="button" data-copy="taka-en" data-i18n="btn.copy">Copy</button></td></tr>
+      <tr><th data-i18n="taka.fmtEn">Formatted (0-9)</th><td id="taka-fmt-en" class="mono"></td><td><button type="button" data-copy="taka-fmt-en" data-i18n="btn.copy">Copy</button></td></tr>
+      <tr><th data-i18n="taka.fmtBn">Formatted (০-৯)</th><td id="taka-fmt-bn" class="mono" lang="bn"></td><td><button type="button" data-copy="taka-fmt-bn" data-i18n="btn.copy">Copy</button></td></tr>
+    </table>
+  </main>
+
+  <div class="ad-slot ad-bottom" data-ad="bottom" data-i18n-attr="aria-label:ad.label" aria-label="Advertisement">
+    <span data-i18n="ad.placeholder">Ad space</span>
+  </div>
+
+  <article class="content">
+    <section data-lang="en" lang="en">
+      <h2>How to write an amount in words</h2>
+      <p>Type an amount in English or Bangla digits, with or without commas. The tool writes it out in Bangla and in English using the South Asian system of hazar (thousand), lakh and crore, and groups the digits the same way, for example <code>12,34,567.50</code>.</p>
+      <h3>Paisa and rounding</h3>
+      <p>Digits after the decimal point are paisa (100 paisa = 1 taka). If you type more than two decimal places, the amount is rounded to the nearest paisa.</p>
+      <h3>Why the “Only” suffix?</h3>
+      <p>On cheques and invoices the amount in words usually ends with “Only” (মাত্র in Bangla) so that nothing can be added after it. Untick the option if you do not need it.</p>
+      <h3>Limits</h3>
+      <p>The tool handles amounts up to 99,99,99,99,999 taka. Amounts of 100 crore and above are written as a multiple of crore, such as “One Hundred Crore”. Always double-check the words before you use them on a legal or bank document. Everything runs in your browser and nothing is sent to a server.</p>
+    </section>
+    <section data-lang="bn" lang="bn">
+      <h2>টাকার অঙ্ক কথায় কীভাবে লিখবেন</h2>
+      <p>ইংরেজি বা বাংলা অঙ্কে টাকার পরিমাণ লিখুন, কমা থাকলেও সমস্যা নেই। টুলটি হাজার, লক্ষ ও কোটির হিসাবে বাংলা ও ইংরেজিতে কথায় লিখে দেবে এবং অঙ্কগুলোও একই নিয়মে কমা দিয়ে সাজাবে, যেমন <code>১২,৩৪,৫৬৭.৫০</code>।</p>
+      <h3>পয়সা ও রাউন্ডিং</h3>
+      <p>দশমিকের পরের অঙ্ক হলো পয়সা (১০০ পয়সা = ১ টাকা)। দুই ঘরের বেশি দশমিক লিখলে পরিমাণটি নিকটতম পয়সায় রাউন্ড হবে।</p>
+      <h3>“মাত্র” কেন লেখা হয়?</h3>
+      <p>চেক ও ইনভয়েসে কথায় লেখা অঙ্কের শেষে সাধারণত “মাত্র” (ইংরেজিতে “Only”) বসানো হয়, যাতে পরে কিছু যোগ করা না যায়। দরকার না হলে অপশনটি বন্ধ করে দিন।</p>
+      <h3>সীমা</h3>
+      <p>টুলটি ৯৯,৯৯,৯৯,৯৯,৯৯৯ টাকা পর্যন্ত লিখতে পারে। ১০০ কোটি বা তার বেশি হলে কোটির গুণিতক হিসেবে লেখা হয়, যেমন “এক শো কোটি”। আইনি বা ব্যাংকের কাগজে ব্যবহারের আগে কথাগুলো একবার মিলিয়ে নিন। সবকিছু আপনার ব্রাউজারেই হয়, কোনো সার্ভারে কিছু পাঠানো হয় না।</p>
+    </section>
+
+    <section class="more-tools">
+      <h2 data-i18n="tools.more">More free tools</h2>
+      <ul class="tool-grid" data-more-tools></ul>
+    </section>
+  </article>
+
+  <footer class="site-footer">
+    <span>© <span data-year></span> <span data-i18n="brand">JSON Bondhu</span></span>
+    <a href="/privacy.html" data-i18n="footer.privacy">Privacy policy</a>
+    <a href="https://github.com/MosabberUddin/jsonbondhu/issues" rel="noopener" data-i18n="footer.contact">Contact</a>
+  </footer>
+
+  <script src="/ads.js" defer></script>
+</body>
+</html>
