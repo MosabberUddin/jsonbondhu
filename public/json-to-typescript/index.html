@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en" data-tool="ts" data-title-key="ts.title" data-desc-key="ts.metaDesc">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>JSON to TypeScript Interface Generator | JSON Bondhu</title>
+  <meta name="description" content="Paste JSON and get TypeScript interfaces or types. Nested objects, optional keys, unions and null are handled. Copy or download .ts. Runs in your browser.">
+  <link rel="canonical" href="https://jsonbondhu.irmaoshop.com/json-to-typescript/">
+  <link rel="alternate" hreflang="en" href="https://jsonbondhu.irmaoshop.com/json-to-typescript/?lang=en">
+  <link rel="alternate" hreflang="bn" href="https://jsonbondhu.irmaoshop.com/json-to-typescript/?lang=bn">
+  <link rel="alternate" hreflang="x-default" href="https://jsonbondhu.irmaoshop.com/json-to-typescript/">
+  <meta name="theme-color" content="#0f766e">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230f766e'/%3E%3Ctext x='16' y='22' font-size='15' font-family='monospace' font-weight='700' fill='white' text-anchor='middle'%3E%7B%7D%3C/text%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/i18n.js"></script>
+  <script src="/tools.js"></script>
+  <script src="/lib/ts-core.js" defer></script>
+  <script src="/json-to-typescript/ts.js" defer></script>
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"WebApplication","name":"JSON to TypeScript — JSON Bondhu","url":"https://jsonbondhu.irmaoshop.com/json-to-typescript/","applicationCategory":"DeveloperApplication","operatingSystem":"Any","inLanguage":["en","bn"],"offers":{"@type":"Offer","price":"0","priceCurrency":"BDT"}}
+  </script>
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="/">
+      <span class="logo" aria-hidden="true">{ }</span>
+      <span><strong data-i18n="brand">JSON Bondhu</strong></span>
+    </a>
+    <nav class="top-nav">
+      <a href="/" data-i18n="nav.tools">All tools</a>
+      <a href="/guides/" data-i18n="nav.guides">Guides</a>
+      <a href="/#premium" class="pill" data-i18n="nav.premium">Go ad-free</a>
+      <div class="lang-switch" role="group" data-i18n-attr="aria-label:lang.label" aria-label="Language">
+        <button type="button" data-set-lang="en" lang="en" aria-pressed="true">EN</button>
+        <button type="button" data-set-lang="bn" lang="bn" aria-pressed="false">বাংলা</button>
+      </div>
+    </nav>
+  </header>
+
+  <div class="tool-head">
+    <h1 data-i18n="tool.ts.name">JSON to TypeScript</h1>
+    <p data-i18n="tool.ts.desc">Generate TypeScript interfaces or types from a JSON sample.</p>
+  </div>
+
+  <div class="ad-slot ad-top" data-ad="top" data-i18n-attr="aria-label:ad.label" aria-label="Advertisement">
+    <span data-i18n="ad.placeholder">Ad space</span>
+  </div>
+
+  <main class="app">
+    <form id="ts-form" class="options">
+      <label><span data-i18n="ts.root">Root name</span> <input id="ts-root" type="text" value="Root" class="mono" style="width:9em" autocomplete="off" spellcheck="false"></label>
+      <span data-i18n="ts.style">Style</span>
+      <label><input type="radio" name="ts-style" value="interface" checked> <span>interface</span></label>
+      <label><input type="radio" name="ts-style" value="type"> <span>type</span></label>
+      <label><input id="ts-export" type="checkbox" checked> <span>export</span></label>
+      <label><input id="ts-optional" type="checkbox" checked> <span data-i18n="ts.optional">Optional keys when merging</span></label>
+      <label><input id="ts-readonly" type="checkbox"> <span>readonly</span></label>
+    </form>
+    <div class="toolbar">
+      <button type="button" data-act="sample" data-i18n="btn.sample">Sample</button>
+      <button type="button" data-act="clear" data-i18n="btn.clear">Clear</button>
+      <button type="button" class="primary" data-act="copy" data-i18n="btn.copy">Copy</button>
+      <button type="button" data-act="download" data-i18n="btn.download">Download</button>
+    </div>
+    <label class="pane-label" for="ts-in" data-i18n="ts.input">JSON input</label>
+    <textarea id="ts-in" class="tool-textarea" spellcheck="false" data-i18n-attr="placeholder:ts.input.placeholder" placeholder="Paste JSON here…"></textarea>
+    <label class="pane-label" for="ts-out" data-i18n="ts.output">TypeScript output</label>
+    <textarea id="ts-out" class="tool-textarea" readonly spellcheck="false"></textarea>
+    <div id="status" class="status" role="status"></div>
+  </main>
+
+  <div class="ad-slot ad-bottom" data-ad="bottom" data-i18n-attr="aria-label:ad.label" aria-label="Advertisement">
+    <span data-i18n="ad.placeholder">Ad space</span>
+  </div>
+
+  <article class="content">
+    <section data-lang="en" lang="en">
+      <h2>Turn a JSON sample into TypeScript types</h2>
+      <p>Paste a JSON response and get matching <code>interface</code> or <code>type</code> declarations you can drop into your code. Every nested object becomes its own named type, named from its key in PascalCase (<code>user_address</code> becomes <code>UserAddress</code>). Objects with the same shape share one type, and a name that is already taken gets a number suffix.</p>
+      <h3>How the types are inferred</h3>
+      <ul>
+        <li><b>Arrays of objects</b> are merged into one type. With “Optional keys when merging” on, a key missing from some elements becomes <code>key?: T</code>. Turn it off to keep differently shaped objects as separate union members.</li>
+        <li><b>Mixed arrays</b> become unions such as <code>(string | number)[]</code>, and an empty array becomes <code>unknown[]</code>.</li>
+        <li><b>null</b> is kept: a value that is sometimes null becomes <code>string | null</code>.</li>
+        <li><b>Keys that are not valid identifiers</b>, like <code>my-key</code>, are quoted. Unicode keys such as Bangla names stay unquoted because TypeScript accepts them.</li>
+      </ul>
+      <h3>Know the limits</h3>
+      <p>A single sample cannot tell the tool everything. A field that is always a string in your sample might be a number elsewhere, and a field present in every sample element might still be optional in the API. Review the output before you rely on it.</p>
+      <p>Everything runs in your browser. Your JSON is not uploaded.</p>
+    </section>
+    <section data-lang="bn" lang="bn">
+      <h2>JSON নমুনা থেকে TypeScript টাইপ তৈরি করুন</h2>
+      <p>একটি JSON রেসপন্স পেস্ট করলেই মানানসই <code>interface</code> বা <code>type</code> পেয়ে যাবেন, যা সরাসরি কোডে বসানো যায়। প্রতিটি নেস্টেড অবজেক্ট আলাদা নামের টাইপ হয়, নামটি আসে কী থেকে PascalCase-এ (<code>user_address</code> হয় <code>UserAddress</code>)। একই গঠনের অবজেক্ট একটি টাইপ ভাগ করে নেয়, আর নাম আগেই নেওয়া থাকলে শেষে সংখ্যা যোগ হয়।</p>
+      <h3>টাইপ কীভাবে অনুমান করা হয়</h3>
+      <ul>
+        <li><b>অবজেক্টের অ্যারে</b> মিলিয়ে একটি টাইপ হয়। “মেলানোর সময় ঐচ্ছিক কী” চালু থাকলে কিছু এলিমেন্টে না থাকা কী হয় <code>key?: T</code>। বন্ধ করলে ভিন্ন গঠনের অবজেক্টগুলো আলাদা ইউনিয়ন সদস্য থাকে।</li>
+        <li><b>মিশ্র অ্যারে</b> হয় ইউনিয়ন, যেমন <code>(string | number)[]</code>; ফাঁকা অ্যারে হয় <code>unknown[]</code>।</li>
+        <li><b>null</b> রাখা হয়: যে মান কখনো null হয়, সেটি হয় <code>string | null</code>।</li>
+        <li><b>বৈধ আইডেন্টিফায়ার নয় এমন কী</b>, যেমন <code>my-key</code>, কোটের ভেতরে লেখা হয়। বাংলা নামের মতো ইউনিকোড কী কোট ছাড়াই থাকে, কারণ TypeScript তা মানে।</li>
+      </ul>
+      <h3>সীমাবদ্ধতা</h3>
+      <p>একটি নমুনা থেকে সবকিছু জানা যায় না। নমুনায় সবসময় স্ট্রিং থাকা ফিল্ড অন্য জায়গায় সংখ্যা হতে পারে, আর নমুনার সব এলিমেন্টে থাকা ফিল্ডও API-তে ঐচ্ছিক হতে পারে। ব্যবহারের আগে আউটপুট মিলিয়ে দেখুন।</p>
+      <p>সবকিছু আপনার ব্রাউজারেই চলে। আপনার JSON কোথাও আপলোড হয় না।</p>
+    </section>
+
+    <section class="more-tools">
+      <h2 data-i18n="tools.more">More free tools</h2>
+      <ul class="tool-grid" data-more-tools></ul>
+    </section>
+  </article>
+
+  <footer class="site-footer">
+    <span>© <span data-year></span> <span data-i18n="brand">JSON Bondhu</span></span>
+    <a href="/privacy.html" data-i18n="footer.privacy">Privacy policy</a>
+    <a href="https://github.com/MosabberUddin/jsonbondhu/issues" rel="noopener" data-i18n="footer.contact">Contact</a>
+  </footer>
+
+  <script src="/ads.js" defer></script>
+</body>
+</html>

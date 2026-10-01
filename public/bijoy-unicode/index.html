@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en" data-tool="bijoy" data-title-key="bijoy.title" data-desc-key="bijoy.metaDesc">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Bijoy to Unicode Converter, Both Ways, Online | JSON Bondhu</title>
+  <meta name="description" content="Convert Bijoy (SutonnyMJ) Bangla text to Unicode and back in your browser. Handles reph, kars and common conjuncts. Free, nothing is uploaded.">
+  <link rel="canonical" href="https://jsonbondhu.irmaoshop.com/bijoy-unicode/">
+  <link rel="alternate" hreflang="en" href="https://jsonbondhu.irmaoshop.com/bijoy-unicode/?lang=en">
+  <link rel="alternate" hreflang="bn" href="https://jsonbondhu.irmaoshop.com/bijoy-unicode/?lang=bn">
+  <link rel="alternate" hreflang="x-default" href="https://jsonbondhu.irmaoshop.com/bijoy-unicode/">
+  <meta name="theme-color" content="#0f766e">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230f766e'/%3E%3Ctext x='16' y='23' font-size='18' font-family='sans-serif' font-weight='700' fill='white' text-anchor='middle'%3E%E0%A6%85%3C/text%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+  <style>
+    .bj-mode { display: inline-flex; gap: 6px; flex-wrap: wrap; }
+    .bj-unicode { font-family: "Hind Siliguri", "Noto Sans Bengali", "Nirmala UI", sans-serif !important; font-size: 16px !important; }
+    .bj-hint { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; padding: 8px 14px; border-top: 1px solid var(--border); background: var(--surface-2); font-size: .9rem; }
+    .bj-hint[hidden] { display: none; }
+  </style>
+  <script src="/i18n.js"></script>
+  <script src="/tools.js"></script>
+  <script src="/lib/bijoy-core.js" defer></script>
+  <script src="/bijoy-unicode/bijoy.js" defer></script>
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"WebApplication","name":"Bijoy to Unicode Converter: JSON Bondhu","url":"https://jsonbondhu.irmaoshop.com/bijoy-unicode/","applicationCategory":"UtilitiesApplication","operatingSystem":"Any","inLanguage":["en","bn"],"offers":{"@type":"Offer","price":"0","priceCurrency":"BDT"}}
+  </script>
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="/">
+      <span class="logo" aria-hidden="true">{ }</span>
+      <span><strong data-i18n="brand">JSON Bondhu</strong></span>
+    </a>
+    <nav class="top-nav">
+      <a href="/" data-i18n="nav.tools">All tools</a>
+      <a href="/guides/" data-i18n="nav.guides">Guides</a>
+      <a href="/#premium" class="pill" data-i18n="nav.premium">Go ad-free</a>
+      <div class="lang-switch" role="group" data-i18n-attr="aria-label:lang.label" aria-label="Language">
+        <button type="button" data-set-lang="en" lang="en" aria-pressed="true">EN</button>
+        <button type="button" data-set-lang="bn" lang="bn" aria-pressed="false">বাংলা</button>
+      </div>
+    </nav>
+  </header>
+
+  <div class="tool-head">
+    <h1 data-i18n="tool.bijoy.name">Bijoy ↔ Unicode Converter</h1>
+    <p data-i18n="tool.bijoy.desc">Convert old Bijoy (SutonnyMJ) Bangla text to Unicode and back.</p>
+  </div>
+
+  <div class="ad-slot ad-top" data-ad="top" data-i18n-attr="aria-label:ad.label" aria-label="Advertisement">
+    <span data-i18n="ad.placeholder">Ad space</span>
+  </div>
+
+  <main class="app">
+    <div class="toolbar">
+      <div class="bj-mode" role="group" data-i18n-attr="aria-label:bijoy.mode" aria-label="Direction">
+        <button type="button" class="primary" data-act="b2u" aria-pressed="true" data-i18n="bijoy.b2u">Bijoy → Unicode</button>
+        <button type="button" data-act="u2b" aria-pressed="false" data-i18n="bijoy.u2b">Unicode → Bijoy</button>
+      </div>
+      <button type="button" data-act="swap" data-i18n-attr="title:bijoy.swap.title" title="Use the output as the new input and switch direction"><span aria-hidden="true">⇄ </span><span data-i18n="bijoy.swap">Swap</span></button>
+      <span class="sep"></span>
+      <button type="button" data-act="sample" data-i18n="btn.sample">Sample</button>
+      <button type="button" data-act="copy" data-i18n="btn.copy">Copy</button>
+      <button type="button" data-act="download" data-i18n="btn.download">Download</button>
+      <button type="button" data-act="clear" data-i18n="btn.clear">Clear</button>
+    </div>
+    <div class="io-grid">
+      <div class="pane">
+        <label class="pane-label" for="bj-in" id="bj-in-label">Bijoy text</label>
+        <textarea id="bj-in" spellcheck="false" autocomplete="off"
+          data-i18n-attr="placeholder:bijoy.in.placeholderB2U" placeholder="Paste Bijoy text here, e.g. evsjv‡`k"></textarea>
+      </div>
+      <div class="pane">
+        <label class="pane-label" for="bj-out" id="bj-out-label">Unicode</label>
+        <textarea id="bj-out" readonly spellcheck="false"></textarea>
+      </div>
+    </div>
+    <div id="bj-hint" class="bj-hint" hidden>
+      <span id="bj-hint-text"></span>
+      <button type="button" data-act="hint-switch" id="bj-hint-btn"></button>
+    </div>
+    <div id="status" class="status" role="status"></div>
+  </main>
+
+  <div class="ad-slot ad-bottom" data-ad="bottom" data-i18n-attr="aria-label:ad.label" aria-label="Advertisement">
+    <span data-i18n="ad.placeholder">Ad space</span>
+  </div>
+
+  <article class="content">
+    <section data-lang="en" lang="en">
+      <h2>What is Bijoy, and why convert it?</h2>
+      <p>Bijoy is the older way of typing Bangla on computers. The text is stored as Latin letters and symbols, such as <code>evsjv</code>, and only looks like Bangla when a special font such as SutonnyMJ is applied. Unicode Bangla (<code>বাংলা</code>) is the modern standard: it works on the web, in search, on phones and in every current app, whatever the font. Old documents, newspaper archives and files from Bijoy users still need converting between the two.</p>
+      <h3>How to use it</h3>
+      <ol>
+        <li>Pick a direction: <b>Bijoy → Unicode</b> for old text, or <b>Unicode → Bijoy</b> if a printer or a legacy program still expects Bijoy.</li>
+        <li>Paste your text on the left. The converted text appears on the right straight away.</li>
+        <li>Press <b>Copy</b> or <b>Download</b>. <b>Swap</b> turns the output into the new input and flips the direction, which is handy for checking a result.</li>
+      </ol>
+      <p>If you paste Bijoy text while the direction is wrong, a hint appears with a one-click switch.</p>
+      <h3>What it handles, and what it does not</h3>
+      <ul>
+        <li>It follows the standard Bijoy (SutonnyMJ) keyboard layout: letters, kars (including e-kar and o-kar placed before the consonant), reph, ya-phala, ra-phala, digits and the common conjuncts.</li>
+        <li>Plain English words inside Bijoy text cannot be told apart from Bijoy letters, so they come out garbled. Convert Bangla passages only.</li>
+        <li>A few rare conjuncts may have no Bijoy glyph in this table. When that happens while converting to Bijoy, the tool tells you how many were written without the joiner, so you can check them.</li>
+        <li>Other legacy fonts (Lekhoni, Boishakhi, and so on) use different layouts and are not covered.</li>
+      </ul>
+      <h3>Is my text private?</h3>
+      <p>Yes. The conversion runs entirely in your browser. Your text is never uploaded or stored.</p>
+    </section>
+    <section data-lang="bn" lang="bn">
+      <h2>বিজয় কী, আর কেন কনভার্ট করবেন?</h2>
+      <p>বিজয় হলো কম্পিউটারে বাংলা লেখার পুরোনো পদ্ধতি। এতে লেখা জমা থাকে ল্যাটিন অক্ষর ও চিহ্ন হিসেবে, যেমন <code>evsjv</code>, আর সুতন্বী এমজে-র মতো বিশেষ ফন্ট দিলেই তবে সেটা বাংলার মতো দেখায়। ইউনিকোড বাংলা (<code>বাংলা</code>) আধুনিক মান: ফন্ট যা-ই হোক, ওয়েবে, সার্চে, ফোনে ও এখনকার সব অ্যাপে এটি কাজ করে। পুরোনো ডকুমেন্ট, পত্রিকার আর্কাইভ বা বিজয়ে লেখা ফাইল তাই দুই পদ্ধতির মধ্যে রূপান্তর করতে হয়।</p>
+      <h3>কীভাবে ব্যবহার করবেন</h3>
+      <ol>
+        <li>দিক বেছে নিন: পুরোনো লেখার জন্য <b>বিজয় → ইউনিকোড</b>, আর কোনো প্রিন্টার বা পুরোনো প্রোগ্রাম বিজয় চাইলে <b>ইউনিকোড → বিজয়</b>।</li>
+        <li>বাঁ দিকে লেখা পেস্ট করুন। রূপান্তরিত লেখা সাথে সাথেই ডান দিকে দেখা যাবে।</li>
+        <li><b>কপি</b> বা <b>ডাউনলোড</b> চাপুন। <b>অদলবদল</b> আউটপুটকে নতুন ইনপুট বানিয়ে দিক পাল্টে দেয়, ফলাফল মিলিয়ে দেখতে কাজে লাগে।</li>
+      </ol>
+      <p>দিক ভুল থাকা অবস্থায় বিজয় লেখা পেস্ট করলে একটি ইঙ্গিত আসবে, এক ক্লিকেই দিক বদলানো যাবে।</p>
+      <h3>কী পারে, আর কী পারে না</h3>
+      <ul>
+        <li>এটি প্রচলিত বিজয় (সুতন্বী এমজে) কিবোর্ড লেআউট মেনে চলে: বর্ণ, কার (ব্যঞ্জনের আগে বসা এ-কার ও ও-কার সহ), রেফ, য-ফলা, র-ফলা, সংখ্যা এবং প্রচলিত যুক্তবর্ণ।</li>
+        <li>বিজয় লেখার ভেতরের সাধারণ ইংরেজি শব্দ বিজয়ের অক্ষর থেকে আলাদা করা যায় না, তাই সেগুলো এলোমেলো হয়ে যাবে। শুধু বাংলা অংশ কনভার্ট করুন।</li>
+        <li>কিছু বিরল যুক্তবর্ণের জন্য এই তালিকায় বিজয় গ্লিফ নাও থাকতে পারে। বিজয়ে রূপান্তরের সময় এমন হলে টুলটি জানিয়ে দেয় কয়টি যুক্তবর্ণ জোড়া ছাড়া লেখা হয়েছে, যাতে আপনি মিলিয়ে নিতে পারেন।</li>
+        <li>অন্যান্য পুরোনো ফন্ট (লেখনী, বৈশাখী ইত্যাদি) আলাদা লেআউট ব্যবহার করে, সেগুলো এখানে নেই।</li>
+      </ul>
+      <h3>আমার লেখা কি গোপন থাকে?</h3>
+      <p>হ্যাঁ। রূপান্তর পুরোটাই আপনার ব্রাউজারে হয়। লেখা কখনো আপলোড বা জমা করা হয় না।</p>
+    </section>
+
+    <section class="more-tools">
+      <h2 data-i18n="tools.more">More free tools</h2>
+      <ul class="tool-grid" data-more-tools></ul>
+    </section>
+  </article>
+
+  <footer class="site-footer">
+    <span>© <span data-year></span> <span data-i18n="brand">JSON Bondhu</span></span>
+    <a href="/privacy.html" data-i18n="footer.privacy">Privacy policy</a>
+    <a href="https://github.com/MosabberUddin/jsonbondhu/issues" rel="noopener" data-i18n="footer.contact">Contact</a>
+  </footer>
+
+  <script src="/ads.js" defer></script>
+</body>
+</html>

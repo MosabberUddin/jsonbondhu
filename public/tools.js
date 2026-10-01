@@ -12,6 +12,12 @@
     { id: 'url', path: '/url-encode/', icon: '%' },
     { id: 'uuid', path: '/uuid-generator/', icon: 'ID' },
     { id: 'timestamp', path: '/timestamp-converter/', icon: '⏱' },
+    { id: 'bijoy', path: '/bijoy-unicode/', icon: 'অ' },
+    { id: 'taka', path: '/taka-in-words/', icon: '৳' },
+    { id: 'regex', path: '/regex-tester/', icon: '.*' },
+    { id: 'diff', path: '/diff-checker/', icon: '±' },
+    { id: 'hash', path: '/hash-generator/', icon: '#' },
+    { id: 'ts', path: '/json-to-typescript/', icon: 'TS' },
   ];
 
   function el(tag, props, children) {

@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en" data-tool="regex" data-title-key="regex.title" data-desc-key="regex.metaDesc">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Regex Tester: JavaScript RegExp, live matches | JSON Bondhu</title>
+  <meta name="description" content="Test JavaScript regular expressions live: highlighted matches, capture and named groups, flags and a replace preview. Runs in your browser.">
+  <link rel="canonical" href="https://jsonbondhu.irmaoshop.com/regex-tester/">
+  <link rel="alternate" hreflang="en" href="https://jsonbondhu.irmaoshop.com/regex-tester/?lang=en">
+  <link rel="alternate" hreflang="bn" href="https://jsonbondhu.irmaoshop.com/regex-tester/?lang=bn">
+  <link rel="alternate" hreflang="x-default" href="https://jsonbondhu.irmaoshop.com/regex-tester/">
+  <meta name="theme-color" content="#0f766e">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230f766e'/%3E%3Ctext x='16' y='22' font-size='15' font-family='monospace' font-weight='700' fill='white' text-anchor='middle'%3E%7B%7D%3C/text%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+  <style>
+    #rx-highlight { margin: 0; padding: 12px 14px; min-height: 3.2em; max-height: 40vh; overflow: auto; white-space: pre-wrap; word-break: break-word; font: 14px/1.55 var(--mono); background: var(--surface); }
+    #rx-highlight mark { background: var(--mark); color: inherit; border-radius: 2px; box-shadow: 0 0 0 1px var(--border); }
+    #rx-highlight mark.alt { background: color-mix(in srgb, var(--mark) 55%, var(--accent, #0f766e) 45%); }
+    #rx-highlight .empty { display: inline-block; width: 2px; height: 1.1em; vertical-align: text-bottom; background: var(--danger); margin: 0 -1px; }
+    .rx-flags { display: flex; flex-wrap: wrap; gap: 4px 14px; align-items: center; }
+    .rx-row { display: flex; gap: 8px; align-items: center; padding: 8px 14px; flex-wrap: wrap; }
+    .rx-row input[type=text] { flex: 1; min-width: 0; }
+    .rx-slash { font-family: var(--mono); color: var(--muted); }
+    #rx-matches { width: 100%; }
+    #rx-matches td, #rx-matches th { font-family: var(--mono); font-size: .85rem; }
+    #rx-replace-out { min-height: 80px; height: 14vh; }
+    .rx-cheat { padding: 4px 14px 12px; }
+    .rx-cheat code { white-space: nowrap; }
+  </style>
+  <script src="/i18n.js"></script>
+  <script src="/tools.js"></script>
+  <script src="/lib/regex-core.js" defer></script>
+  <script src="/regex-tester/regex.js" defer></script>
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"WebApplication","name":"Regex Tester — JSON Bondhu","url":"https://jsonbondhu.irmaoshop.com/regex-tester/","applicationCategory":"DeveloperApplication","operatingSystem":"Any","inLanguage":["en","bn"],"offers":{"@type":"Offer","price":"0","priceCurrency":"BDT"}}
+  </script>
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="/">
+      <span class="logo" aria-hidden="true">{ }</span>
+      <span><strong data-i18n="brand">JSON Bondhu</strong></span>
+    </a>
+    <nav class="top-nav">
+      <a href="/" data-i18n="nav.tools">All tools</a>
+      <a href="/guides/" data-i18n="nav.guides">Guides</a>
+      <a href="/#premium" class="pill" data-i18n="nav.premium">Go ad-free</a>
+      <div class="lang-switch" role="group" data-i18n-attr="aria-label:lang.label" aria-label="Language">
+        <button type="button" data-set-lang="en" lang="en" aria-pressed="true">EN</button>
+        <button type="button" data-set-lang="bn" lang="bn" aria-pressed="false">বাংলা</button>
+      </div>
+    </nav>
+  </header>
+
+  <div class="tool-head">
+    <h1 data-i18n="tool.regex.name">Regex Tester</h1>
+    <p data-i18n="tool.regex.desc">Test a regular expression live: matches, groups and replace.</p>
+  </div>
+
+  <div class="ad-slot ad-top" data-ad="top" data-i18n-attr="aria-label:ad.label" aria-label="Advertisement">
+    <span data-i18n="ad.placeholder">Ad space</span>
+  </div>
+
+  <main class="app">
+    <div class="rx-row">
+      <span data-i18n="rx.presets">Examples</span>
+      <button type="button" data-preset="email" data-i18n="rx.preset.email">Email</button>
+      <button type="button" data-preset="phone" data-i18n="rx.preset.phone">BD mobile number</button>
+      <button type="button" data-preset="date" data-i18n="rx.preset.date">Date (YYYY-MM-DD)</button>
+    </div>
+    <div class="rx-row">
+      <label for="rx-pattern" class="rx-slash" data-i18n="rx.pattern">Pattern</label>
+      <input id="rx-pattern" type="text" class="mono" autocomplete="off" spellcheck="false" autocapitalize="off"
+        data-i18n-attr="placeholder:rx.pattern.placeholder" placeholder="Type a regular expression, without slashes">
+    </div>
+    <div class="rx-row">
+      <span data-i18n="rx.flags">Flags</span>
+      <div class="rx-flags" id="rx-flags" role="group" data-i18n-attr="aria-label:rx.flags" aria-label="Flags">
+        <label title="global"><input type="checkbox" value="g" checked> g</label>
+        <label title="ignoreCase"><input type="checkbox" value="i"> i</label>
+        <label title="multiline"><input type="checkbox" value="m"> m</label>
+        <label title="dotAll"><input type="checkbox" value="s"> s</label>
+        <label title="unicode"><input type="checkbox" value="u"> u</label>
+        <label title="sticky"><input type="checkbox" value="y"> y</label>
+        <label title="hasIndices"><input type="checkbox" value="d"> d</label>
+      </div>
+    </div>
+    <div id="rx-error" class="status err" role="alert" hidden></div>
+    <div id="rx-warn" class="status warn" role="status" hidden></div>
+
+    <label class="pane-label" for="rx-text" data-i18n="rx.text">Test text</label>
+    <textarea id="rx-text" class="tool-textarea" spellcheck="false" style="min-height:140px;height:22vh"
+      data-i18n-attr="placeholder:rx.text.placeholder" placeholder="Paste or type the text to search…"></textarea>
+
+    <div class="pane-label" data-i18n="rx.highlighted">Highlighted matches</div>
+    <pre id="rx-highlight" aria-live="polite"></pre>
+    <div id="status" class="status" role="status"></div>
+
+    <div class="pane-label" data-i18n="rx.matchList">Match list</div>
+    <div style="overflow-x:auto">
+      <table id="rx-matches" class="kv-table"></table>
+    </div>
+
+    <div class="rx-row" style="border-top:1px solid var(--border)">
+      <label for="rx-replace" data-i18n="rx.replaceWith">Replace with</label>
+      <input id="rx-replace" type="text" class="mono" autocomplete="off" spellcheck="false"
+        data-i18n-attr="placeholder:rx.replace.placeholder" placeholder="e.g. $1 or $&lt;name&gt;">
+      <button type="button" data-act="copy-replaced" data-i18n="rx.copyResult">Copy result</button>
+    </div>
+    <label class="pane-label" for="rx-replace-out" data-i18n="rx.replaceResult">Replace result</label>
+    <textarea id="rx-replace-out" class="tool-textarea" readonly spellcheck="false"></textarea>
+
+    <details class="rx-cheat">
+      <summary data-i18n="rx.cheat">Cheat sheet</summary>
+      <table class="kv-table">
+        <tr><th><code>.</code></th><td data-i18n="rx.c.dot">Any character except a line break</td></tr>
+        <tr><th><code>\d \w \s</code></th><td data-i18n="rx.c.classes">Digit, word character, whitespace (capitals mean the opposite)</td></tr>
+        <tr><th><code>[abc] [^abc] [a-z]</code></th><td data-i18n="rx.c.set">Character set, negated set, range</td></tr>
+        <tr><th><code>^ $ \b</code></th><td data-i18n="rx.c.anchors">Start, end, word boundary</td></tr>
+        <tr><th><code>* + ? {2,4}</code></th><td data-i18n="rx.c.quant">Repeat: 0 or more, 1 or more, optional, a range (add ? for lazy)</td></tr>
+        <tr><th><code>(…) (?:…) (?&lt;n&gt;…)</code></th><td data-i18n="rx.c.groups">Capturing group, non-capturing group, named group</td></tr>
+        <tr><th><code>a|b</code></th><td data-i18n="rx.c.alt">Either a or b</td></tr>
+        <tr><th><code>(?=…) (?!…) (?&lt;=…) (?&lt;!…)</code></th><td data-i18n="rx.c.look">Lookahead and lookbehind</td></tr>
+        <tr><th><code>$1 $&lt;n&gt; $&amp; $$</code></th><td data-i18n="rx.c.repl">In the replacement: group, named group, whole match, a literal $</td></tr>
+      </table>
+    </details>
+  </main>
+
+  <div class="ad-slot ad-bottom" data-ad="bottom" data-i18n-attr="aria-label:ad.label" aria-label="Advertisement">
+    <span data-i18n="ad.placeholder">Ad space</span>
+  </div>
+
+  <article class="content">
+    <section data-lang="en" lang="en">
+      <h2>How to test a regular expression</h2>
+      <p>Type a pattern, tick the flags you need and paste some text. Matches are highlighted as you type, and the list below shows each match with its position, numbered groups and named groups. Use the replace box to preview a substitution with <code>$1</code> or <code>$&lt;name&gt;</code>.</p>
+      <h3>Which regex engine is this?</h3>
+      <p>This tool uses the JavaScript (ECMAScript) <code>RegExp</code> engine built into your browser. Syntax and behaviour match what you get in JavaScript and Node.js, but can differ from PCRE, Python, Java or PHP (for example in lookbehind, named group syntax and flags).</p>
+      <h3>Limits that keep the page responsive</h3>
+      <ul>
+        <li>At most 1000 matches are listed and only the first 50,000 characters of text are searched.</li>
+        <li>Empty matches are handled safely, so patterns like <code>x*</code> never loop forever.</li>
+        <li>Nested quantifiers such as <code>(a+)+</code> can take exponentially long on some inputs, and a browser cannot interrupt a running regex. The page warns you about this shape, but if a pattern still hangs the tab, reload it.</li>
+      </ul>
+      <h3>Is my text sent anywhere?</h3>
+      <p>No. Everything runs in your browser and nothing is uploaded.</p>
+    </section>
+    <section data-lang="bn" lang="bn">
+      <h2>রেগুলার এক্সপ্রেশন কীভাবে পরীক্ষা করবেন</h2>
+      <p>একটি প্যাটার্ন লিখুন, প্রয়োজনীয় ফ্ল্যাগ বেছে নিন এবং টেক্সট পেস্ট করুন। লেখার সাথে সাথেই মিলগুলো হাইলাইট হয়, আর নিচের তালিকায় প্রতিটি মিলের অবস্থান, নম্বরযুক্ত গ্রুপ ও নামযুক্ত গ্রুপ দেখানো হয়। রিপ্লেস বক্সে <code>$1</code> বা <code>$&lt;name&gt;</code> লিখে বদলের ফলাফল আগেই দেখে নিতে পারবেন।</p>
+      <h3>এটি কোন রেজেক্স ইঞ্জিন?</h3>
+      <p>এখানে আপনার ব্রাউজারে থাকা JavaScript (ECMAScript) <code>RegExp</code> ইঞ্জিন ব্যবহার করা হয়। JavaScript ও Node.js-এ যেমন চলে, এখানেও ঠিক তেমন চলবে; তবে PCRE, Python, Java বা PHP-এর সাথে কিছু পার্থক্য থাকতে পারে (যেমন লুকবিহাইন্ড, নামযুক্ত গ্রুপের সিনট্যাক্স ও ফ্ল্যাগ)।</p>
+      <h3>পেজ সচল রাখার সীমা</h3>
+      <ul>
+        <li>সর্বোচ্চ ১০০০টি মিল দেখানো হয় এবং টেক্সটের প্রথম ৫০,০০০ অক্ষর খোঁজা হয়।</li>
+        <li>ফাঁকা মিল নিরাপদে সামলানো হয়, তাই <code>x*</code>-এর মতো প্যাটার্ন কখনো অসীম লুপে আটকায় না।</li>
+        <li><code>(a+)+</code>-এর মতো নেস্টেড কোয়ান্টিফায়ার কিছু ইনপুটে অস্বাভাবিক সময় নিতে পারে, আর চলমান রেজেক্স ব্রাউজার থামাতে পারে না। এমন গঠন দেখলে পেজ সতর্ক করে, তবু ট্যাব আটকে গেলে রিলোড করুন।</li>
+      </ul>
+      <h3>আমার টেক্সট কি কোথাও পাঠানো হয়?</h3>
+      <p>না। সবকিছু আপনার ব্রাউজারেই চলে, কিছু আপলোড হয় না।</p>
+    </section>
+
+    <section class="more-tools">
+      <h2 data-i18n="tools.more">More free tools</h2>
+      <ul class="tool-grid" data-more-tools></ul>
+    </section>
+  </article>
+
+  <footer class="site-footer">
+    <span>© <span data-year></span> <span data-i18n="brand">JSON Bondhu</span></span>
+    <a href="/privacy.html" data-i18n="footer.privacy">Privacy policy</a>
+    <a href="https://github.com/MosabberUddin/jsonbondhu/issues" rel="noopener" data-i18n="footer.contact">Contact</a>
+  </footer>
+
+  <script src="/ads.js" defer></script>
+</body>
+</html>

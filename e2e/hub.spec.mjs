@@ -9,7 +9,7 @@ test.beforeEach(async ({ page }) => {
 
 test('lists every tool with a working link', async ({ page }) => {
   const cards = page.locator('[data-tool-grid] .tool-card');
-  await expect(cards).toHaveCount(7);
+  await expect(cards).toHaveCount(13);
   const hrefs = await cards.evaluateAll((els) => els.map((e) => e.getAttribute('href')));
   for (const href of hrefs) {
     const res = await page.request.get(href);
@@ -27,7 +27,7 @@ test('search filters tools in either language', async ({ page }) => {
   await expect(page.locator('.tool-card:visible')).toHaveCount(0);
   await expect(page.locator('#tool-empty')).toBeVisible();
   await page.fill('#tool-search', '');
-  await expect(page.locator('.tool-card:visible')).toHaveCount(7);
+  await expect(page.locator('.tool-card:visible')).toHaveCount(13);
 });
 
 test('switches the hub to Bangla', async ({ page }) => {
@@ -40,7 +40,7 @@ test('switches the hub to Bangla', async ({ page }) => {
 
 test('tool pages link back to the hub and to other tools', async ({ page }) => {
   await page.goto('/json-formatter/');
-  await expect(page.locator('[data-more-tools] .tool-card')).toHaveCount(6);
+  await expect(page.locator('[data-more-tools] .tool-card')).toHaveCount(12);
   await page.click('.top-nav a[href="/"]');
   await expect(page).toHaveURL(/\/$/);
 });
@@ -54,7 +54,7 @@ test('premium link from a tool page lands on the hub section', async ({ page }) 
 test('unknown pages show the not-found page', async ({ page }) => {
   await page.goto('/404.html');
   await expect(page.locator('h1:visible')).toHaveText('Page not found');
-  await expect(page.locator('[data-more-tools] .tool-card')).toHaveCount(7);
+  await expect(page.locator('[data-more-tools] .tool-card')).toHaveCount(13);
 });
 
 test('no console errors and no horizontal scroll on the hub', async ({ page }) => {

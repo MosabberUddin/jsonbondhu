@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en" data-tool="hash" data-title-key="hash.title" data-desc-key="hash.metaDesc">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Hash Generator: SHA-256, MD5, HMAC online | JSON Bondhu</title>
+  <meta name="description" content="Free online hash generator: SHA-256, SHA-1, SHA-512 and MD5 of text or a file, plus HMAC. Runs in your browser, nothing is uploaded.">
+  <link rel="canonical" href="https://jsonbondhu.irmaoshop.com/hash-generator/">
+  <link rel="alternate" hreflang="en" href="https://jsonbondhu.irmaoshop.com/hash-generator/?lang=en">
+  <link rel="alternate" hreflang="bn" href="https://jsonbondhu.irmaoshop.com/hash-generator/?lang=bn">
+  <link rel="alternate" hreflang="x-default" href="https://jsonbondhu.irmaoshop.com/hash-generator/">
+  <meta name="theme-color" content="#0f766e">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230f766e'/%3E%3Ctext x='16' y='22' font-size='15' font-family='monospace' font-weight='700' fill='white' text-anchor='middle'%3E%7B%7D%3C/text%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/i18n.js"></script>
+  <script src="/tools.js"></script>
+  <script src="/lib/hash-core.js" defer></script>
+  <script src="/hash-generator/hash.js" defer></script>
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"WebApplication","name":"Hash Generator — JSON Bondhu","url":"https://jsonbondhu.irmaoshop.com/hash-generator/","applicationCategory":"DeveloperApplication","operatingSystem":"Any","inLanguage":["en","bn"],"offers":{"@type":"Offer","price":"0","priceCurrency":"BDT"}}
+  </script>
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="/">
+      <span class="logo" aria-hidden="true">{ }</span>
+      <span><strong data-i18n="brand">JSON Bondhu</strong></span>
+    </a>
+    <nav class="top-nav">
+      <a href="/" data-i18n="nav.tools">All tools</a>
+      <a href="/guides/" data-i18n="nav.guides">Guides</a>
+      <a href="/#premium" class="pill" data-i18n="nav.premium">Go ad-free</a>
+      <div class="lang-switch" role="group" data-i18n-attr="aria-label:lang.label" aria-label="Language">
+        <button type="button" data-set-lang="en" lang="en" aria-pressed="true">EN</button>
+        <button type="button" data-set-lang="bn" lang="bn" aria-pressed="false">বাংলা</button>
+      </div>
+    </nav>
+  </header>
+
+  <div class="tool-head">
+    <h1 data-i18n="tool.hash.name">Hash Generator</h1>
+    <p data-i18n="tool.hash.desc">SHA-256, SHA-1, SHA-512 and MD5 hashes of text or a file, with HMAC.</p>
+  </div>
+
+  <div class="ad-slot ad-top" data-ad="top" data-i18n-attr="aria-label:ad.label" aria-label="Advertisement">
+    <span data-i18n="ad.placeholder">Ad space</span>
+  </div>
+
+  <main class="app">
+    <label class="pane-label" for="hash-input" data-i18n="hash.input">Text to hash</label>
+    <textarea id="hash-input" class="tool-textarea" style="min-height:120px;height:20vh" spellcheck="false"
+      data-i18n-attr="placeholder:hash.input.placeholder" placeholder="Type or paste text (UTF-8, Bangla works)…"></textarea>
+    <div class="options" style="border-top:1px solid var(--border)">
+      <label for="hash-file" data-i18n="hash.file">Or choose a file</label>
+      <input id="hash-file" type="file">
+      <button type="button" data-act="clear-file" id="hash-clear-file" hidden data-i18n="hash.clearFile">Remove file</button>
+    </div>
+    <form id="hash-form" class="options" style="border-top:1px solid var(--border)">
+      <span data-i18n="hash.mode">Mode</span>
+      <label><input type="radio" name="hash-mode" value="hash" checked> <span data-i18n="hash.mode.hash">Plain hash</span></label>
+      <label><input type="radio" name="hash-mode" value="hmac"> <span data-i18n="hash.mode.hmac">HMAC (with secret key)</span></label>
+      <span data-i18n="hash.output">Output</span>
+      <label><input type="radio" name="hash-enc" value="hex" checked> <span data-i18n="hash.enc.hex">Hex (lowercase)</span></label>
+      <label><input type="radio" name="hash-enc" value="hex-upper"> <span data-i18n="hash.enc.hexUpper">Hex (UPPERCASE)</span></label>
+      <label><input type="radio" name="hash-enc" value="base64"> <span data-i18n="hash.enc.base64">Base64</span></label>
+    </form>
+    <div class="options" id="hash-key-row" style="border-top:1px solid var(--border)" hidden>
+      <label for="hash-key" data-i18n="hash.key">Secret key</label>
+      <input id="hash-key" type="text" class="mono" style="flex:1;min-width:0" autocomplete="off" spellcheck="false"
+        data-i18n-attr="placeholder:hash.key.placeholder" placeholder="Secret key (text, UTF-8)">
+    </div>
+    <table id="hash-results" class="kv-table" aria-live="polite"></table>
+    <div class="options" style="border-top:1px solid var(--border)">
+      <label for="hash-compare" data-i18n="hash.compare">Compare with a hash</label>
+      <input id="hash-compare" type="text" class="mono" style="flex:1;min-width:0" autocomplete="off" spellcheck="false"
+        data-i18n-attr="placeholder:hash.compare.placeholder" placeholder="Paste a hash (hex or Base64) to check it matches…">
+    </div>
+    <div id="hash-compare-result" class="status" role="status" hidden></div>
+    <div id="status" class="status" role="status"></div>
+  </main>
+
+  <div class="ad-slot ad-bottom" data-ad="bottom" data-i18n-attr="aria-label:ad.label" aria-label="Advertisement">
+    <span data-i18n="ad.placeholder">Ad space</span>
+  </div>
+
+  <article class="content">
+    <section data-lang="en" lang="en">
+      <h2>What is a hash?</h2>
+      <p>A hash function turns any input, a word, a document or a whole file, into a short fixed-length fingerprint. The same input always gives the same fingerprint, and even a one-character change gives a completely different one. You cannot turn the fingerprint back into the original, which is why hashes are used to check that a downloaded file was not changed, or that two files are identical.</p>
+      <h3>Hashing is not encryption</h3>
+      <p>Encryption can be reversed with a key. Hashing cannot be reversed at all. Read the full comparison in <a href="/guides/encoding-vs-encryption-vs-hashing/">encoding vs encryption vs hashing</a>.</p>
+      <h3>Which algorithm should I use?</h3>
+      <ul>
+        <li><b>SHA-256, SHA-384, SHA-512</b> are the right choice for file checksums and integrity checks today.</li>
+        <li><b>MD5</b> and <b>SHA-1</b> are broken for security: attackers can create two different inputs with the same hash. They are fine for spotting accidental corruption or for matching legacy systems, but never use them to sign anything.</li>
+        <li><b>Never store passwords with any of these.</b> Fast hashes like SHA-256 and MD5 can be guessed billions of times per second. Passwords need a slow, salted algorithm such as bcrypt, scrypt or Argon2.</li>
+      </ul>
+      <h3>What is HMAC?</h3>
+      <p>HMAC mixes a secret key into the hash, so only someone who knows the key can produce or check the result. APIs and webhooks use it to prove a message really came from the sender and was not changed on the way. Switch to HMAC mode and enter your key.</p>
+      <h3>Is it private?</h3>
+      <p>Everything is computed in your browser. SHA-1, SHA-256, SHA-384 and SHA-512 use the built-in Web Crypto API and MD5 uses code on this page. Your text, key and files are never uploaded. Files up to 100 MB are supported.</p>
+    </section>
+    <section data-lang="bn" lang="bn">
+      <h2>হ্যাশ কী?</h2>
+      <p>হ্যাশ ফাংশন যেকোনো ইনপুট, একটি শব্দ, নথি বা পুরো ফাইলকে একটি ছোট, নির্দিষ্ট দৈর্ঘ্যের ফিঙ্গারপ্রিন্টে রূপান্তর করে। একই ইনপুটে সবসময় একই ফিঙ্গারপ্রিন্ট আসে, আর একটিমাত্র অক্ষর বদলালেই পুরোপুরি আলাদা ফল আসে। ফিঙ্গারপ্রিন্ট থেকে মূল ডেটা ফিরে পাওয়া যায় না, তাই ডাউনলোড করা ফাইল বদলে গেছে কি না বা দুটি ফাইল হুবহু এক কি না যাচাই করতে হ্যাশ ব্যবহার হয়।</p>
+      <h3>হ্যাশিং এনক্রিপশন নয়</h3>
+      <p>এনক্রিপশন চাবি দিয়ে উল্টানো যায়। হ্যাশিং একেবারেই উল্টানো যায় না। বিস্তারিত তুলনা পড়ুন <a href="/guides/encoding-vs-encryption-vs-hashing/">এনকোডিং, এনক্রিপশন ও হ্যাশিংয়ের পার্থক্য</a> গাইডে।</p>
+      <h3>কোন অ্যালগরিদম ব্যবহার করবেন?</h3>
+      <ul>
+        <li><b>SHA-256, SHA-384, SHA-512</b> আজকের দিনে ফাইল চেকসাম ও অখণ্ডতা যাচাইয়ের জন্য সঠিক পছন্দ।</li>
+        <li><b>MD5</b> ও <b>SHA-1</b> নিরাপত্তার জন্য ভাঙা: আক্রমণকারী একই হ্যাশের দুটি ভিন্ন ইনপুট বানাতে পারে। হঠাৎ ডেটা নষ্ট হয়েছে কি না দেখতে বা পুরোনো সিস্টেমের সাথে মেলাতে এগুলো চলে, কিন্তু কিছু সই করতে কখনো ব্যবহার করবেন না।</li>
+        <li><b>পাসওয়ার্ড সংরক্ষণে এগুলোর কোনোটিই ব্যবহার করবেন না।</b> SHA-256 বা MD5-এর মতো দ্রুত হ্যাশ প্রতি সেকেন্ডে কোটি কোটি বার অনুমান করা যায়। পাসওয়ার্ডের জন্য দরকার bcrypt, scrypt বা Argon2-এর মতো ধীরগতির, সল্ট-যুক্ত অ্যালগরিদম।</li>
+      </ul>
+      <h3>HMAC কী?</h3>
+      <p>HMAC হ্যাশের সাথে একটি গোপন চাবি মিশিয়ে দেয়, ফলে শুধু যে চাবি জানে সে-ই ফলাফল তৈরি বা যাচাই করতে পারে। API ও ওয়েবহুক এটি দিয়ে প্রমাণ করে যে বার্তাটি সত্যিই প্রেরকের কাছ থেকে এসেছে এবং পথে বদলায়নি। HMAC মোডে গিয়ে আপনার চাবি লিখুন।</p>
+      <h3>এটি কি গোপনীয়?</h3>
+      <p>সবকিছু আপনার ব্রাউজারেই হিসাব হয়। SHA-1, SHA-256, SHA-384 ও SHA-512-এর জন্য ব্রাউজারের Web Crypto API এবং MD5-এর জন্য এই পেজের কোড ব্যবহার হয়। আপনার টেক্সট, চাবি ও ফাইল কখনো আপলোড হয় না। ১০০ মেগাবাইট পর্যন্ত ফাইল চলে।</p>
+    </section>
+
+    <section class="more-tools">
+      <h2 data-i18n="tools.more">More free tools</h2>
+      <ul class="tool-grid" data-more-tools></ul>
+    </section>
+  </article>
+
+  <footer class="site-footer">
+    <span>© <span data-year></span> <span data-i18n="brand">JSON Bondhu</span></span>
+    <a href="/privacy.html" data-i18n="footer.privacy">Privacy policy</a>
+    <a href="https://github.com/MosabberUddin/jsonbondhu/issues" rel="noopener" data-i18n="footer.contact">Contact</a>
+  </footer>
+
+  <script src="/ads.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="en" data-tool="diff" data-title-key="diff.title" data-desc-key="diff.desc">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Diff Checker, Compare Two Texts Online | JSON Bondhu</title>
+  <meta name="description" content="Compare two texts side by side or as a unified diff, with word-level highlights and options to ignore case and spaces. Runs in your browser.">
+  <link rel="canonical" href="https://jsonbondhu.irmaoshop.com/diff-checker/">
+  <link rel="alternate" hreflang="en" href="https://jsonbondhu.irmaoshop.com/diff-checker/?lang=en">
+  <link rel="alternate" hreflang="bn" href="https://jsonbondhu.irmaoshop.com/diff-checker/?lang=bn">
+  <link rel="alternate" hreflang="x-default" href="https://jsonbondhu.irmaoshop.com/diff-checker/">
+  <meta name="theme-color" content="#0f766e">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230f766e'/%3E%3Ctext x='16' y='22' font-size='15' font-family='monospace' font-weight='700' fill='white' text-anchor='middle'%3E%7B%7D%3C/text%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+  <style>
+    :root {
+      --d-add-bg: #e6f4ea; --d-add-word: #a8dbb5; --d-del-bg: #fdebeb; --d-del-word: #f3b0b0; --d-gutter: #eef1ef;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) {
+        --d-add-bg: #12331f; --d-add-word: #1f6b3a; --d-del-bg: #3a1717; --d-del-word: #7f2a2a; --d-gutter: #1d2624;
+      }
+    }
+    :root[data-theme="dark"] {
+      --d-add-bg: #12331f; --d-add-word: #1f6b3a; --d-del-bg: #3a1717; --d-del-word: #7f2a2a; --d-gutter: #1d2624;
+    }
+    .diff-summary { display: flex; flex-wrap: wrap; gap: 8px; padding: 8px 12px; border-top: 1px solid var(--border); align-items: center; }
+    .diff-summary .badge { font-family: var(--mono); font-size: .85rem; border: 1px solid var(--border); }
+    .diff-scroll { overflow-x: auto; border-top: 1px solid var(--border); max-height: 70vh; overflow-y: auto; }
+    .diff-table { width: 100%; border-collapse: collapse; table-layout: fixed; font: 13px/1.5 var(--mono); min-width: 560px; }
+    .diff-table td { vertical-align: top; padding: 0 6px; }
+    .diff-table td.ln { width: 3.4em; text-align: right; color: var(--muted); background: var(--d-gutter); user-select: none; }
+    .diff-table td.mk { width: 1.6em; text-align: center; font-weight: 700; user-select: none; }
+    .diff-table td.tx { white-space: pre-wrap; overflow-wrap: anywhere; }
+    .diff-table.side td.tx { width: calc(50% - 5em); }
+    .diff-table.side td.mk + td.tx + td.ln { border-left: 1px solid var(--border); }
+    .diff-table .del { background: var(--d-del-bg); }
+    .diff-table .add { background: var(--d-add-bg); }
+    .diff-table td.empty { background: var(--d-gutter); }
+    .diff-table .w-del { background: var(--d-del-word); text-decoration: line-through; text-decoration-thickness: 1px; border-radius: 2px; }
+    .diff-table .w-add { background: var(--d-add-word); text-decoration: underline; border-radius: 2px; }
+    .diff-note { padding: 8px 14px; font-size: .9rem; color: var(--muted); border-top: 1px solid var(--border); }
+    .diff-scroll:empty { display: none; }
+  </style>
+  <script src="/i18n.js"></script>
+  <script src="/tools.js"></script>
+  <script src="/lib/diff-core.js" defer></script>
+  <script src="/diff-checker/diff.js" defer></script>
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"WebApplication","name":"Diff Checker — JSON Bondhu","url":"https://jsonbondhu.irmaoshop.com/diff-checker/","applicationCategory":"DeveloperApplication","operatingSystem":"Any","inLanguage":["en","bn"],"offers":{"@type":"Offer","price":"0","priceCurrency":"BDT"}}
+  </script>
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="/">
+      <span class="logo" aria-hidden="true">{ }</span>
+      <span><strong data-i18n="brand">JSON Bondhu</strong></span>
+    </a>
+    <nav class="top-nav">
+      <a href="/" data-i18n="nav.tools">All tools</a>
+      <a href="/guides/" data-i18n="nav.guides">Guides</a>
+      <a href="/#premium" class="pill" data-i18n="nav.premium">Go ad-free</a>
+      <div class="lang-switch" role="group" data-i18n-attr="aria-label:lang.label" aria-label="Language">
+        <button type="button" data-set-lang="en" lang="en" aria-pressed="true">EN</button>
+        <button type="button" data-set-lang="bn" lang="bn" aria-pressed="false">বাংলা</button>
+      </div>
+    </nav>
+  </header>
+
+  <div class="tool-head">
+    <h1 data-i18n="tool.diff.name">Diff Checker</h1>
+    <p data-i18n="tool.diff.desc">Compare two texts and see what was added, removed or changed.</p>
+  </div>
+
+  <div class="ad-slot ad-top" data-ad="top" data-i18n-attr="aria-label:ad.label" aria-label="Advertisement">
+    <span data-i18n="ad.placeholder">Ad space</span>
+  </div>
+
+  <main class="app">
+    <form id="diff-form" class="options">
+      <label><input id="diff-ws" type="checkbox"> <span data-i18n="diff.ignoreWs">Ignore whitespace</span></label>
+      <label><input id="diff-case" type="checkbox"> <span data-i18n="diff.ignoreCase">Ignore case</span></label>
+      <label><input id="diff-trail" type="checkbox"> <span data-i18n="diff.ignoreTrail">Ignore trailing spaces</span></label>
+      <span data-i18n="diff.view">View</span>
+      <label><input type="radio" name="diff-view" value="side" checked> <span data-i18n="diff.view.side">Side by side</span></label>
+      <label><input type="radio" name="diff-view" value="unified"> <span data-i18n="diff.view.unified">Unified</span></label>
+    </form>
+    <div class="toolbar">
+      <button type="button" class="primary" data-act="compare" data-i18n="diff.compare">Compare</button>
+      <button type="button" data-act="load-a" data-i18n="diff.loadA">Load original file</button>
+      <button type="button" data-act="load-b" data-i18n="diff.loadB">Load changed file</button>
+      <button type="button" data-act="swap" data-i18n="diff.swap">Swap sides</button>
+      <button type="button" data-act="copy" data-i18n="diff.copy">Copy unified diff</button>
+      <button type="button" data-act="clear" data-i18n="btn.clear">Clear</button>
+      <input type="file" id="diff-file" hidden accept="text/*,.txt,.md,.json,.csv,.js,.ts,.html,.css,.xml,.yml,.yaml,.log">
+    </div>
+    <div class="io-grid">
+      <div class="pane">
+        <label class="pane-label" for="diff-a" data-i18n="diff.original">Original</label>
+        <textarea id="diff-a" spellcheck="false" autocomplete="off" wrap="off"
+          data-i18n-attr="placeholder:diff.ph.a" placeholder="Paste the original text here…"></textarea>
+      </div>
+      <div class="pane">
+        <label class="pane-label" for="diff-b" data-i18n="diff.changed">Changed</label>
+        <textarea id="diff-b" spellcheck="false" autocomplete="off" wrap="off"
+          data-i18n-attr="placeholder:diff.ph.b" placeholder="Paste the changed text here…"></textarea>
+      </div>
+    </div>
+    <div id="diff-summary" class="diff-summary" aria-live="polite"></div>
+    <div id="diff-out" class="diff-scroll" tabindex="0" data-i18n-attr="aria-label:diff.resultLabel" aria-label="Comparison result"></div>
+    <div id="status" class="status" role="status"></div>
+  </main>
+
+  <div class="ad-slot ad-bottom" data-ad="bottom" data-i18n-attr="aria-label:ad.label" aria-label="Advertisement">
+    <span data-i18n="ad.placeholder">Ad space</span>
+  </div>
+
+  <article class="content">
+    <section data-lang="en" lang="en">
+      <h2>What is a diff checker?</h2>
+      <p>A diff checker compares two versions of a text and shows exactly what changed: lines that were removed are marked with <code>-</code>, lines that were added are marked with <code>+</code>, and everything else is left alone. Use it to review edits to a document, compare two config files, spot what changed between two API responses or check a translation against its source.</p>
+      <h3>How to read the result</h3>
+      <ul>
+        <li><b>Side by side</b> puts the original on the left and the changed text on the right. When a line was edited, the words that differ are highlighted, marked with underline (added) or strike-through (removed), so it works without colour too.</li>
+        <li><b>Unified</b> is the same format Git and the <code>diff -u</code> command print. Use “Copy unified diff” to paste it into a ticket, a chat or a patch file.</li>
+        <li>A moved line shows up as one removal and one addition, because the comparison goes line by line.</li>
+      </ul>
+      <h3>Options</h3>
+      <p>“Ignore whitespace” treats lines as equal when they differ only in spaces or tabs. “Ignore trailing spaces” ignores spaces at the end of a line only. “Ignore case” treats upper and lower case letters as the same. Line endings (Windows CRLF or Unix LF) never count as a difference.</p>
+      <h3>Bangla and other scripts</h3>
+      <p>Words are compared as whole characters with their vowel signs and conjuncts, so a Bangla word is never split in the middle of a letter.</p>
+      <h3>Is my text uploaded?</h3>
+      <p>No. The comparison runs in your browser and nothing is sent to a server. To keep the page fast, each side is limited to 1,000,000 characters and 20,000 lines.</p>
+    </section>
+    <section data-lang="bn" lang="bn">
+      <h2>ডিফ চেকার কী?</h2>
+      <p>ডিফ চেকার একটি লেখার দুটি সংস্করণ তুলনা করে ঠিক কী বদলেছে তা দেখায়। বাদ যাওয়া লাইনে <code>-</code>, নতুন যোগ হওয়া লাইনে <code>+</code> চিহ্ন থাকে, বাকি সব যেমন ছিল তেমনই থাকে। কোনো ডকুমেন্টের সম্পাদনা দেখতে, দুটি কনফিগ ফাইল মেলাতে, দুটি API রেসপন্সের পার্থক্য ধরতে বা অনুবাদ মূল লেখার সাথে মেলাতে এটি কাজে লাগে।</p>
+      <h3>ফলাফল কীভাবে পড়বেন</h3>
+      <ul>
+        <li><b>পাশাপাশি</b> দেখায় বাঁয়ে মূল লেখা, ডানে বদলানো লেখা। কোনো লাইন সম্পাদনা হলে যে শব্দগুলো আলাদা সেগুলো হাইলাইট হয়; যোগ হওয়া শব্দে আন্ডারলাইন, বাদ যাওয়া শব্দে কাটা দাগ থাকে, তাই রং না দেখা গেলেও বোঝা যায়।</li>
+        <li><b>ইউনিফাইড</b> হলো Git ও <code>diff -u</code> কমান্ডের পরিচিত ফরম্যাট। “ইউনিফাইড ডিফ কপি করুন” চেপে টিকেট, চ্যাট বা প্যাচ ফাইলে পেস্ট করতে পারবেন।</li>
+        <li>কোনো লাইন অন্য জায়গায় সরে গেলে সেটি একটি বাদ ও একটি যোগ হিসেবে দেখায়, কারণ তুলনা হয় লাইন ধরে ধরে।</li>
+      </ul>
+      <h3>অপশন</h3>
+      <p>“হোয়াইটস্পেস উপেক্ষা” দিলে শুধু স্পেস বা ট্যাবের পার্থক্য থাকা লাইনগুলো সমান ধরা হয়। “লাইনের শেষের স্পেস উপেক্ষা” শুধু লাইনের শেষের স্পেস বাদ দেয়। “বড়-ছোট হাতের অক্ষর উপেক্ষা” দিলে ইংরেজি বড় ও ছোট হরফ সমান ধরা হয়। উইন্ডোজের CRLF আর ইউনিক্সের LF লাইন-শেষ কখনো পার্থক্য হিসেবে গণ্য হয় না।</p>
+      <h3>বাংলা ও অন্যান্য লিপি</h3>
+      <p>শব্দ তুলনার সময় কার, ফলা ও যুক্তাক্ষরসহ পুরো অক্ষর একসাথে ধরা হয়, তাই বাংলা শব্দ কখনো অক্ষরের মাঝখানে ভেঙে যায় না।</p>
+      <h3>আমার লেখা কি আপলোড হয়?</h3>
+      <p>না। তুলনা আপনার ব্রাউজারেই হয়, কোনো সার্ভারে কিছু যায় না। পেজ দ্রুত রাখতে প্রতি পাশে সর্বোচ্চ ১০,০০,০০০ অক্ষর ও ২০,০০০ লাইন নেওয়া হয়।</p>
+    </section>
+
+    <section class="more-tools">
+      <h2 data-i18n="tools.more">More free tools</h2>
+      <ul class="tool-grid" data-more-tools></ul>
+    </section>
+  </article>
+
+  <footer class="site-footer">
+    <span>© <span data-year></span> <span data-i18n="brand">JSON Bondhu</span></span>
+    <a href="/privacy.html" data-i18n="footer.privacy">Privacy policy</a>
+    <a href="https://github.com/MosabberUddin/jsonbondhu/issues" rel="noopener" data-i18n="footer.contact">Contact</a>
+  </footer>
+
+  <script src="/ads.js" defer></script>
+</body>
+</html>
